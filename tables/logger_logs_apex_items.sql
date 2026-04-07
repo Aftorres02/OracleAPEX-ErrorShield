@@ -17,13 +17,13 @@ begin
   if l_count = 0 then
     execute immediate '
 create table logger_logs_apex_items(
-    id				number not null,
-    log_id          number not null,
-    app_session     number not null,
-    item_name       varchar2(1000) not null,
-    item_value      clob,
-    constraint logger_logs_apx_itms_pk primary key (id) enable,
-    constraint logger_logs_apx_itms_fk foreign key (log_id) references logger_logs(id) ON DELETE CASCADE
+  id number not null
+ , log_id number not null
+ , app_session number not null
+ , item_name varchar2(1000) not null
+ , item_value clob
+ , constraint logger_logs_apx_itms_pk primary key (id) enable
+ , constraint logger_logs_apx_itms_fk foreign key (log_id) references logger_logs(id) on delete cascade
 )
     ';
   end if;
@@ -40,12 +40,12 @@ create table logger_logs_apex_items(
 
     if l_count = 0 then
       execute immediate '
-  create sequence logger_apx_items_seq
-    minvalue 1
-    maxvalue 999999999999999999999999999
-    start with 1
-    increment by 1
-    cache 20
+create sequence logger_apx_items_seq
+  minvalue 1
+  maxvalue 999999999999999999999999999
+  start with 1
+  increment by 1
+  cache 20
       ';
     end if;
 
@@ -65,7 +65,7 @@ end;
 
 create or replace trigger biu_logger_apex_items
   before insert or update on logger_logs_apex_items
-for each row
+  for each row
 begin
   $if $$logger_no_op_install $then
     null;

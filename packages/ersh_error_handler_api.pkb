@@ -7,8 +7,12 @@ alter session set plsql_ccflags = 'VERBOSE_OUTPUT:FALSE';
 
 create or replace package body ersh_error_handler_api as
 
-  gc_scope_prefix    constant varchar2(31) := lower($$plsql_unit) || '.';
+  gc_scope_prefix     constant varchar2(31) := lower($$plsql_unit) || '.';
+  -- End-user support contact shown on masked errors (not the admin alert mailbox).
   gc_support_email    constant varchar2(255 char) := 'help@netgain.tech';
+  -- Leading zeros for the user-facing reference (e.g. 10 -> 0000000010). Uses
+  -- greatest(.., length(to_char(id))) so values never truncate as ids grow.
+  gc_reference_display_min_digits constant pls_integer := 10; -- optional: 12 or 14
 
   -- -------------------------------------------------------------------------
   -- Public methods
@@ -44,16 +48,40 @@ create or replace package body ersh_error_handler_api as
       -- errors raised by application / page authorization and all errors
       -- regarding session and session state)
       if not p_error.is_common_runtime_error then
-        -- Log error for example with an autonomous transaction and return
-        -- l_reference_id as reference#
-        -- l_reference_id := log_error(p_error => p_error);
+        -- Persist details in LOGGER_LOGS (autonomous commit inside logger). Return id as support reference.
+        l_reference_id := logger.log_error(
+          p_text =>
+            'Internal APEX error (user-facing message masked).'
+            || chr(10) || 'message: ' || substr(nvl(p_error.message, '(null)'), 1, 3000)
+            || chr(10) || 'additional_info: '
+            || substr(nvl(p_error.additional_info, '(null)'), 1, 1000)
+            || chr(10) || 'ora_sqlcode: ' || to_char(p_error.ora_sqlcode)
+            || chr(10) || 'ora_sqlerrm: ' || substr(nvl(p_error.ora_sqlerrm, '(null)'), 1, 4000)
+            || chr(10) || 'error_backtrace: '
+            || substr(nvl(p_error.error_backtrace, '(null)'), 1, 2000),
+          p_scope => gc_scope_prefix || 'apex_error_handling');
 
-        -- Change the message to the generic error message which doesn't
-        -- expose any sensitive information.
-        l_result.message := 'An unexpected internal application error has occurred. '
-          || 'Please get in contact with ' || gc_support_email || ' and provide reference# '
-          || to_char(l_reference_id, '999G999G999G990')
-          || ' for further investigation.';
+        -- User-facing copy: no claim that we emailed the user (admin notification is separate).
+        if l_reference_id is not null then
+          l_result.message :=
+            'We hit an unexpected problem. Reference: '
+            || lpad(
+                 to_char(l_reference_id),
+                 greatest(
+                   gc_reference_display_min_digits,
+                   length(to_char(l_reference_id))
+                 ),
+                 '0'
+               )
+            || '. Please contact '
+            || gc_support_email
+            || ' and give us this reference.';
+        else
+          l_result.message :=
+            'We hit an unexpected problem. Please contact '
+            || gc_support_email
+            || ' for assistance. If you can, describe what you were doing when this appeared.';
+        end if;
         l_result.additional_info := null;
       end if;
     else

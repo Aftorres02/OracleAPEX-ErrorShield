@@ -45,8 +45,8 @@ create table logger_prefs_by_client_id(
 
   -- Rebuild constraint
   l_sql := q'!alter table logger_prefs_by_client_id
-    add constraint logger_prefs_by_client_id_ck1
-    check (logger_level in ('OFF','PERMANENT','ERROR','WARNING','INFORMATION','DEBUG','TIMING', 'APEX', 'SYS_CONTEXT'))!';
+  add constraint logger_prefs_by_client_id_ck1
+  check (logger_level in ('OFF','PERMANENT','ERROR','WARNING','INFORMATION','DEBUG','TIMING', 'APEX', 'SYS_CONTEXT'))!';
   execute immediate l_sql;
 
 end;

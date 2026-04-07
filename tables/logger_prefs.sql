@@ -16,9 +16,9 @@ begin
   if l_count = 0 then
     execute immediate '
 create table logger_prefs(
-  pref_name	varchar2(255),
-  pref_value	varchar2(255) not null,
-  constraint logger_prefs_pk primary key (pref_name) enable
+  pref_name varchar2(255)
+ , pref_value varchar2(255) not null
+ , constraint logger_prefs_pk primary key (pref_name) enable
 )
     ';
   end if;
@@ -145,8 +145,8 @@ begin
       select 'PLUGIN_FN_ERROR' pref_name, 'NONE' pref_value from dual union
       -- #64
       select 'LOGGER_DEBUG' pref_name, 'FALSE' pref_value from dual
-      ) d
-      on (p.pref_name = d.pref_name)
+    ) d
+    on (p.pref_name = d.pref_name)
     when matched then
       update set p.pref_value =
         case
@@ -155,8 +155,14 @@ begin
           else p.pref_value
         end
     when not matched then
-      insert (p.pref_name,p.pref_value)
-      values (d.pref_name,d.pref_value);
+      insert (
+        p.pref_name
+       , p.pref_value
+      )
+      values (
+        d.pref_name
+       , d.pref_value
+      );
   $end
 end;
 /

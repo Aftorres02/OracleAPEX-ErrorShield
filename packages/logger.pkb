@@ -46,9 +46,6 @@ as
 
 
 
-
-
-
   -- CONSTANTS
   gc_line_feed constant varchar2(1) := chr(10);
   gc_cflf constant varchar2(2) := chr(13)||chr(10);
@@ -1167,12 +1164,14 @@ as
    * @param p_extra
    * @param p_params
    */
-  procedure log_error(
+  function log_error(
     p_text in varchar2 default null,
     p_scope in varchar2 default null,
     p_extra in clob default null,
     p_params in tab_param default logger.gc_empty_tab_param)
+    return logger_logs.id%type
   is
+    l_return_id logger_logs.id%type := null;
     l_proc_name varchar2(100);
     l_lineno varchar2(100);
     l_text varchar2(32767);
@@ -1180,7 +1179,7 @@ as
     l_extra clob;
   begin
     $if $$no_op $then
-      null;
+      return null;
     $else
       if ok_to_log(logger.g_error) then
         get_debug_info(
@@ -1206,7 +1205,9 @@ as
           p_text => l_text,
           p_call_stack => l_call_stack,
           p_line_no => l_lineno,
-          po_id => g_log_id);
+          po_id => l_return_id);
+
+        g_log_id := l_return_id;
 
         -- Plugin
         $if $$logger_plugin_error $then
@@ -1224,7 +1225,24 @@ as
         $end
 
       end if; -- ok_to_log
+      return l_return_id;
     $end
+  end log_error;
+
+
+  procedure log_error(
+    p_text in varchar2 default null,
+    p_scope in varchar2 default null,
+    p_extra in clob default null,
+    p_params in tab_param default logger.gc_empty_tab_param)
+  is
+    l_discard logger_logs.id%type;
+  begin
+    l_discard := log_error(
+      p_text => p_text,
+      p_scope => p_scope,
+      p_extra => p_extra,
+      p_params => p_params);
   end log_error;
 
 
@@ -1425,16 +1443,16 @@ as
    * @param p_extra
    * @param p_params
    */
-  procedure log(
+  function log(
     p_text in varchar2,
     p_scope in varchar2 default null,
     p_extra in clob default null,
     p_params in tab_param default logger.gc_empty_tab_param)
+    return logger_logs.id%type
   is
   begin
-
     $if $$no_op $then
-      null;
+      return null;
     $else
       if ok_to_log(logger.g_debug) then
         log_internal(
@@ -1444,8 +1462,26 @@ as
           p_extra => p_extra,
           p_callstack => dbms_utility.format_call_stack,
           p_params => p_params);
+        return g_log_id;
       end if;
+      return null;
     $end
+  end log;
+
+
+  procedure log(
+    p_text in varchar2,
+    p_scope in varchar2 default null,
+    p_extra in clob default null,
+    p_params in tab_param default logger.gc_empty_tab_param)
+  is
+    l_discard logger_logs.id%type;
+  begin
+    l_discard := log(
+      p_text => p_text,
+      p_scope => p_scope,
+      p_extra => p_extra,
+      p_params => p_params);
   end log;
 
 
@@ -1802,7 +1838,7 @@ as
   function time_stop(
     p_unit in varchar2,
     p_scope in varchar2 default null,
-    p_log_in_table IN boolean default true)
+    p_log_in_table in boolean default true)
     return varchar2
   is
     l_time_string varchar2(50);

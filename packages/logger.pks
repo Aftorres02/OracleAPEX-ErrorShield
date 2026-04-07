@@ -28,28 +28,28 @@ as
 
   -- TYPES
   type rec_param is record(
-    name varchar2(255),
-    val varchar2(4000));
+    name varchar2(255)
+   , val varchar2(4000));
 
   type tab_param is table of rec_param index by binary_integer;
 
   type rec_logger_log is record(
-    id logger_logs.id%type,
-    logger_level logger_logs.logger_level%type
+    id logger_logs.id%type
+   , logger_level logger_logs.logger_level%type
   );
 
 
   -- VARIABLES
-	g_logger_version constant varchar2(10) := 'x.x.x'; -- Don't change this. Build script will replace with right version number
-	g_context_name constant varchar2(35) := substr(sys_context('USERENV','CURRENT_SCHEMA'),1,23)||'_LOGCTX';
+  g_logger_version constant varchar2(10) := 'x.x.x'; -- Don't change this. Build script will replace with right version number
+  g_context_name constant varchar2(35) := substr(sys_context('USERENV','CURRENT_SCHEMA'),1,23)||'_LOGCTX';
 
   g_off constant number := 0;
   g_permanent constant number := 1;
-	g_error constant number := 2;
-	g_warning constant number := 4;
-	g_information constant number := 8;
+  g_error constant number := 2;
+  g_warning constant number := 4;
+  g_information constant number := 8;
   g_debug constant number := 16;
-	g_timing constant number := 32;
+  g_timing constant number := 32;
   g_sys_context constant number := 64;
   g_apex constant number := 128;
 
@@ -82,26 +82,26 @@ as
       return boolean;
 
     procedure assert(
-      p_condition in boolean,
-      p_message in varchar2);
+      p_condition                             in boolean
+    , p_message                               in varchar2);
 
     function get_param_clob(p_params in logger.tab_param)
       return clob;
 
     procedure save_global_context(
-      p_attribute in varchar2,
-      p_value in varchar2,
-      p_client_id in varchar2 default null);
+      p_attribute                               in varchar2
+    , p_value                                   in varchar2
+    , p_client_id                               in varchar2 default null);
 
     function set_extra_with_params(
-      p_extra in logger_logs.extra%type,
-      p_params in tab_param)
+      p_extra                                   in logger_logs.extra%type
+    , p_params                                  in tab_param)
       return logger_logs.extra%type;
 
     function get_sys_context(
-      p_detail_level in varchar2 default 'USER', -- ALL, NLS, USER, INSTANCE
-      p_vertical in boolean default false,
-      p_show_null in boolean default false)
+      p_detail_level                            in varchar2 default 'USER', -- ALL, NLS, USER, INSTANCE
+    , p_vertical                                in boolean default false
+    , p_show_null                               in boolean default false)
       return clob;
 
     function admin_security_check
@@ -114,17 +114,17 @@ as
       return boolean;
 
     function date_text_format_base (
-      p_date_start in date,
-      p_date_stop  in date)
+      p_date_start                              in date
+    , p_date_stop                               in date)
       return varchar2;
 
     procedure log_internal(
-      p_text in varchar2,
-      p_log_level in number,
-      p_scope in varchar2,
-      p_extra in clob default null,
-      p_callstack in varchar2 default null,
-      p_params in tab_param default logger.gc_empty_tab_param);
+      p_text                                    in varchar2
+    , p_log_level                               in number
+    , p_scope                                   in varchar2
+    , p_extra                                   in clob default null
+    , p_callstack                               in varchar2 default null
+    , p_params                                  in tab_param default logger.gc_empty_tab_param);
   $end
 
   -- PROCEDURES and FUNCTIONS
@@ -142,106 +142,130 @@ as
   function date_text_format (p_date in date)
     return varchar2;
 
-	function get_character_codes(
-		p_string 				in varchar2,
-		p_show_common_codes 	in boolean default true)
+  function get_character_codes(
+    p_string                                  in varchar2
+  , p_show_common_codes                       in boolean default true)
     return varchar2;
 
   procedure log_error(
-    p_text          in varchar2 default null,
-    p_scope         in varchar2 default null,
-    p_extra         in clob default null,
-    p_params        in tab_param default logger.gc_empty_tab_param);
+    p_text                                    in varchar2 default null
+  , p_scope                                   in varchar2 default null
+  , p_extra                                   in clob default null
+  , p_params                                  in tab_param default logger.gc_empty_tab_param);
+
+  /**
+   * Same as procedure log_error, but returns the new LOGGER_LOGS.id when a row
+   * is inserted (for example a user-facing reference number). Returns null when
+   * NO_OP install, level filters out the call, or no row is written.
+   */
+  function log_error(
+    p_text                                    in varchar2 default null
+  , p_scope                                   in varchar2 default null
+  , p_extra                                   in clob default null
+  , p_params                                  in tab_param default logger.gc_empty_tab_param)
+    return logger_logs.id%type;
 
   procedure log_permanent(
-    p_text    in varchar2,
-    p_scope   in varchar2 default null,
-    p_extra   in clob default null,
-    p_params  in tab_param default logger.gc_empty_tab_param);
+    p_text                                    in varchar2
+  , p_scope                                   in varchar2 default null
+  , p_extra                                   in clob default null
+  , p_params                                  in tab_param default logger.gc_empty_tab_param);
 
   procedure log_warning(
-    p_text    in varchar2,
-    p_scope   in varchar2 default null,
-    p_extra   in clob default null,
-    p_params  in tab_param default logger.gc_empty_tab_param);
+    p_text                                    in varchar2
+  , p_scope                                   in varchar2 default null
+  , p_extra                                   in clob default null
+  , p_params                                  in tab_param default logger.gc_empty_tab_param);
 
   procedure log_warn(
-    p_text in varchar2,
-    p_scope in varchar2 default null,
-    p_extra in clob default null,
-    p_params in tab_param default logger.gc_empty_tab_param);
+    p_text                                    in varchar2
+  , p_scope                                   in varchar2 default null
+  , p_extra                                   in clob default null
+  , p_params                                  in tab_param default logger.gc_empty_tab_param);
 
   procedure log_information(
-    p_text    in varchar2,
-    p_scope   in varchar2 default null,
-    p_extra   in clob default null,
-    p_params  in tab_param default logger.gc_empty_tab_param);
+    p_text                                    in varchar2
+  , p_scope                                   in varchar2 default null
+  , p_extra                                   in clob default null
+  , p_params                                  in tab_param default logger.gc_empty_tab_param);
 
   procedure log_info(
-    p_text in varchar2,
-    p_scope in varchar2 default null,
-    p_extra in clob default null,
-    p_params in tab_param default logger.gc_empty_tab_param);
+    p_text                                    in varchar2
+  , p_scope                                   in varchar2 default null
+  , p_extra                                   in clob default null
+  , p_params                                  in tab_param default logger.gc_empty_tab_param);
 
   procedure log(
-    p_text    in varchar2,
-    p_scope   in varchar2 default null,
-    p_extra   in clob default null,
-    p_params  in tab_param default logger.gc_empty_tab_param);
+    p_text                                    in varchar2
+  , p_scope                                   in varchar2 default null
+  , p_extra                                   in clob default null
+  , p_params                                  in tab_param default logger.gc_empty_tab_param);
+
+  /**
+   * Same as procedure log, but returns the new LOGGER_LOGS.id when a row is
+   * inserted. Returns null when NO_OP install, level filters out the call, or
+   * no row is written.
+   */
+  function log(
+    p_text                                    in varchar2
+  , p_scope                                   in varchar2 default null
+  , p_extra                                   in clob default null
+  , p_params                                  in tab_param default logger.gc_empty_tab_param)
+    return logger_logs.id%type;
 
   function get_cgi_env(
-    p_show_null		in boolean default false)
-  	return clob;
+    p_show_null in boolean default false)
+    return clob;
 
   procedure log_userenv(
-    p_detail_level in varchar2 default 'USER',-- ALL, NLS, USER, INSTANCE,
-    p_show_null in boolean default false,
-    p_scope in logger_logs.scope%type default null,
-    p_level in logger_logs.logger_level%type default null);
+    p_detail_level                            in varchar2 default 'USER', -- ALL, NLS, USER, INSTANCE
+  , p_show_null                               in boolean default false
+  , p_scope                                   in logger_logs.scope%type default null
+  , p_level                                   in logger_logs.logger_level%type default null);
 
   procedure log_cgi_env(
-    p_show_null in boolean default false,
-    p_scope in logger_logs.scope%type default null,
-    p_level in logger_logs.logger_level%type default null);
+    p_show_null                               in boolean default false
+  , p_scope                                   in logger_logs.scope%type default null
+  , p_level                                   in logger_logs.logger_level%type default null);
 
   procedure log_character_codes(
-    p_text in varchar2,
-    p_scope in logger_logs.scope%type default null,
-    p_show_common_codes in boolean default true,
-    p_level in logger_logs.logger_level%type default null);
+    p_text                                    in varchar2
+  , p_scope                                   in logger_logs.scope%type default null
+  , p_show_common_codes                       in boolean default true
+  , p_level                                   in logger_logs.logger_level%type default null);
 
-    procedure log_apex_items(
-      p_text in varchar2 default 'Log APEX Items',
-      p_scope in logger_logs.scope%type default null,
-      p_item_type in varchar2 default logger.g_apex_item_type_all,
-      p_log_null_items in boolean default true,
-      p_level in logger_logs.logger_level%type default null);
+  procedure log_apex_items(
+    p_text                                    in varchar2 default 'Log APEX Items'
+  , p_scope                                   in logger_logs.scope%type default null
+  , p_item_type                               in varchar2 default logger.g_apex_item_type_all
+  , p_log_null_items                          in boolean default true
+  , p_level                                   in logger_logs.logger_level%type default null);
 
-	procedure time_start(
-		p_unit in varchar2,
-    p_log_in_table in boolean default true);
+  procedure time_start(
+    p_unit                                    in varchar2
+  , p_log_in_table                            in boolean default true);
 
-	procedure time_stop(
-		p_unit in varchar2,
-    p_scope in varchar2 default null);
+  procedure time_stop(
+    p_unit                                    in varchar2
+  , p_scope                                   in varchar2 default null);
 
   function time_stop(
-    p_unit in varchar2,
-    p_scope in varchar2 default null,
-    p_log_in_table in boolean default true)
+    p_unit                                    in varchar2
+  , p_scope                                   in varchar2 default null
+  , p_log_in_table                            in boolean default true)
     return varchar2;
 
   function time_stop_seconds(
-    p_unit in varchar2,
-    p_scope in varchar2 default null,
-    p_log_in_table in boolean default true)
+    p_unit                                    in varchar2
+  , p_scope                                   in varchar2 default null
+  , p_log_in_table                            in boolean default true)
     return number;
 
   procedure time_reset;
 
   function get_pref(
-    p_pref_name in logger_prefs.pref_name%type,
-    p_pref_type in logger_prefs.pref_type%type default logger.g_pref_type_logger)
+    p_pref_name                               in logger_prefs.pref_name%type
+  , p_pref_type                               in logger_prefs.pref_type%type default logger.g_pref_type_logger)
     return varchar2
     $if not dbms_db_version.ver_le_10_2  $then
       result_cache
@@ -249,35 +273,35 @@ as
 
   -- #103
   procedure set_pref(
-    p_pref_type in logger_prefs.pref_type%type,
-    p_pref_name in logger_prefs.pref_name%type,
-    p_pref_value in logger_prefs.pref_value%type);
+    p_pref_type                               in logger_prefs.pref_type%type
+  , p_pref_name                               in logger_prefs.pref_name%type
+  , p_pref_value                              in logger_prefs.pref_value%type);
 
   -- #103
   procedure del_pref(
-    p_pref_type in logger_prefs.pref_type%type,
-    p_pref_name in logger_prefs.pref_name%type);
-
-	procedure purge(
-		p_purge_after_days in varchar2 default null,
-		p_purge_min_level	in varchar2	default null);
+    p_pref_type                               in logger_prefs.pref_type%type
+  , p_pref_name                               in logger_prefs.pref_name%type);
 
   procedure purge(
-    p_purge_after_days in number default null,
-    p_purge_min_level in number);
+    p_purge_after_days                        in varchar2 default null
+  , p_purge_min_level                         in varchar2 default null);
 
-	procedure purge_all;
+  procedure purge(
+    p_purge_after_days                        in number default null
+  , p_purge_min_level                         in number);
 
-	procedure status(
-		p_output_format	in varchar2 default null); -- SQL-DEVELOPER | HTML | DBMS_OUPUT
+  procedure purge_all;
+
+  procedure status(
+    p_output_format                           in varchar2 default null); -- SQL-DEVELOPER | HTML | DBMS_OUPUT
 
   procedure sqlplus_format;
 
   procedure set_level(
-    p_level in varchar2 default logger.g_debug_name,
-    p_client_id in varchar2 default null,
-    p_include_call_stack in varchar2 default null,
-    p_client_id_expire_hours in number default null
+    p_level                                   in varchar2 default logger.g_debug_name
+  , p_client_id                               in varchar2 default null
+  , p_include_call_stack                      in varchar2 default null
+  , p_client_id_expire_hours                  in number default null
   );
 
   procedure unset_client_level(p_client_id in varchar2);
@@ -288,39 +312,39 @@ as
 
 
   procedure append_param(
-    p_params in out nocopy logger.tab_param,
-    p_name in varchar2,
-    p_val in varchar2);
+    p_params                                  in out nocopy logger.tab_param
+  , p_name                                    in varchar2
+  , p_val                                     in varchar2);
 
   procedure append_param(
-    p_params in out nocopy logger.tab_param,
-    p_name in varchar2,
-    p_val in number);
+    p_params                                  in out nocopy logger.tab_param
+  , p_name                                    in varchar2
+  , p_val                                     in number);
 
   procedure append_param(
-    p_params in out nocopy logger.tab_param,
-    p_name in varchar2,
-    p_val in date);
+    p_params                                  in out nocopy logger.tab_param
+  , p_name                                    in varchar2
+  , p_val                                     in date);
 
   procedure append_param(
-    p_params in out nocopy logger.tab_param,
-    p_name in varchar2,
-    p_val in timestamp);
+    p_params                                  in out nocopy logger.tab_param
+  , p_name                                    in varchar2
+  , p_val                                     in timestamp);
 
   procedure append_param(
-    p_params in out nocopy logger.tab_param,
-    p_name in varchar2,
-    p_val in timestamp with time zone);
+    p_params                                  in out nocopy logger.tab_param
+  , p_name                                    in varchar2
+  , p_val                                     in timestamp with time zone);
 
   procedure append_param(
-    p_params in out nocopy logger.tab_param,
-    p_name in varchar2,
-    p_val in timestamp with local time zone);
+    p_params                                  in out nocopy logger.tab_param
+  , p_name                                    in varchar2
+  , p_val                                     in timestamp with local time zone);
 
   procedure append_param(
-    p_params in out nocopy logger.tab_param,
-    p_name in varchar2,
-    p_val in boolean);
+    p_params                                  in out nocopy logger.tab_param
+  , p_name                                    in varchar2
+  , p_val                                     in boolean);
 
   function ok_to_log(p_level in number)
     return boolean;
@@ -353,33 +377,33 @@ as
     return varchar2;
 
   procedure ins_logger_logs(
-    p_logger_level in logger_logs.logger_level%type,
-    p_text in varchar2 default null, -- Not using type since want to be able to pass in 32767 characters
-    p_scope in logger_logs.scope%type default null,
-    p_call_stack in logger_logs.call_stack%type default null,
-    p_unit_name in logger_logs.unit_name%type default null,
-    p_line_no in logger_logs.line_no%type default null,
-    p_extra in logger_logs.extra%type default null,
-    po_id out nocopy logger_logs.id%type
+    p_logger_level                            in logger_logs.logger_level%type
+  , p_text                                    in varchar2 default null -- Not using type since want to be able to pass in 32767 characters
+  , p_scope                                   in logger_logs.scope%type default null
+  , p_call_stack                              in logger_logs.call_stack%type default null
+  , p_unit_name                               in logger_logs.unit_name%type default null
+  , p_line_no                                 in logger_logs.line_no%type default null
+  , p_extra                                   in logger_logs.extra%type default null
+  , po_id                                     out nocopy logger_logs.id%type
   );
 
 
   function sprintf(
-    p_str in varchar2,
-    p_s1 in varchar2 default null,
-    p_s2 in varchar2 default null,
-    p_s3 in varchar2 default null,
-    p_s4 in varchar2 default null,
-    p_s5 in varchar2 default null,
-    p_s6 in varchar2 default null,
-    p_s7 in varchar2 default null,
-    p_s8 in varchar2 default null,
-    p_s9 in varchar2 default null,
-    p_s10 in varchar2 default null)
+    p_str                                     in varchar2
+  , p_s1                                      in varchar2 default null
+  , p_s2                                      in varchar2 default null
+  , p_s3                                      in varchar2 default null
+  , p_s4                                      in varchar2 default null
+  , p_s5                                      in varchar2 default null
+  , p_s6                                      in varchar2 default null
+  , p_s7                                      in varchar2 default null
+  , p_s8                                      in varchar2 default null
+  , p_s9                                      in varchar2 default null
+  , p_s10                                     in varchar2 default null)
     return varchar2;
 
   function get_plugin_rec(
-    p_logger_level in logger_logs.logger_level%type)
+    p_logger_level                            in logger_logs.logger_level%type)
     return logger.rec_logger_log;
 end logger;
 /
