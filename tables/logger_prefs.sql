@@ -15,10 +15,10 @@ begin
 
   if l_count = 0 then
     execute immediate '
-create table ersh_logger_prefs(
+create table logger_prefs(
   pref_name	varchar2(255),
   pref_value	varchar2(255) not null,
-  constraint ersh_logger_prefs_pk primary key (pref_name) enable
+  constraint logger_prefs_pk primary key (pref_name) enable
 )
     ';
   end if;
@@ -55,18 +55,18 @@ end;
 -- alter session set plsql_ccflags='currently_installing:true&cur_plsql_ccflags'
 -- /
 
-create or replace trigger biu_ersh_logger_prefs
-  before insert or update on ersh_logger_prefs
+create or replace trigger biu_logger_prefs
+  before insert or update on logger_prefs
   for each row
 begin
-  $if $$ersh_logger_no_op_install $then
+  $if $$logger_no_op_install $then
     null;
   $else
     :new.pref_name := upper(:new.pref_name);
     :new.pref_type := upper(:new.pref_type);
 
     if 1=1
-      and :new.pref_type = ersh_logger.g_pref_type_logger
+      and :new.pref_type = logger.g_pref_type_logger
       and :new.pref_name = 'LEVEL' then
       :new.pref_value := upper(:new.pref_value);
     end if;
@@ -74,20 +74,20 @@ begin
     -- #TODO:50 mdsouza: 3.1.1
     -- #TODO:100 mdsouza: if removing then decrease indent
     -- $if $$currently_installing is null or not $$currently_installing $then
-      -- Since ersh_logger.pks may not be installed when this trigger is compiled, need to move some code here
+      -- Since logger.pks may not be installed when this trigger is compiled, need to move some code here
       if 1=1
-        and :new.pref_type = ersh_logger.g_pref_type_logger
+        and :new.pref_type = logger.g_pref_type_logger
         and :new.pref_name = 'LEVEL'
-        and upper(:new.pref_value) not in (ersh_logger.g_off_name, ersh_logger.g_permanent_name, ersh_logger.g_error_name, ersh_logger.g_warning_name, ersh_logger.g_information_name, ersh_logger.g_debug_name, ersh_logger.g_timing_name, ersh_logger.g_sys_context_name, ersh_logger.g_apex_name) then
+        and upper(:new.pref_value) not in (logger.g_off_name, logger.g_permanent_name, logger.g_error_name, logger.g_warning_name, logger.g_information_name, logger.g_debug_name, logger.g_timing_name, logger.g_sys_context_name, logger.g_apex_name) then
         raise_application_error(-20000, '"LEVEL" must be one of the following values: ' ||
-          ersh_logger.g_off_name || ', ' || ersh_logger.g_permanent_name || ', ' || ersh_logger.g_error_name || ', ' ||
-          ersh_logger.g_warning_name || ', ' || ersh_logger.g_information_name || ', ' || ersh_logger.g_debug_name || ', ' ||
-          ersh_logger.g_timing_name || ', ' || ersh_logger.g_sys_context_name || ', ' || ersh_logger.g_apex_name);
+          logger.g_off_name || ', ' || logger.g_permanent_name || ', ' || logger.g_error_name || ', ' ||
+          logger.g_warning_name || ', ' || logger.g_information_name || ', ' || logger.g_debug_name || ', ' ||
+          logger.g_timing_name || ', ' || logger.g_sys_context_name || ', ' || logger.g_apex_name);
       end if;
 
       -- Allow for null to be used for Plugins, then default to NONE
       if 1=1
-        and :new.pref_type = ersh_logger.g_pref_type_logger
+        and :new.pref_type = logger.g_pref_type_logger
         and :new.pref_name like 'PLUGIN_FN%'
         and :new.pref_value is null then
         :new.pref_value := 'NONE';
@@ -97,7 +97,7 @@ begin
       -- Only predefined preferences and Custom Preferences are allowed
       -- Custom Preferences must be prefixed with CUST_
       if 1=1
-        and :new.pref_type = ersh_logger.g_pref_type_logger
+        and :new.pref_type = logger.g_pref_type_logger
         and :new.pref_name not in (
           'GLOBAL_CONTEXT_NAME'
           ,'INCLUDE_CALL_STACK'
@@ -115,23 +115,23 @@ begin
         raise_application_error (-20000, 'Setting system level preferences are restricted to a set list.');
       end if;
 
-      -- this is because the logger package is not installed yet.  We enable it in ersh_logger_configure
-      ersh_logger.null_global_contexts;
+      -- this is because the logger package is not installed yet.  We enable it in logger_configure
+      logger.null_global_contexts;
     -- #TODO:60 mdsouza: 3.1.1
     -- $end
-  $end -- $$ersh_logger_no_op_install
+  $end -- $$logger_no_op_install
 end;
 /
 
-alter trigger biu_ersh_logger_prefs disable;
+alter trigger biu_logger_prefs disable;
 
 declare
 begin
-  $if $$ersh_logger_no_op_install $then
+  $if $$logger_no_op_install $then
     null;
   $else
     -- Configure Data
-    merge into ersh_logger_prefs p
+    merge into logger_prefs p
     using (
       select 'PURGE_AFTER_DAYS' pref_name, '7' pref_value from dual union
       select 'PURGE_MIN_LEVEL' pref_name, 'DEBUG' pref_value from dual union
@@ -185,19 +185,19 @@ begin
     into l_count
     from user_tab_columns
     where 1=1
-      and upper(table_name) = upper('ersh_logger_prefs')
+      and upper(table_name) = upper('logger_prefs')
       and column_name = l_new_cols(i).column_name;
 
     if l_count = 0 then
-      execute immediate 'alter table ersh_logger_prefs add (' || l_new_cols(i).column_name || ' ' || l_new_cols(i).data_type || ')';
+      execute immediate 'alter table logger_prefs add (' || l_new_cols(i).column_name || ' ' || l_new_cols(i).data_type || ')';
 
       -- Custom post-add columns
 
       -- #127
       if lower(l_new_cols(i).column_name) = 'pref_type' then
-        -- If "LOGGER" is changed then modify ersh_logger.pks g_pref_type_logger constant
-        execute immediate q'!update ersh_logger_prefs set pref_type = 'LOGGER'!';
-        execute immediate q'!alter table ersh_logger_prefs modify pref_type not null!';
+        -- If "LOGGER" is changed then modify logger.pks g_logger_prefs_pref_type value
+        execute immediate q'!update logger_prefs set pref_type = 'LOGGER'!';
+        execute immediate q'!alter table logger_prefs modify pref_type not null!';
       end if;
 
     end if; -- l_count = 0
@@ -220,7 +220,7 @@ begin
 
   if l_count = 0 then
     -- PK only has one column, drop it and it will be rebuilt below
-    execute immediate 'alter table ersh_logger_prefs drop constraint ersh_logger_prefs_pk';
+    execute immediate 'alter table logger_prefs drop constraint logger_prefs_pk';
   end if;
 
 end;
@@ -255,7 +255,7 @@ begin
 
 
   -- All pref names/types should be upper
-  update ersh_logger_prefs
+  update logger_prefs
   set
     pref_name = upper(pref_name),
     pref_type = upper(pref_type)
@@ -272,7 +272,7 @@ begin
       and constraint_name = l_constraints(i).name;
 
     if l_count = 0 then
-      l_sql := 'alter table ersh_logger_prefs add constraint %CONSTRAINT_NAME% %CONSTRAINT_CONDITION%';
+      l_sql := 'alter table logger_prefs add constraint %CONSTRAINT_NAME% %CONSTRAINT_CONDITION%';
       l_sql := replace(l_sql, '%CONSTRAINT_NAME%', l_constraints(i).name);
       l_sql := replace(l_sql, '%CONSTRAINT_CONDITION%', l_constraints(i).condition);
 
@@ -283,4 +283,4 @@ begin
 end;
 /
 
-alter trigger biu_ersh_logger_prefs enable;
+alter trigger biu_logger_prefs enable;

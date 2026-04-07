@@ -1,6 +1,6 @@
 declare
   l_count pls_integer;
-  l_job_name user_scheduler_jobs.job_name%type := 'ERSH_LOGGER_UNSET_PREFS_BY_CLIENT';
+  l_job_name user_scheduler_jobs.job_name%type := 'LOGGER_UNSET_PREFS_BY_CLIENT';
 begin
   
   select count(1)
@@ -12,11 +12,11 @@ begin
     dbms_scheduler.create_job(
        job_name => l_job_name,
        job_type => 'PLSQL_BLOCK',
-       job_action => 'begin ersh_logger.unset_client_level; end; ',
+       job_action => 'begin logger.unset_client_level; end; ',
        start_date => systimestamp,
        repeat_interval => 'FREQ=HOURLY; BYHOUR=1',
        enabled => TRUE,
-       comments => 'Clears ersh_logger_prefs_by_client_id entries for expired client sessions.');
+       comments => 'Clears logger prefs by client_id');
   end if;
 end;
 /

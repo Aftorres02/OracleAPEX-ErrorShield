@@ -1,0 +1,20 @@
+Third-party and attribution
+===========================
+
+OracleAPEX-ErrorShield vendors **Logger** by **OraOpenSource** under the
+**MIT License**.
+
+  Project:     Logger
+  Upstream:    https://github.com/OraOpenSource/logger
+  Snapshot:    git 600f0c44cd0cc7f064776d31de50e9006d3476c4 (branch master, shallow clone)
+  License:     MIT (see LICENSE and licenses/OraOpenSource-Logger-LICENSE.txt)
+  Copyright:   Copyright (c) 2015 OraOpenSource
+
+Logger is bundled using **native object names** (`logger`, `logger_logs`,
+`logger_prefs`, views, jobs, etc.) so it matches upstream documentation and
+community examples.
+
+ErrorShield-owned components (`ersh_error_handler_api`, `ersh_error_lookup`,
+`ersh_constraint_lookup`, …) are separate MIT-licensed additions in this repo;
+see LICENSE.
+

@@ -47,7 +47,7 @@ grant connect,create view, create job, create table, create sequence, create tri
 prompt
 prompt
 prompt &LOGGER_USER user successfully created.
-prompt Important!!! Connect as the &LOGGER_USER user and run the ErrorShield install scripts (ersh_logger_*.sql, tables, then packages).
+prompt Important!!! Connect as the &LOGGER_USER user and run scripts/logger_create_user.sql or upstream Logger install, then ErrorShield objects.
 prompt
 prompt
 

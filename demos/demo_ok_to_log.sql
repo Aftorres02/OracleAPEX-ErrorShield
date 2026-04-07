@@ -3,7 +3,7 @@ declare
   l_log_str varchar2(255);
 begin
 
-  l_log := ersh_logger.ok_to_log(ersh_logger.g_warning); -- Just change this with the level you want to test
+  l_log := logger.ok_to_log(logger.g_warning); -- Just change this with the level you want to test
 
   if l_log then
     l_log_str := 'TRUE';

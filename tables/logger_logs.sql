@@ -24,7 +24,7 @@ begin
 
   if l_count = 0 then
     execute immediate '
-create table ersh_logger_logs(
+create table logger_logs(
   id number,
   logger_level number,
   text varchar2(4000),
@@ -39,8 +39,8 @@ create table ersh_logger_logs(
   line_no varchar2(100),
   scn number,
   extra clob,
-  constraint ersh_logger_logs_pk primary key (id) enable,
-  constraint ersh_logger_logs_lvl_ck check(logger_level in (1,2,4,8,16,32,64,128))
+  constraint logger_logs_pk primary key (id) enable,
+  constraint logger_logs_lvl_ck check(logger_level in (1,2,4,8,16,32,64,128))
 )
     ';
   end if;
@@ -58,7 +58,7 @@ create table ersh_logger_logs(
       and column_name = upper(l_required_columns(i));
 
     if l_nullable = 'Y' then
-      execute immediate 'alter table ersh_logger_logs modify ' || l_required_columns(i) || ' not null';
+      execute immediate 'alter table logger_logs modify ' || l_required_columns(i) || ' not null';
     end if;
   end loop;
 
@@ -90,7 +90,7 @@ create table ersh_logger_logs(
   end loop;
 
 
-  $if $$ersh_logger_no_op_install $then
+  $if $$logger_no_op_install $then
     null;
   $else
     -- SEQUENCE
@@ -101,7 +101,7 @@ create table ersh_logger_logs(
 
     if l_count = 0 then
       execute immediate '
-        create sequence ersh_logger_logs_seq
+        create sequence logger_logs_seq
             minvalue 1
             maxvalue 999999999999999999999999999
             start with 1
@@ -117,7 +117,7 @@ create table ersh_logger_logs(
     where index_name = 'LOGGER_LOGS_IDX1';
 
     if l_count = 0 then
-      execute immediate 'create index ersh_logger_logs_idx1 on ersh_logger_logs(time_stamp,logger_level)';
+      execute immediate 'create index logger_logs_idx1 on logger_logs(time_stamp,logger_level)';
     end if;
   $end
 
