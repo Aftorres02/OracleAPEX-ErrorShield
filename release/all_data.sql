@@ -1,3 +1,7 @@
 -- This file must be manually modified as order matters when creating data records
 -- Data files are re-runnable data scripts
--- ex: @../data/data_my_table.sql
+
+-- -------------------------------------------------------------------------
+-- ERSH preferences
+-- -------------------------------------------------------------------------
+@../data/ersh_preferences.sql

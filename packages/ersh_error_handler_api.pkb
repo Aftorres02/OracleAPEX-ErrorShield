@@ -7,12 +7,8 @@ alter session set plsql_ccflags = 'VERBOSE_OUTPUT:FALSE';
 
 create or replace package body ersh_error_handler_api as
 
-  gc_scope_prefix     constant varchar2(31) := lower($$plsql_unit) || '.';
-  -- End-user support contact shown on masked errors (not the admin alert mailbox).
-  gc_support_email    constant varchar2(255 char) := 'help@netgain.tech';
-  -- Leading zeros for the user-facing reference (e.g. 10 -> 0000000010). Uses
-  -- greatest(.., length(to_char(id))) so values never truncate as ids grow.
-  gc_reference_display_min_digits constant pls_integer := 10; -- optional: 12 or 14
+  gc_scope_prefix constant varchar2(31) := lower($$plsql_unit) || '.';
+  gc_pref_type    constant varchar2(30) := 'ERSH';
 
   -- -------------------------------------------------------------------------
   -- Public methods
@@ -35,6 +31,8 @@ create or replace package body ersh_error_handler_api as
     l_result           apex_error.t_error_result;
     l_reference_id     number;
     l_constraint_name  varchar2(255 char);
+    l_support_email    varchar2(255 char);
+    l_min_digits       pls_integer;
   begin
     l_result := apex_error.init_error_result(p_error => p_error);
 
@@ -61,6 +59,9 @@ create or replace package body ersh_error_handler_api as
             || substr(nvl(p_error.error_backtrace, '(null)'), 1, 2000),
           p_scope => gc_scope_prefix || 'apex_error_handling');
 
+        l_support_email := logger.get_pref('SUPPORT_EMAIL', gc_pref_type);
+        l_min_digits := to_number(logger.get_pref('REFERENCE_DISPLAY_MIN_DIGITS', gc_pref_type));
+
         -- User-facing copy: no claim that we emailed the user (admin notification is separate).
         if l_reference_id is not null then
           l_result.message :=
@@ -68,18 +69,18 @@ create or replace package body ersh_error_handler_api as
             || lpad(
                  to_char(l_reference_id),
                  greatest(
-                   gc_reference_display_min_digits,
+                   l_min_digits,
                    length(to_char(l_reference_id))
                  ),
                  '0'
                )
             || '. Please contact '
-            || gc_support_email
+            || l_support_email
             || ' and give us this reference.';
         else
           l_result.message :=
             'We hit an unexpected problem. Please contact '
-            || gc_support_email
+            || l_support_email
             || ' for assistance. If you can, describe what you were doing when this appeared.';
         end if;
         l_result.additional_info := null;

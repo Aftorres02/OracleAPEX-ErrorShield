@@ -105,23 +105,24 @@ whenever sqlerror continue
 
 
 -- =============================================================================
--- 8. LOGGER POST-INSTALL CONFIGURATION
+-- 8. DATA (preferences and re-runnable data scripts)
+-- =============================================================================
+-- Must run after packages so logger.set_pref is available,
+-- and before post-install config which reads these prefs.
+@all_data.sql
+
+
+-- =============================================================================
+-- 9. LOGGER POST-INSTALL CONFIGURATION
 -- =============================================================================
 prompt *** Logger post-install configuration ***
 @../scripts/post_install_configuration.sql
 
 
 -- =============================================================================
--- 9. JOBS
+-- 10. JOBS
 -- =============================================================================
 @all_jobs.sql
-
-
--- =============================================================================
--- 10. DATA
--- =============================================================================
--- Load any re-runnable data scripts
-@all_data.sql
 
 
 -- =============================================================================

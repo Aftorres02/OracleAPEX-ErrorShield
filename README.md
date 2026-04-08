@@ -26,7 +26,9 @@ MIT text is in
 - `packages/logger.pks` / `logger.pkb` — upstream Logger
 - `packages/ersh_error_handler_api.*` — ErrorShield error API
 - `contexts/`, `procedures/` — Logger install helpers from upstream
-- `scripts/logger_create_user.sql` — upstream schema-creation script copy
+- `scripts/` — owner-schema scripts (grants, prereqs, post-install, APEX helpers)
+- `scripts/admin/` — DBA scripts run as SYS (schema creation)
+- `scripts/consumer/` — scripts run as the app schema that consumes ErrorShield (synonyms)
 
 ## Standards
 
