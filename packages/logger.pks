@@ -218,7 +218,7 @@ as
     return clob;
 
   procedure log_userenv(
-    p_detail_level                            in varchar2 default 'USER', -- ALL, NLS, USER, INSTANCE
+    p_detail_level                            in varchar2 default 'USER' -- ALL, NLS, USER, INSTANCE
   , p_show_null                               in boolean default false
   , p_scope                                   in logger_logs.scope%type default null
   , p_level                                   in logger_logs.logger_level%type default null);

@@ -1,2 +1,4 @@
--- Listing for triggers
-prompt @../triggers/*.sql
+-- Listing for standalone triggers
+-- Note: ERSH and Logger triggers are created within their table scripts.
+-- Add standalone trigger files below as needed.
+-- ex: @../triggers/my_trigger.sql

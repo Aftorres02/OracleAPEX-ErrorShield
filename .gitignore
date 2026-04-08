@@ -17,3 +17,5 @@ Icon
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
 AGENTS.md
+release/release_log_*
+release/&logname.lst

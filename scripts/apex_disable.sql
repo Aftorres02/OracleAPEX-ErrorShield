@@ -1,18 +1,22 @@
 -- Disables comma delimited list of APEX applications
 -- This is primarily used at the start of an APEX release process
 -- Commit is applied at the end of this file. If not then the app won't be disabled for end users
--- 
--- Parameters
--- 1: Comma delimited list of application IDs. Ex: 100,200
--- 
--- 
+--
+-- Reads &env_apex_app_ids from load_env_vars.sql
+-- Set to NONE to skip, or a comma delimited list of application IDs. Ex: 100,200
+--
 prompt Disable APEX Application(s)
 declare
-  c_app_ids constant varchar2(500) := '&1.';
+  c_app_ids constant varchar2(500) := '&env_apex_app_ids';
   c_username constant varchar2(30) := user;
 
   l_apex_app_ids apex_t_varchar2;
 begin
+  if c_app_ids is null or upper(c_app_ids) = 'NONE' then
+    dbms_output.put_line('No APEX app IDs configured (env_apex_app_ids = NONE). Skipping.');
+    return;
+  end if;
+
   l_apex_app_ids := apex_string.split(p_str => c_app_ids, p_sep => ',');
 
   -- Note if getting error "ORA_20987 to catch the error: ORA-20987: APEX - An API call has been prohibited."
@@ -32,10 +36,10 @@ begin
       p_application_status => 'UNAVAILABLE',
       p_unavailable_value => 'Scheduled update of application.');
 
-    apex_session.detach; 
+    apex_session.detach;
 
   end loop;
 
-  commit; -- Commit required to ensure the disabling of application is applied
+  commit;
 end;
 /
