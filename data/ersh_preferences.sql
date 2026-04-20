@@ -1,24 +1,31 @@
 -- =============================================================================
--- Preferences (stored in logger_prefs)
+-- ERSH preferences (stored in logger_prefs with pref_type = 'ERSH')
 -- =============================================================================
--- Re-runnable: logger.set_pref performs an upsert.
+-- Re-runnable and NON-DESTRUCTIVE:
+--   * Fresh install          -> seeds ERSH_VERSION, SUPPORT_EMAIL and
+--                               REFERENCE_DISPLAY_MIN_DIGITS with their defaults.
+--   * Pref already present   -> existing pref_value is preserved (admins can
+--                               change these after install without the release
+--                               reverting their changes).
+--
+-- NOTE: Intentionally does NOT call logger.set_level. The Logger LEVEL pref
+-- is seeded (only on fresh install) by tables/logger_prefs.sql. If you need
+-- to change the Logger level in an environment, do it manually with
+-- logger.set_level() after the release completes; the release will not
+-- touch the value on future runs.
 -- =============================================================================
 
-prompt *** Loading preferences ***
+prompt *** Loading ERSH preferences (insert-if-missing) ***
 
-begin
-  -- LOGGER-type preferences are managed by Logger itself during install.
-  -- Do not call logger.set_pref with pref_type='LOGGER' — it is reserved
-  -- and will raise ORA-20001. Use logger.set_level / logger.purge instead.
-  -- Set to DEBUG for development, ERROR for production.
-  -- All Logger level constants are prefixed with g_ (e.g. g_debug_name, g_error_name).
-  logger.set_level(p_level => logger.g_debug_name);
+merge into logger_prefs p
+using (
+  select 'ERSH' as pref_type, 'ERSH_VERSION'                 as pref_name, '1.0.0'                 as pref_value from dual union all
+  select 'ERSH'              , 'SUPPORT_EMAIL'                             , 'aftorres02@gmail.com'              from dual union all
+  select 'ERSH'              , 'REFERENCE_DISPLAY_MIN_DIGITS'              , '10'                                from dual
+) d
+on (p.pref_type = d.pref_type and p.pref_name = d.pref_name)
+when not matched then
+  insert (p.pref_type, p.pref_name, p.pref_value)
+  values (d.pref_type, d.pref_name, d.pref_value);
 
-  -- ERSH preferences (custom type; logger.set_pref performs an upsert)
-  logger.set_pref('ERSH', 'ERSH_VERSION', '1.0.0');
-  logger.set_pref('ERSH', 'SUPPORT_EMAIL', 'aftorres02@gmail.com');
-  logger.set_pref('ERSH', 'REFERENCE_DISPLAY_MIN_DIGITS', '10');
-
-  commit;
-end;
-/
+commit;

@@ -126,21 +126,22 @@ end;
 alter trigger biu_logger_prefs disable;
 
 -- -----------------------------------------------------------------------------
--- Seed LOGGER-type preferences.
+-- Seed LOGGER-type preferences (INSERT-IF-MISSING only).
 -- -----------------------------------------------------------------------------
--- NOTE: The upstream OraOpenSource/Logger version of this block is NOT
--- idempotent on re-runs: it only inserts (pref_name, pref_value) and
--- relies on pref_type being added *after*. If a previous install aborted
--- before seeding these 10 rows, the pref_type column will already exist
--- as NOT NULL on the re-run, and the upstream MERGE fails with ORA-01400.
+-- Behavior:
+--   * Fresh install  -> inserts the 10 LOGGER-type rows with their defaults.
+--   * Existing Logger -> any row that already exists is PRESERVED (pref_value
+--                         is never overwritten). Missing rows are seeded.
 --
--- This block detects whether pref_type column exists and picks the
+-- The upstream OraOpenSource/Logger MERGE is NOT idempotent on re-runs
+-- (it inserts only (pref_name, pref_value) assuming pref_type doesn't exist
+-- yet). Here we detect whether the pref_type column exists and pick the
 -- correct shape of the MERGE via dynamic SQL:
---   * fresh install: insert (pref_name, pref_value)             -- upstream behavior
---   * re-run       : insert (pref_type, pref_name, pref_value)  -- supplies NOT NULL column
+--   * fresh install  -> insert (pref_name, pref_value)
+--   * re-run         -> insert (pref_type, pref_name, pref_value)
 --
--- Existing pref_value rows are preserved (except LOGGER_VERSION which is
--- always refreshed from the seed, matching upstream semantics).
+-- No WHEN MATCHED clause: existing admin-tuned values (LEVEL, PURGE_*, etc.)
+-- are never modified by re-runs of the release script.
 -- -----------------------------------------------------------------------------
 declare
   l_pref_type_exists pls_integer;
@@ -172,10 +173,6 @@ begin
           select 'LOGGER_DEBUG'                                , 'FALSE'              from dual
         ) d
         on (p.pref_name = d.pref_name)
-        when matched then
-          update set p.pref_value =
-            case when p.pref_name = 'LOGGER_VERSION' then d.pref_value
-                 else p.pref_value end
         when not matched then
           insert (p.pref_name, p.pref_value)
           values (d.pref_name, d.pref_value)
@@ -197,10 +194,6 @@ begin
           select 'LOGGER'              , 'LOGGER_DEBUG'                                , 'FALSE'              from dual
         ) d
         on (p.pref_type = d.pref_type and p.pref_name = d.pref_name)
-        when matched then
-          update set p.pref_value =
-            case when p.pref_name = 'LOGGER_VERSION' then d.pref_value
-                 else p.pref_value end
         when not matched then
           insert (p.pref_type, p.pref_name, p.pref_value)
           values (d.pref_type, d.pref_name, d.pref_value)
