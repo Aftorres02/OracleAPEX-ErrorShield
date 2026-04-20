@@ -125,38 +125,89 @@ end;
 
 alter trigger biu_logger_prefs disable;
 
+-- -----------------------------------------------------------------------------
+-- Seed LOGGER-type preferences.
+-- -----------------------------------------------------------------------------
+-- NOTE: The upstream OraOpenSource/Logger version of this block is NOT
+-- idempotent on re-runs: it only inserts (pref_name, pref_value) and
+-- relies on pref_type being added *after*. If a previous install aborted
+-- before seeding these 10 rows, the pref_type column will already exist
+-- as NOT NULL on the re-run, and the upstream MERGE fails with ORA-01400.
+--
+-- This block detects whether pref_type column exists and picks the
+-- correct shape of the MERGE via dynamic SQL:
+--   * fresh install: insert (pref_name, pref_value)             -- upstream behavior
+--   * re-run       : insert (pref_type, pref_name, pref_value)  -- supplies NOT NULL column
+--
+-- Existing pref_value rows are preserved (except LOGGER_VERSION which is
+-- always refreshed from the seed, matching upstream semantics).
+-- -----------------------------------------------------------------------------
 declare
+  l_pref_type_exists pls_integer;
+  l_sql              varchar2(4000);
 begin
   $if $$logger_no_op_install $then
     null;
   $else
-    -- Configure Data
-    merge into logger_prefs p
-    using (
-      select 'PURGE_AFTER_DAYS' pref_name, '7' pref_value from dual union
-      select 'PURGE_MIN_LEVEL' pref_name, 'DEBUG' pref_value from dual union
-      select 'LOGGER_VERSION' pref_name, '3.1.1' pref_value from dual union -- 3.1.1 is the version of the Logger package
-      select 'LEVEL' pref_name, 'DEBUG' pref_value from dual union
-      select 'PROTECT_ADMIN_PROCS' pref_name, 'TRUE' pref_value from dual union
-      select 'INCLUDE_CALL_STACK' pref_name, 'TRUE' pref_value from dual union
-      select 'PREF_BY_CLIENT_ID_EXPIRE_HOURS' pref_name, '12' pref_value from dual union
-      select 'INSTALL_SCHEMA' pref_name, sys_context('USERENV','CURRENT_SCHEMA') pref_value from dual union
-      -- #46
-      select 'PLUGIN_FN_ERROR' pref_name, 'NONE' pref_value from dual union
-      -- #64
-      select 'LOGGER_DEBUG' pref_name, 'FALSE' pref_value from dual
-    ) d
-    on (p.pref_name = d.pref_name)
-    when matched then
-      update set p.pref_value =
-        case
-          -- Only LOGGER_VERSION should be updated during an update
-          when p.pref_name = 'LOGGER_VERSION' then d.pref_value
-          else p.pref_value
-        end
-    when not matched then
-      insert (p.pref_name,p.pref_value)
-      values (d.pref_name,d.pref_value);
+    select count(1)
+      into l_pref_type_exists
+      from user_tab_columns
+     where table_name  = 'LOGGER_PREFS'
+       and column_name = 'PREF_TYPE';
+
+    if l_pref_type_exists = 0 then
+      -- Fresh install path: pref_type column does not exist yet.
+      l_sql := q'[
+        merge into logger_prefs p
+        using (
+          select 'PURGE_AFTER_DAYS'               as pref_name, '7'     as pref_value from dual union all
+          select 'PURGE_MIN_LEVEL'                             , 'DEBUG'              from dual union all
+          select 'LOGGER_VERSION'                              , '3.1.1'              from dual union all
+          select 'LEVEL'                                       , 'DEBUG'              from dual union all
+          select 'PROTECT_ADMIN_PROCS'                         , 'TRUE'               from dual union all
+          select 'INCLUDE_CALL_STACK'                          , 'TRUE'               from dual union all
+          select 'PREF_BY_CLIENT_ID_EXPIRE_HOURS'              , '12'                 from dual union all
+          select 'INSTALL_SCHEMA'                              , sys_context('USERENV','CURRENT_SCHEMA') from dual union all
+          select 'PLUGIN_FN_ERROR'                             , 'NONE'               from dual union all
+          select 'LOGGER_DEBUG'                                , 'FALSE'              from dual
+        ) d
+        on (p.pref_name = d.pref_name)
+        when matched then
+          update set p.pref_value =
+            case when p.pref_name = 'LOGGER_VERSION' then d.pref_value
+                 else p.pref_value end
+        when not matched then
+          insert (p.pref_name, p.pref_value)
+          values (d.pref_name, d.pref_value)
+      ]';
+    else
+      -- Re-run path: pref_type column exists and is NOT NULL.
+      l_sql := q'[
+        merge into logger_prefs p
+        using (
+          select 'LOGGER' as pref_type, 'PURGE_AFTER_DAYS'               as pref_name, '7'     as pref_value from dual union all
+          select 'LOGGER'              , 'PURGE_MIN_LEVEL'                             , 'DEBUG'              from dual union all
+          select 'LOGGER'              , 'LOGGER_VERSION'                              , '3.1.1'              from dual union all
+          select 'LOGGER'              , 'LEVEL'                                       , 'DEBUG'              from dual union all
+          select 'LOGGER'              , 'PROTECT_ADMIN_PROCS'                         , 'TRUE'               from dual union all
+          select 'LOGGER'              , 'INCLUDE_CALL_STACK'                          , 'TRUE'               from dual union all
+          select 'LOGGER'              , 'PREF_BY_CLIENT_ID_EXPIRE_HOURS'              , '12'                 from dual union all
+          select 'LOGGER'              , 'INSTALL_SCHEMA'                              , sys_context('USERENV','CURRENT_SCHEMA') from dual union all
+          select 'LOGGER'              , 'PLUGIN_FN_ERROR'                             , 'NONE'               from dual union all
+          select 'LOGGER'              , 'LOGGER_DEBUG'                                , 'FALSE'              from dual
+        ) d
+        on (p.pref_type = d.pref_type and p.pref_name = d.pref_name)
+        when matched then
+          update set p.pref_value =
+            case when p.pref_name = 'LOGGER_VERSION' then d.pref_value
+                 else p.pref_value end
+        when not matched then
+          insert (p.pref_type, p.pref_name, p.pref_value)
+          values (d.pref_type, d.pref_name, d.pref_value)
+      ]';
+    end if;
+
+    execute immediate l_sql;
   $end
 end;
 /

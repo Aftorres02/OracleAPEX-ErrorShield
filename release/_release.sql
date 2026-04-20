@@ -149,13 +149,30 @@ end;
 
 
 -- =============================================================================
--- 12. VALIDATE (fail if any objects remain invalid after recompile)
+-- 12. VALIDATE (fail if any RELEASE objects remain invalid after recompile)
 -- =============================================================================
-prompt *** Checking for invalid objects ***
+-- Scope: only objects owned/managed by this release (ERSH_* and LOGGER_*).
+-- Pre-existing invalid objects in the schema (materialized views, legacy
+-- packages, etc.) are out of scope — they are not touched by this release
+-- and must be fixed independently by the DBA.
+-- First show ALL invalid objects in the schema for visibility, then fail
+-- only if any ERSH/LOGGER object is invalid.
+prompt *** Checking for invalid objects (informational: entire schema) ***
 
 select object_name, object_type, status
   from user_objects
  where status != 'VALID'
+ order by object_type, object_name;
+
+prompt *** Validating RELEASE objects only (ERSH_* and LOGGER_*) ***
+
+select object_name, object_type, status
+  from user_objects
+ where status    != 'VALID'
+   and (   object_name like 'ERSH\_%'       escape '\'
+        or object_name like 'LOGGER'
+        or object_name like 'LOGGER\_%'     escape '\'
+        or object_name like 'BIU\_LOGGER%'  escape '\')
  order by object_type, object_name;
 
 whenever sqlerror exit sql.sqlcode
@@ -166,12 +183,16 @@ begin
   select count(1)
     into l_invalid_count
     from user_objects
-   where status != 'VALID';
+   where status    != 'VALID'
+     and (   object_name like 'ERSH\_%'       escape '\'
+          or object_name  = 'LOGGER'
+          or object_name like 'LOGGER\_%'     escape '\'
+          or object_name like 'BIU\_LOGGER%'  escape '\');
 
   if l_invalid_count > 0 then
     raise_application_error(
       -20002
-      , l_invalid_count || ' invalid object(s) found after recompile. Review the log for details.'
+      , l_invalid_count || ' invalid RELEASE object(s) (ERSH/LOGGER) found after recompile. Review the log.'
     );
   end if;
 end;
