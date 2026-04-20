@@ -1,6 +1,8 @@
 -- Grants privileges for logger objects from current user to a defined user
 
 
+set define &
+
 -- Parameters
 define to_user = '&1' -- This is the user to grant the permissions to
 

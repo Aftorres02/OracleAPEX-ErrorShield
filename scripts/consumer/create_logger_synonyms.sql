@@ -1,6 +1,8 @@
 -- Creates synonyms from defined user for Logger objects
 
 
+set define &
+
 -- Parameters
 define from_user = '&1' -- This is the user to reference Logger objects
 

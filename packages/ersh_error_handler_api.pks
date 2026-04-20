@@ -33,5 +33,65 @@ create or replace package ersh_error_handler_api is
   );
 
 
+  -- ==========================================================================
+  -- Incident tracking
+  -- ==========================================================================
+
+  /**
+   * Inserts or increments a row in ersh_shield_incidents using a 30-second
+   * time bucket and a SHA-256 fingerprint as the dedup key (Option A).
+   * Autonomous commit so it persists even if the caller rolls back.
+   *
+   * @param p_application_id  APEX application ID
+   * @param p_page_id         APEX page ID
+   * @param p_app_user        APEX application user
+   * @param p_request         APEX request value (e.g. SAVE, DELETE)
+   * @param p_component_type  APEX component type from apex_error.t_error
+   * @param p_component_name  APEX component name from apex_error.t_error
+   * @param p_ora_sqlcode     ORA error code, if available
+   * @param p_error_message   Raw internal message (stored only in DB, never shown to users)
+   * @param p_logger_log_id   logger_logs.id from logger.log_error call, if available
+   * @param o_incident_id     Shield incident id (new or existing dedup row)
+   */
+  procedure record_internal_incident(
+    p_application_id                        in number default null
+  , p_page_id                               in number default null
+  , p_app_user                              in varchar2 default null
+  , p_request                               in varchar2 default null
+  , p_component_type                        in varchar2 default null
+  , p_component_name                        in varchar2 default null
+  , p_ora_sqlcode                           in number default null
+  , p_error_message                         in varchar2 default null
+  , p_logger_log_id                         in number default null
+  , o_incident_id                           out ersh_shield_incidents.shield_incident_id%type
+  );
+
+
+  -- ==========================================================================
+  -- Incident resolution
+  -- ==========================================================================
+
+  /**
+   * Marks a shield incident as resolved. Sets resolved_yn = 'Y', resolved_by
+   * (current APEX/DB user) and resolved_on (current timestamp).
+   *
+   * @example
+   *   ersh_error_handler_api.resolve_incident(
+   *       p_incident_id      => 42
+   *     , p_resolution_notes => 'Root cause: missing null check in process_payment. Fixed in release 1.2.'
+   *   );
+   *
+   * @issue ERSH-001
+   *
+   * @param p_incident_id      PK of the ersh_shield_incidents row to resolve
+   * @param p_resolution_notes Optional admin notes describing root cause or fix
+   */
+  procedure resolve_incident(
+    p_incident_id                           in ersh_shield_incidents.shield_incident_id%type
+  , p_resolution_notes                      in ersh_shield_incidents.resolution_notes%type default null
+  );
+
+
+
 end ersh_error_handler_api;
 /

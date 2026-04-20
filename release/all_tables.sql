@@ -30,3 +30,6 @@ prompt @../tables/ersh_constraint_lookup.sql
 
 prompt @../tables/ersh_error_lookup.sql
 @../tables/ersh_error_lookup.sql
+
+prompt @../tables/ersh_shield_incidents.sql
+@../tables/ersh_shield_incidents.sql
