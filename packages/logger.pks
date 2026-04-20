@@ -40,7 +40,7 @@ as
 
 
   -- VARIABLES
-  g_logger_version constant varchar2(10) := 'x.x.x'; -- Don't change this. Build script will replace with right version number
+  g_logger_version constant varchar2(10) := '3.1.1'; -- Don't change this. Build script will replace with right version number
   g_context_name constant varchar2(35) := substr(sys_context('USERENV','CURRENT_SCHEMA'),1,23)||'_LOGCTX';
 
   g_off constant number := 0;

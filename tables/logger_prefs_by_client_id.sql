@@ -39,15 +39,34 @@ create table logger_prefs_by_client_id(
   execute immediate q'!comment on column logger_prefs_by_client_id.expiry_date is 'After the given expiry date the logger_level will be disabled for the specific client_id. Unless sepcifically removed from this table a job will clean up old entries'!';
 
 
+  -- ---------------------------------------------------------------------------
   -- 92: Missing APEX and SYS_CONTEXT support
-  l_sql := 'alter table logger_prefs_by_client_id drop constraint logger_prefs_by_client_id_ck1';
-  execute immediate l_sql;
+  -- Idempotent: only drop + rebuild the check constraint when the existing
+  -- definition is the old/narrow one (i.e. it does not already include 'APEX').
+  -- If the constraint was removed manually, it will be re-created below.
+  -- ---------------------------------------------------------------------------
+  declare
+    l_search_condition user_constraints.search_condition_vc%type;
+  begin
+    select search_condition_vc
+      into l_search_condition
+      from user_constraints
+     where table_name      = 'LOGGER_PREFS_BY_CLIENT_ID'
+       and constraint_name = 'LOGGER_PREFS_BY_CLIENT_ID_CK1';
 
-  -- Rebuild constraint
-  l_sql := q'!alter table logger_prefs_by_client_id
-  add constraint logger_prefs_by_client_id_ck1
-  check (logger_level in ('OFF','PERMANENT','ERROR','WARNING','INFORMATION','DEBUG','TIMING', 'APEX', 'SYS_CONTEXT'))!';
-  execute immediate l_sql;
+    if l_search_condition is null or l_search_condition not like '%APEX%' then
+      execute immediate 'alter table logger_prefs_by_client_id drop constraint logger_prefs_by_client_id_ck1';
+
+      execute immediate q'!alter table logger_prefs_by_client_id
+        add constraint logger_prefs_by_client_id_ck1
+        check (logger_level in ('OFF','PERMANENT','ERROR','WARNING','INFORMATION','DEBUG','TIMING', 'APEX', 'SYS_CONTEXT'))!';
+    end if;
+  exception
+    when no_data_found then
+      execute immediate q'!alter table logger_prefs_by_client_id
+        add constraint logger_prefs_by_client_id_ck1
+        check (logger_level in ('OFF','PERMANENT','ERROR','WARNING','INFORMATION','DEBUG','TIMING', 'APEX', 'SYS_CONTEXT'))!';
+  end;
 
 end;
 /
