@@ -105,6 +105,19 @@ whenever sqlerror continue
 
 
 -- =============================================================================
+-- 7.1 LOGGER GLOBAL CONTEXT
+-- =============================================================================
+-- Upstream Logger install script (source/contexts/logger_context.sql) that was
+-- not imported into this repo. Creates the <schema>_LOGCTX global context and
+-- seeds the GLOBAL_CONTEXT_NAME preference. Must run AFTER logger packages are
+-- compiled (it references logger.g_pref_type_logger) and AFTER logger_prefs is
+-- already seeded by tables/logger_prefs.sql (the MERGE only fills in
+-- GLOBAL_CONTEXT_NAME, the other 10 LOGGER-type rows come from step 2).
+prompt @../contexts/logger_context.sql
+@../contexts/logger_context.sql
+
+
+-- =============================================================================
 -- 8. DATA (preferences and re-runnable data scripts)
 -- =============================================================================
 -- Must run after packages so logger.set_pref is available,
