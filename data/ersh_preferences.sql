@@ -21,7 +21,26 @@ merge into logger_prefs p
 using (
   select 'ERSH' as pref_type, 'ERSH_VERSION'                 as pref_name, '1.0.0'                 as pref_value from dual union all
   select 'ERSH'              , 'SUPPORT_EMAIL'                             , 'aftorres02@gmail.com'              from dual union all
-  select 'ERSH'              , 'REFERENCE_DISPLAY_MIN_DIGITS'              , '10'                                from dual
+  select 'ERSH'              , 'REFERENCE_DISPLAY_MIN_DIGITS'              , '10'                                from dual union all
+  -- ENVIRONMENT is just the label of the current database.
+  -- Admins are free to use any name they want (DEV, TEST, QA, STAGE, PROD,
+  -- HOTFIX, ...). It is matched against MASK_IN_ENVIRONMENTS to decide
+  -- whether to mask user-facing error messages.
+  select 'ERSH'              , 'ENVIRONMENT'                               , 'PROD'                              from dual union all
+  -- MASK_IN_ENVIRONMENTS is a comma-separated list of environments where
+  -- internal APEX errors must be hidden behind a generic reference message.
+  -- Matching against ENVIRONMENT is case-insensitive and whitespace-tolerant.
+  --
+  -- Examples:
+  --   'TEST,PROD'       -> mask in TEST and PROD, raw errors in DEV  (default)
+  --   'PROD'            -> mask only in PROD
+  --   'DEV,TEST,PROD'   -> mask everywhere
+  --   ''  or  null      -> never mask (always show raw errors)
+  --
+  -- Change per environment, e.g.:
+  --   update logger_prefs set pref_value = 'PROD'
+  --    where pref_type = 'ERSH' and pref_name = 'MASK_IN_ENVIRONMENTS';
+  select 'ERSH'              , 'MASK_IN_ENVIRONMENTS'                      , 'TEST,PROD'                         from dual
 ) d
 on (p.pref_type = d.pref_type and p.pref_name = d.pref_name)
 when not matched then

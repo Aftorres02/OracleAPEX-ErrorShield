@@ -6,25 +6,64 @@ create or replace package ersh_error_handler_api is
 
 
   -- =========================================================================
-  -- Custom error code management
+  -- Custom error code management (ersh_error_lookup)
   -- =========================================================================
 
-  procedure add_custom_error(
+  /**
+   * Inserts or updates a row in ersh_error_lookup by error_code (MERGE).
+   * Single entry point for former add_custom_error / update_custom_error.
+   *
+   * @param p_error_code  Business key (must not be null).
+   * @param p_ora_sqlcode SQLCODE passed to raise_application_error.
+   * @param p_message     User-facing message.
+   * @param p_active_yn   Soft flag Y/N (default Y).
+   */
+  procedure merge_ersh_error_lookup(
     p_error_code                            in ersh_error_lookup.error_code%type
   , p_ora_sqlcode                           in ersh_error_lookup.ora_sqlcode%type
   , p_message                               in ersh_error_lookup.message%type
+  , p_active_yn                             in ersh_error_lookup.active_yn%type default 'Y'
   );
 
 
-  procedure update_custom_error(
+  /**
+   * Deletes a row from ersh_error_lookup by error_code.
+   *
+   * @param p_error_code Business key to remove.
+   */
+  procedure delete_ersh_error_lookup(
     p_error_code                            in ersh_error_lookup.error_code%type
-  , p_ora_sqlcode                           in ersh_error_lookup.ora_sqlcode%type
-  , p_message                               in ersh_error_lookup.message%type
   );
 
 
   procedure delete_custom_error(
     p_error_code                            in ersh_error_lookup.error_code%type
+  );
+
+
+  -- =========================================================================
+  -- Constraint lookup (ersh_constraint_lookup)
+  -- =========================================================================
+
+  /**
+   * Inserts or updates a row in ersh_constraint_lookup by constraint_name (MERGE).
+   *
+   * @param p_constraint_name    Unique constraint name (must not be null).
+   * @param p_constraint_message User-facing message for constraint violations.
+   */
+  procedure merge_ersh_constraint_lookup(
+    p_constraint_name                       in ersh_constraint_lookup.constraint_name%type
+  , p_constraint_message                    in ersh_constraint_lookup.constraint_message%type
+  );
+
+
+  /**
+   * Deletes a row from ersh_constraint_lookup by constraint_name.
+   *
+   * @param p_constraint_name Business key to remove.
+   */
+  procedure delete_ersh_constraint_lookup(
+    p_constraint_name                       in ersh_constraint_lookup.constraint_name%type
   );
 
 

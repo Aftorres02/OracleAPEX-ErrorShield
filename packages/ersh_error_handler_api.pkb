@@ -16,27 +16,48 @@ create or replace package body ersh_error_handler_api as
 
   /**
    * Logs a maskable error to logger and ersh_shield_incidents, then builds
-   * the user-facing reference message. Called from apex_error_handling for
-   * both internal APEX errors and unexpected technical errors from app code.
+   * the user-facing message. Called from apex_error_handling for both
+   * internal APEX errors and unexpected technical errors from app code.
    *
-   * Both logger and incident recording are protected by their own
-   * begin/exception blocks so a failure in either never propagates to
-   * the caller or the end user.
+   * Behaviour is driven by two ERSH preferences:
+   *   - ENVIRONMENT           label of the current database (DEV, TEST,
+   *                           QA, STAGE, PROD, ... any string is valid).
+   *   - MASK_IN_ENVIRONMENTS  comma-separated list of environments where
+   *                           the user-facing message must be hidden.
    *
-   * @param p_log_title  Prefix line written to logger to identify error origin.
-   * @param p_error      Original APEX error record (apex_error.t_error).
-   * @param o_message    User-facing masked message: reference number or fallback.
+   * If ENVIRONMENT appears in MASK_IN_ENVIRONMENTS (case-insensitive,
+   * whitespace-tolerant) the message is replaced with a generic reference
+   * text and additional_info is cleared. Otherwise the original
+   * p_error.message and p_error.additional_info are passed through so
+   * developers can debug on screen.
+   *
+   * On any failure reading the preferences, masking is applied as a safe
+   * fallback so sensitive details are never leaked by accident.
+   *
+   * Logging and incident recording run in every environment, so traceability
+   * is preserved regardless of what the end user sees. Both are wrapped in
+   * their own begin/exception blocks so a failure in either never propagates
+   * to the caller or the end user.
+   *
+   * @param p_log_title       Prefix line written to logger to identify error origin.
+   * @param p_error           Original APEX error record (apex_error.t_error).
+   * @param o_message         Message to show the user (masked in PROD, raw elsewhere).
+   * @param o_additional_info Additional info to show the user (null in PROD, raw elsewhere).
    */
   procedure log_and_mask_error(
     p_log_title                             in varchar2
   , p_error                                 in apex_error.t_error
   , o_message                               out varchar2
+  , o_additional_info                       out varchar2
   )
   is
     l_reference_id  number;
     l_incident_id   ersh_shield_incidents.shield_incident_id%type;
     l_support_email varchar2(255 char);
     l_min_digits    pls_integer;
+    l_environment   varchar2(30 char);
+    l_mask_list     varchar2(255 char);
+    l_should_mask   boolean;
   begin
     -- Log full details (autonomous commit inside logger; failure is silent)
     begin
@@ -70,12 +91,44 @@ create or replace package body ersh_error_handler_api as
       when others then null;
     end;
 
+    -- -----------------------------------------------------------------------
+    -- Environment-aware output.
+    -- Resolve ENVIRONMENT and MASK_IN_ENVIRONMENTS, then decide whether the
+    -- current environment belongs to the "mask" set.
+    --
+    -- Matching is case-insensitive and whitespace-tolerant. The comparison
+    -- uses comma-wrapped strings (e.g. ',DEV,TEST,PROD,') so partial matches
+    -- like 'STAGE' vs 'STAGE2' or 'PROD' vs 'PROD_OLD' are impossible.
+    --
+    -- Any error while reading the prefs falls back to masking for safety.
+    -- -----------------------------------------------------------------------
+    begin
+      l_environment := upper(trim(logger.get_pref('ENVIRONMENT', gc_pref_type)));
+      l_mask_list   := upper(replace(nvl(logger.get_pref('MASK_IN_ENVIRONMENTS', gc_pref_type), ''), ' ', ''));
+
+      l_should_mask :=
+        l_environment is not null
+        and l_mask_list is not null
+        and instr(',' || l_mask_list || ',', ',' || l_environment || ',') > 0;
+    exception
+      when others then
+        l_should_mask := true;
+    end;
+
+    if not l_should_mask then
+      o_message         := p_error.message;
+      o_additional_info := p_error.additional_info;
+      return;
+    end if;
+
     l_support_email := logger.get_pref('SUPPORT_EMAIL', gc_pref_type);
     l_min_digits    := to_number(logger.get_pref('REFERENCE_DISPLAY_MIN_DIGITS', gc_pref_type));
 
     if l_reference_id is not null then
       o_message :=
-        'We hit an unexpected problem. Reference: '
+        'Unable to process this action. If the issue persists, please contact '
+        || l_support_email
+        || ' quoting reference '
         || lpad(
              to_char(l_reference_id),
              greatest(
@@ -84,15 +137,15 @@ create or replace package body ersh_error_handler_api as
              ),
              '0'
            )
-        || '. Please contact '
-        || l_support_email
-        || ' and give us this reference.';
+        || '.';
     else
       o_message :=
-        'We hit an unexpected problem. Please contact '
+        'Unable to process this action. If the issue persists, please contact '
         || l_support_email
-        || ' for assistance. If you can, describe what you were doing when this appeared.';
+        || '.';
     end if;
+
+    o_additional_info := null;
 
   end log_and_mask_error;
 
@@ -131,11 +184,11 @@ create or replace package body ersh_error_handler_api as
       -- regarding session and session state)
       if not p_error.is_common_runtime_error then
         log_and_mask_error(
-          p_log_title => 'Internal APEX error (user-facing message masked).'
-        , p_error     => p_error
-        , o_message   => l_result.message
+          p_log_title       => 'Internal APEX error (user-facing message masked in PROD).'
+        , p_error           => p_error
+        , o_message         => l_result.message
+        , o_additional_info => l_result.additional_info
         );
-        l_result.additional_info := null;
       end if;
     else
       -- Note: If you want to have friendlier ORA error messages, you can
@@ -191,11 +244,11 @@ create or replace package body ersh_error_handler_api as
         else
           -- Unexpected technical error: mask it and give the user a reference.
           log_and_mask_error(
-            p_log_title => 'Unexpected technical error in application code (masked).'
-          , p_error     => p_error
-          , o_message   => l_result.message
+            p_log_title       => 'Unexpected technical error in application code (masked in PROD).'
+          , p_error           => p_error
+          , o_message         => l_result.message
+          , o_additional_info => l_result.additional_info
           );
-          l_result.additional_info := null;
 
         end if;
       end if;
@@ -218,97 +271,89 @@ create or replace package body ersh_error_handler_api as
   end apex_error_handling;
 
 
+  -- ==========================================================================
+  -- PROCEDURE: merge_ersh_error_lookup
+  -- ==========================================================================
   /**
-   * Adds a custom error code to the ersh_error_lookup table.
-   *
-   * @author Angel Flores (Consultant)
-   * @created Monday, March 09, 2026
+   * MERGE into ersh_error_lookup on error_code: insert new or update existing.
+   * Replaces separate add / update flows with a single upsert.
    *
    * @example
-   *   ersh_error_handler_api.add_custom_error(
-   *       p_error_code   => 'CURRENCY_FETCH_FAILED'
-   *     , p_ora_sqlcode  => -20001
-   *     , p_message      => 'Failed to fetch currencies from the external service.'
-   *   );
-   */
-  procedure add_custom_error(
-    p_error_code                            in ersh_error_lookup.error_code%type
-  , p_ora_sqlcode                           in ersh_error_lookup.ora_sqlcode%type
-  , p_message                               in ersh_error_lookup.message%type
-  )
-  is
-    l_scope   logger_logs.scope%type := gc_scope_prefix || 'add_custom_error';
-    l_params  logger.tab_param;
-    l_exists  number;
-  begin
-    logger.append_param(l_params, 'p_error_code: ', p_error_code);
-    logger.append_param(l_params, 'p_ora_sqlcode: ', p_ora_sqlcode);
-    logger.append_param(l_params, 'p_message: ', p_message);
-    logger.log('START', l_scope, null, l_params);
-
-    select count(1)
-      into l_exists
-      from ersh_error_lookup
-     where error_code = p_error_code;
-
-    if l_exists > 0 then
-      raise_application_error(
-        -20001
-        , 'Error code already exists, try update method instead (ersh_error_handler_api.update_custom_error) '
-      );
-    end if;
-
-    insert into ersh_error_lookup (
-        error_code
-      , ora_sqlcode
-      , message
-    )
-    values (
-        p_error_code
-      , p_ora_sqlcode
-      , p_message
-    );
-
-    logger.log('END', l_scope, null, l_params);
-
-  exception
-    when others then
-      logger.log_error('Unhandled Exception', l_scope, null, l_params);
-      raise;
-  end add_custom_error;
-
-
-  /**
-   * Updates a custom error code in the ersh_error_lookup table.
-   *
-   * @author Angel Flores (Consultant)
-   * @created Monday, March 09, 2026
-   *
-   * @example
-   *   ersh_error_handler_api.update_custom_error(
+   *   ersh_error_handler_api.merge_ersh_error_lookup(
    *       p_error_code   => 'CURRENCY_FETCH_FAILED'
    *     , p_ora_sqlcode  => -20001
    *     , p_message      => 'Unable to load currency data. Please try again later.'
+   *     , p_active_yn    => 'Y'
    *   );
+   *
+   * @issue ERSH-002
+   * @issue ERSH-003 Consolidated add_custom_error and update_custom_error.
+   *
+   * @author Angel Flores (Consultant)
+   * @created April 23, 2026
+   *
+   * @param p_error_code  Unique error code (required).
+   * @param p_ora_sqlcode ORA / application error code for raise_application_error.
+   * @param p_message     User-facing message stored in the lookup.
+   * @param p_active_yn   Active flag Y or N (default Y).
    */
-  procedure update_custom_error(
+  procedure merge_ersh_error_lookup(
     p_error_code                            in ersh_error_lookup.error_code%type
   , p_ora_sqlcode                           in ersh_error_lookup.ora_sqlcode%type
   , p_message                               in ersh_error_lookup.message%type
+  , p_active_yn                             in ersh_error_lookup.active_yn%type default 'Y'
   )
   is
-    l_scope   logger_logs.scope%type := gc_scope_prefix || 'update_custom_error';
+    l_scope   logger_logs.scope%type := gc_scope_prefix || 'merge_ersh_error_lookup';
     l_params  logger.tab_param;
   begin
     logger.append_param(l_params, 'p_error_code: ', p_error_code);
     logger.append_param(l_params, 'p_ora_sqlcode: ', p_ora_sqlcode);
     logger.append_param(l_params, 'p_message: ', p_message);
+    logger.append_param(l_params, 'p_active_yn: ', p_active_yn);
     logger.log('START', l_scope, null, l_params);
 
-    update ersh_error_lookup
-       set ora_sqlcode = p_ora_sqlcode
-         , message     = p_message
-     where error_code  = p_error_code;
+    if p_error_code is null then
+      raise_application_error(
+        -20001
+      , 'error_code is required for merge_ersh_error_lookup.'
+      );
+    end if;
+
+    if p_active_yn not in ('Y', 'N') then
+      raise_application_error(
+        -20001
+      , 'p_active_yn must be Y or N.'
+      );
+    end if;
+
+    merge into ersh_error_lookup t
+    using (
+      select p_error_code  as error_code
+           , p_ora_sqlcode as ora_sqlcode
+           , p_message     as message
+           , p_active_yn   as active_yn
+        from dual
+    ) s
+    on (t.error_code = s.error_code)
+    when matched then
+      update
+      set t.ora_sqlcode = s.ora_sqlcode
+        , t.message     = s.message
+        , t.active_yn   = s.active_yn
+    when not matched then
+      insert (
+        error_code
+      , ora_sqlcode
+      , message
+      , active_yn
+      )
+      values (
+        s.error_code
+      , s.ora_sqlcode
+      , s.message
+      , s.active_yn
+      );
 
     logger.log('END', l_scope, null, l_params);
 
@@ -316,22 +361,32 @@ create or replace package body ersh_error_handler_api as
     when others then
       logger.log_error('Unhandled Exception', l_scope, null, l_params);
       raise;
-  end update_custom_error;
+  end merge_ersh_error_lookup;
 
 
+  -- ==========================================================================
+  -- PROCEDURE: delete_ersh_error_lookup
+  -- ==========================================================================
   /**
-   * Deletes a custom error code from the ersh_error_lookup table.
+   * Deletes a row from ersh_error_lookup by error_code.
+   *
+   * @example
+   *   ersh_error_handler_api.delete_ersh_error_lookup(
+   *     p_error_code => 'CURRENCY_FETCH_FAILED'
+   *   );
+   *
+   * @issue ERSH-002
    *
    * @author Angel Flores (Consultant)
-   * @created Monday, March 09, 2026
+   * @created April 23, 2026
    *
-   * @param p_error_code The error code
+   * @param p_error_code Business key to delete.
    */
-  procedure delete_custom_error(
+  procedure delete_ersh_error_lookup(
     p_error_code                            in ersh_error_lookup.error_code%type
   )
   is
-    l_scope   logger_logs.scope%type := gc_scope_prefix || 'delete_custom_error';
+    l_scope   logger_logs.scope%type := gc_scope_prefix || 'delete_ersh_error_lookup';
     l_params  logger.tab_param;
   begin
     logger.append_param(l_params, 'p_error_code: ', p_error_code);
@@ -347,7 +402,134 @@ create or replace package body ersh_error_handler_api as
     when others then
       logger.log_error('Unhandled Exception', l_scope, null, l_params);
       raise;
+  end delete_ersh_error_lookup;
+
+
+  /**
+   * Deletes a custom error code from the ersh_error_lookup table.
+   * Delegates to delete_ersh_error_lookup (single implementation / logging scope).
+   *
+   * @author Angel Flores (Consultant)
+   * @created Monday, March 09, 2026
+   *
+   * @param p_error_code The error code
+   */
+  procedure delete_custom_error(
+    p_error_code                            in ersh_error_lookup.error_code%type
+  )
+  is
+  begin
+    delete_ersh_error_lookup(p_error_code => p_error_code);
   end delete_custom_error;
+
+
+  -- ==========================================================================
+  -- PROCEDURE: merge_ersh_constraint_lookup
+  -- ==========================================================================
+  /**
+   * MERGE into ersh_constraint_lookup on constraint_name: insert new or update message.
+   *
+   * @example
+   *   ersh_error_handler_api.merge_ersh_constraint_lookup(
+   *       p_constraint_name    => 'FK_ERSH_CLIENT_DEFAULT_CURRENCY'
+   *     , p_constraint_message => 'Please select a valid default currency.'
+   *   );
+   *
+   * @issue ERSH-004
+   *
+   * @author Angel Flores (Consultant)
+   * @created April 23, 2026
+   *
+   * @param p_constraint_name    Unique constraint name (required).
+   * @param p_constraint_message Friendly message shown on violation.
+   */
+  procedure merge_ersh_constraint_lookup(
+    p_constraint_name                       in ersh_constraint_lookup.constraint_name%type
+  , p_constraint_message                    in ersh_constraint_lookup.constraint_message%type
+  )
+  is
+    l_scope   logger_logs.scope%type := gc_scope_prefix || 'merge_ersh_constraint_lookup';
+    l_params  logger.tab_param;
+  begin
+    logger.append_param(l_params, 'p_constraint_name: ', p_constraint_name);
+    logger.append_param(l_params, 'p_constraint_message: ', p_constraint_message);
+    logger.log('START', l_scope, null, l_params);
+
+    if p_constraint_name is null then
+      raise_application_error(
+        -20001
+      , 'constraint_name is required for merge_ersh_constraint_lookup.'
+      );
+    end if;
+
+    merge into ersh_constraint_lookup t
+    using (
+      select p_constraint_name    as constraint_name
+           , p_constraint_message as constraint_message
+        from dual
+    ) s
+    on (t.constraint_name = s.constraint_name)
+    when matched then
+      update
+      set t.constraint_message = s.constraint_message
+    when not matched then
+      insert (
+        constraint_name
+      , constraint_message
+      )
+      values (
+        s.constraint_name
+      , s.constraint_message
+      );
+
+    logger.log('END', l_scope, null, l_params);
+
+  exception
+    when others then
+      logger.log_error('Unhandled Exception', l_scope, null, l_params);
+      raise;
+  end merge_ersh_constraint_lookup;
+
+
+  -- ==========================================================================
+  -- PROCEDURE: delete_ersh_constraint_lookup
+  -- ==========================================================================
+  /**
+   * Deletes a row from ersh_constraint_lookup by constraint_name.
+   *
+   * @example
+   *   ersh_error_handler_api.delete_ersh_constraint_lookup(
+   *     p_constraint_name => 'FK_ERSH_CLIENT_DEFAULT_CURRENCY'
+   *   );
+   *
+   * @issue ERSH-004
+   *
+   * @author Angel Flores (Consultant)
+   * @created April 23, 2026
+   *
+   * @param p_constraint_name Business key to delete.
+   */
+  procedure delete_ersh_constraint_lookup(
+    p_constraint_name                       in ersh_constraint_lookup.constraint_name%type
+  )
+  is
+    l_scope   logger_logs.scope%type := gc_scope_prefix || 'delete_ersh_constraint_lookup';
+    l_params  logger.tab_param;
+  begin
+    logger.append_param(l_params, 'p_constraint_name: ', p_constraint_name);
+    logger.log('START', l_scope, null, l_params);
+
+    delete
+      from ersh_constraint_lookup
+     where constraint_name = p_constraint_name;
+
+    logger.log('END', l_scope, null, l_params);
+
+  exception
+    when others then
+      logger.log_error('Unhandled Exception', l_scope, null, l_params);
+      raise;
+  end delete_ersh_constraint_lookup;
 
 
   /**

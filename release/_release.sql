@@ -141,11 +141,12 @@ prompt *** Logger post-install configuration ***
 -- =============================================================================
 -- 11. RECOMPILE
 -- =============================================================================
-prompt recompile invalid schema objects
-begin
- dbms_utility.compile_schema(schema => user, compile_all => false);
-end;
-/
+promt recompile invalid objects if necessary
+-- prompt recompile invalid schema objects
+-- begin
+--  dbms_utility.compile_schema(schema => user, compile_all => false);
+-- end;
+-- /
 
 
 -- =============================================================================
