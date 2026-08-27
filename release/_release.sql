@@ -10,7 +10,7 @@ set verify off
 whenever sqlerror exit sql.sqlcode
 
 prompt loading environment variables
-@load_env_vars.sql
+@@load_env_vars.sql
 -- feedback - Displays the number of records returned by a script ON=1
 set feedback on
 -- timing - Displays the time that commands take to complete
@@ -26,7 +26,7 @@ define logname = '' -- Name of the log file
 
 set termout on
 column my_logname new_val logname
-select 'release_log_'||sys_context( 'userenv', 'service_name' )|| '_' || to_char(sysdate, 'YYYY-MM-DD_HH24-MI-SS')||'.log' my_logname from dual;
+select 'release_log_'||sys_context( 'userenv', 'service_name' )|| '_' || to_char(current_timestamp, 'YYYY-MM-DD_HH24-MI-SS')||'.log' my_logname from dual;
 -- good to clear column names when done with them
 column my_logname clear
 set termout on
@@ -38,14 +38,14 @@ prompt Log File: &logname
 prompt check DB user is expected user
 declare
 begin
-  if user != '&env_schema_name' or '&env_schema_name' is null then
+  if upper(user) != upper('&env_schema_name') or '&env_schema_name' is null then
     raise_application_error(-20001, 'Must be run as &env_schema_name');
   end if;
 end;
 /
 
 -- Disable APEX apps
-@../scripts/apex_disable.sql
+@@../scripts/apex_disable.sql
 
 
 -- *** END: HEADER SECTION ***
@@ -56,7 +56,7 @@ end;
 -- =============================================================================
 -- Exit on error: if privileges are missing the install cannot continue.
 prompt *** Checking installation prerequisites ***
-@../scripts/logger_install_prereqs.sql
+@@../scripts/logger_install_prereqs.sql
 
 
 -- =============================================================================
@@ -71,37 +71,37 @@ whenever sqlerror continue
 -- =============================================================================
 -- 2. TABLES
 -- =============================================================================
-@all_tables.sql
+@@all_tables.sql
 
 
 -- =============================================================================
 -- 3. RELEASE SPECIFIC TASKS
 -- =============================================================================
-@code/_run_code.sql
+@@code/_run_code.sql
 
 
 -- =============================================================================
 -- 4. VIEWS
 -- =============================================================================
-@all_views.sql
+@@all_views.sql
 
 
 -- =============================================================================
 -- 5. PACKAGES
 -- =============================================================================
-@all_packages.sql
+@@all_packages.sql
 
 
 -- =============================================================================
 -- 6. TRIGGERS
 -- =============================================================================
-@all_triggers.sql
+@@all_triggers.sql
 
 
 -- =============================================================================
 -- 7. STANDALONE PROCEDURES
 -- =============================================================================
-@all_procedures.sql
+@@all_procedures.sql
 
 
 -- =============================================================================
@@ -114,7 +114,7 @@ whenever sqlerror continue
 -- already seeded by tables/logger_prefs.sql (the MERGE only fills in
 -- GLOBAL_CONTEXT_NAME, the other 10 LOGGER-type rows come from step 2).
 prompt @../contexts/logger_context.sql
-@../contexts/logger_context.sql
+@@../contexts/logger_context.sql
 
 
 -- =============================================================================
@@ -122,31 +122,30 @@ prompt @../contexts/logger_context.sql
 -- =============================================================================
 -- Must run after packages so logger.set_pref is available,
 -- and before post-install config which reads these prefs.
-@all_data.sql
+@@all_data.sql
 
 
 -- =============================================================================
 -- 9. LOGGER POST-INSTALL CONFIGURATION
 -- =============================================================================
 prompt *** Logger post-install configuration ***
-@../scripts/post_install_configuration.sql
+@@../scripts/post_install_configuration.sql
 
 
 -- =============================================================================
 -- 10. JOBS
 -- =============================================================================
-@all_jobs.sql
+@@all_jobs.sql
 
 
 -- =============================================================================
 -- 11. RECOMPILE
 -- =============================================================================
-promt recompile invalid objects if necessary
--- prompt recompile invalid schema objects
--- begin
---  dbms_utility.compile_schema(schema => user, compile_all => false);
--- end;
--- /
+prompt recompile invalid schema objects
+begin
+  dbms_utility.compile_schema(schema => user, compile_all => false);
+end;
+/
 
 
 -- =============================================================================
@@ -206,7 +205,7 @@ end;
 whenever sqlerror continue
 
 -- Install all apex applications
-@all_apex.sql
+@@all_apex.sql
 
 
 -- Control Build Options (optional)
