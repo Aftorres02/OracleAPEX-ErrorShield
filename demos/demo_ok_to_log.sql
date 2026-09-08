@@ -13,5 +13,6 @@ begin
 
   dbms_output.put_line('Ok to log? ' || l_log_str);
 
+
 end;
 /
