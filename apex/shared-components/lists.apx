@@ -1,0 +1,381 @@
+list navigation-bar (
+    name: Navigation Bar
+
+    entry about (
+        label: About
+        icon {
+            imageIconCssClasses: fa-question-circle-o
+        }
+        layout {
+            sequence: 10
+        }
+        userDefinedAttributes {
+            2: icon-only
+        }
+        config {
+            buildOption: @feature-about-page
+        }
+    )
+
+    entry about-page (
+        label: About Page
+        icon {
+            imageIconCssClasses: fa-info-circle-o
+        }
+        layout {
+            sequence: 40
+            parentEntry: @about
+        }
+        link {
+            target: {
+                page: 10020
+                clearCache: 10020
+            }
+        }
+        config {
+            buildOption: @feature-about-page
+        }
+    )
+
+    entry app-user (
+        label: &APP_USER.
+        icon {
+            imageIconCssClasses: fa-user
+        }
+        layout {
+            sequence: 50
+        }
+        link {
+            target: {
+                type: url
+                url: #
+            }
+        }
+        userDefinedAttributes {
+            2: has-username
+        }
+    )
+
+    entry list_item (
+        label: ---
+        layout {
+            sequence: 30
+            parentEntry: @about
+        }
+        link {
+            target: {
+                type: url
+                url: separator
+            }
+        }
+    )
+
+    entry list_item-2 (
+        label: ---
+        layout {
+            sequence: 60
+            parentEntry: @app-user
+        }
+        link {
+            target: {
+                type: url
+                url: separator
+            }
+        }
+    )
+
+    entry page-help (
+        label: Page Help
+        icon {
+            imageIconCssClasses: fa-question-circle-o
+        }
+        layout {
+            sequence: 20
+            parentEntry: @about
+        }
+        link {
+            target: {
+                page: 10021
+                items: {
+                    P10021_PAGE_ID: &APP_PAGE_ID.
+                }
+            }
+        }
+        userDefinedAttributes {
+            2: icon-only
+        }
+        config {
+            buildOption: @feature-about-page
+        }
+    )
+
+    entry sign-out (
+        label: Sign Out
+        icon {
+            imageIconCssClasses: fa-sign-out
+        }
+        layout {
+            sequence: 70
+            parentEntry: @app-user
+        }
+        link {
+            target: {
+                type: url
+                url: &LOGOUT_URL.
+            }
+        }
+    )
+
+)
+
+list navigation-menu (
+    name: Navigation Menu
+
+    entry administration (
+        label: Administration
+        icon {
+            imageIconCssClasses: fa-user-wrench
+        }
+        layout {
+            sequence: 10000
+        }
+        link {
+            target: {
+                page: 10000
+            }
+        }
+        security {
+            authorizationScheme: @administration-rights
+        }
+    )
+
+    entry apex-automations (
+        label: APEX automations
+        layout {
+            sequence: 120
+            parentEntry: @jobs-dashboard
+        }
+        isCurrent {
+            type: pages
+            pages: 1600
+        }
+        link {
+            target: {
+                page: 1600
+            }
+        }
+    )
+
+    entry error-shield-preferences (
+        label: Application Preferences
+        layout {
+            sequence: 30
+        }
+        isCurrent {
+            type: pages
+            pages: [
+                200
+                210
+            ]
+        }
+        link {
+            target: {
+                page: 200
+            }
+        }
+    )
+
+    entry home (
+        label: Home
+        icon {
+            imageIconCssClasses: fa-home
+        }
+        layout {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 1
+            }
+        }
+    )
+
+    entry incidents (
+        label: Incidents
+        layout {
+            sequence: 20
+        }
+        isCurrent {
+            type: pages
+            pages: 100
+        }
+        link {
+            target: {
+                page: 100
+            }
+        }
+    )
+
+    entry inventory (
+        label: Inventory
+        layout {
+            sequence: 70
+            parentEntry: @jobs-dashboard
+        }
+        isCurrent {
+            type: pages
+            pages: 1100
+        }
+        link {
+            target: {
+                page: 1100
+            }
+        }
+    )
+
+    entry job-details (
+        label: Job - Details
+        layout {
+            sequence: 80
+            parentEntry: @jobs-dashboard
+        }
+        isCurrent {
+            type: pages
+            pages: 1200
+        }
+        link {
+            target: {
+                page: 1200
+            }
+        }
+        serverSideCondition {
+            type: never
+        }
+    )
+
+    entry job-executions (
+        label: Job-Executions
+        layout {
+            sequence: 90
+            parentEntry: @jobs-dashboard
+        }
+        isCurrent {
+            type: pages
+            pages: 1300
+        }
+        link {
+            target: {
+                page: 1300
+            }
+        }
+    )
+
+    entry jobs-dashboard (
+        label: Jobs - dashboard
+        layout {
+            sequence: 60
+        }
+        isCurrent {
+            type: pages
+            pages: [
+                1000
+                1100
+                1200
+                1300
+                1400
+                1500
+                1600
+            ]
+        }
+        link {
+            target: {
+                page: 1000
+            }
+        }
+    )
+
+    entry looger-logs (
+        label: Looger Logs
+        layout {
+            sequence: 40
+        }
+        isCurrent {
+            type: pages
+            pages: [
+                400
+                410
+            ]
+        }
+        link {
+            target: {
+                page: 400
+            }
+        }
+    )
+
+    entry running-now (
+        label: Running now
+        layout {
+            sequence: 100
+            parentEntry: @jobs-dashboard
+        }
+        isCurrent {
+            type: pages
+            pages: 1400
+        }
+        link {
+            target: {
+                page: 1400
+            }
+        }
+    )
+
+    entry timeline (
+        label: Timeline
+        layout {
+            sequence: 110
+            parentEntry: @jobs-dashboard
+        }
+        isCurrent {
+            type: pages
+            pages: 1500
+        }
+        link {
+            target: {
+                page: 1500
+            }
+        }
+    )
+
+)
+
+list user-interface (
+    name: User Interface
+    config {
+        buildOption: @feature-theme-style-selection
+    }
+
+    entry theme-style-selection (
+        label: Theme Style Selection
+        icon {
+            imageIconCssClasses: fa-paint-brush
+        }
+        layout {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 10010
+                clearCache: 10010
+            }
+        }
+        userDefinedAttributes {
+            1: Set the default application look and feel
+        }
+        config {
+            buildOption: @feature-theme-style-selection
+        }
+    )
+
+)
+

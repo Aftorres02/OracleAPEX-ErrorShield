@@ -1,0 +1,166 @@
+breadcrumb breadcrumb (
+    name: Breadcrumb
+
+    entry administration (
+        name: Administration
+        pageNumber: 10000
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 10000
+            }
+        }
+    )
+
+    entry apex-automations (
+        name: APEX automations
+        pageNumber: 1600
+        execution {
+            sequence: 10
+        }
+        appearance {
+            parentEntry: @jobs-dashboard
+        }
+        link {
+            target: {
+                page: 1600
+            }
+        }
+    )
+
+    entry home (
+        name: Home
+        pageNumber: 1
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 1
+            }
+        }
+    )
+
+    entry inventory (
+        name: " Inventory"
+        pageNumber: 1100
+        execution {
+            sequence: 10
+        }
+        appearance {
+            parentEntry: @jobs-dashboard
+        }
+        link {
+            target: {
+                page: 1100
+            }
+        }
+    )
+
+    entry job-details (
+        name: Job - Details
+        pageNumber: 1200
+        execution {
+            sequence: 10
+        }
+        appearance {
+            parentEntry: @jobs-dashboard
+        }
+        link {
+            target: {
+                page: 1200
+            }
+        }
+    )
+
+    entry job-executions (
+        name: Job-Executions
+        pageNumber: 1300
+        execution {
+            sequence: 10
+        }
+        appearance {
+            parentEntry: @jobs-dashboard
+        }
+        link {
+            target: {
+                page: 1300
+            }
+        }
+    )
+
+    entry jobs-dashboard (
+        name: Jobs - Dashboard
+        pageNumber: 1000
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 1000
+            }
+        }
+    )
+
+    entry log (
+        name: Log
+        pageNumber: 410
+        execution {
+            sequence: 10
+        }
+        appearance {
+            parentEntry: @looger-logs
+        }
+        link {
+            target: {
+                page: 410
+            }
+        }
+    )
+
+    entry looger-logs (
+        name: Looger Logs
+        pageNumber: 400
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 400
+            }
+        }
+    )
+
+    entry running-now (
+        name: "Running now "
+        pageNumber: 1400
+        execution {
+            sequence: 10
+        }
+        appearance {
+            parentEntry: @jobs-dashboard
+        }
+        link {
+            target: {
+                page: 1400
+            }
+        }
+    )
+
+    entry timeline (
+        name: Timeline
+        pageNumber: 1500
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 1500
+            }
+        }
+    )
+
+)
+

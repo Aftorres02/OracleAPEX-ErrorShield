@@ -1,0 +1,737 @@
+page 1600 (
+    name: APEX Automations
+    alias: APEX-AUTOMATIONS
+    title: APEX Automations
+    pageGroup: @jobs
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region automations (
+        name: Automations
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select a.application_id                                            as application_id
+                     , a.application_name                                          as application_name
+                     , a.name                                                      as automation_name
+                     , a.static_id                                                 as static_id
+                     , a.trigger_type                                              as trigger_type
+                     , a.polling_interval                                          as polling_interval
+                     , a.polling_status                                            as polling_status
+                     , a.polling_last_run_timestamp                                as last_run_on
+                     , a.polling_next_run_timestamp                                as next_run_on
+                     , a.result_type                                               as result_type
+                     , a.query_type                                                as query_type
+                     , a.table_owner                                               as table_owner
+                     , a.table_name                                                as table_name
+                     , a.max_rows_to_process                                       as max_rows_to_process
+                     , a.error_handling_type                                       as error_handling_type
+                     , a.build_option                                              as build_option
+                     , a.component_comment                                         as component_comment
+                     , a.last_updated_on                                           as last_updated_on
+                  from apex_appl_automations a
+                 order by a.application_id
+                        , a.name
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        advanced {
+            regionDisplaySelector: true
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column APPLICATION_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Application Id
+                alignment: center
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column APPLICATION_NAME (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Application Name
+                alignment: center
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column AUTOMATION_NAME (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Automation Name
+                alignment: center
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column BUILD_OPTION (
+            reportColumnQueryId: 16
+            derivedColumn: N
+            heading {
+                heading: Build Option
+                alignment: center
+            }
+            layout {
+                sequence: 160
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column COMPONENT_COMMENT (
+            reportColumnQueryId: 17
+            derivedColumn: N
+            heading {
+                heading: Component Comment
+                alignment: center
+            }
+            layout {
+                sequence: 170
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ERROR_HANDLING_TYPE (
+            reportColumnQueryId: 15
+            derivedColumn: N
+            heading {
+                heading: Error Handling Type
+                alignment: center
+            }
+            layout {
+                sequence: 150
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column LAST_RUN_ON (
+            reportColumnQueryId: 8
+            derivedColumn: N
+            heading {
+                heading: Last Run On
+                alignment: center
+            }
+            layout {
+                sequence: 80
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column LAST_UPDATED_ON (
+            reportColumnQueryId: 18
+            derivedColumn: N
+            heading {
+                heading: Last Updated On
+                alignment: center
+            }
+            layout {
+                sequence: 180
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column MAX_ROWS_TO_PROCESS (
+            reportColumnQueryId: 14
+            derivedColumn: N
+            heading {
+                heading: Max Rows To Process
+                alignment: center
+            }
+            layout {
+                sequence: 140
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column NEXT_RUN_ON (
+            reportColumnQueryId: 9
+            derivedColumn: N
+            heading {
+                heading: Next Run On
+                alignment: center
+            }
+            layout {
+                sequence: 90
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column POLLING_INTERVAL (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Polling Interval
+                alignment: center
+            }
+            layout {
+                sequence: 60
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column POLLING_STATUS (
+            reportColumnQueryId: 7
+            derivedColumn: N
+            heading {
+                heading: Polling Status
+                alignment: center
+            }
+            layout {
+                sequence: 70
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column QUERY_TYPE (
+            reportColumnQueryId: 11
+            derivedColumn: N
+            heading {
+                heading: Query Type
+                alignment: center
+            }
+            layout {
+                sequence: 110
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column RESULT_TYPE (
+            reportColumnQueryId: 10
+            derivedColumn: N
+            heading {
+                heading: Result Type
+                alignment: center
+            }
+            layout {
+                sequence: 100
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column STATIC_ID (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Static Id
+                alignment: center
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column TABLE_NAME (
+            reportColumnQueryId: 13
+            derivedColumn: N
+            heading {
+                heading: Table Name
+                alignment: center
+            }
+            layout {
+                sequence: 130
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column TABLE_OWNER (
+            reportColumnQueryId: 12
+            derivedColumn: N
+            heading {
+                heading: Table Owner
+                alignment: center
+            }
+            layout {
+                sequence: 120
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column TRIGGER_TYPE (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Trigger Type
+                alignment: center
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region executions-7-days (
+        name: Executions · 7 days
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                with w_log as (
+                  select l.id                                                      as log_id
+                       , l.application_id                                          as application_id
+                       , l.automation_id                                           as automation_id
+                       , l.automation_name                                         as automation_name
+                       , l.is_job                                                  as is_job
+                       , l.status                                                  as status
+                       , l.start_timestamp                                         as start_timestamp
+                       , l.end_timestamp                                           as end_timestamp
+                       , l.successful_row_count                                    as successful_row_count
+                       , l.error_row_count                                         as error_row_count
+                       , l.end_timestamp - l.start_timestamp                       as run_interval
+                    from apex_automation_log l
+                   where l.start_timestamp >= systimestamp - interval '7' day
+                )
+                select w.log_id                                                    as log_id
+                     , w.application_id                                            as application_id
+                     , w.automation_name                                           as automation_name
+                     , w.status                                                    as status
+                     , w.is_job                                                    as is_job
+                     , to_char(w.start_timestamp, 'YYYY-MM-DD HH24:MI:SS')         as started_at
+                     , round(
+                         extract(day    from w.run_interval) * 86400
+                       + extract(hour   from w.run_interval) * 3600
+                       + extract(minute from w.run_interval) * 60
+                       + extract(second from w.run_interval)
+                       , 1)                                                        as duration_secs
+                     , w.successful_row_count                                      as successful_row_count
+                     , w.error_row_count                                           as error_row_count
+                  from w_log w
+                 order by w.start_timestamp desc
+                ```
+        }
+        layout {
+            sequence: 40
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        advanced {
+            regionDisplaySelector: true
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column APPLICATION_ID (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Application Id
+                alignment: center
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column AUTOMATION_NAME (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Automation Name
+                alignment: center
+            }
+            layout {
+                sequence: 30
+            }
+            link {
+                target: {
+                    page: 1600
+                    items: {
+                        P1600_LOG_ID: #LOG_ID#
+                    }
+                    clearCache: 1600
+                }
+                linkText: #AUTOMATION_NAME#
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column DURATION_SECS (
+            reportColumnQueryId: 7
+            derivedColumn: N
+            heading {
+                heading: Duration Secs
+                alignment: center
+            }
+            layout {
+                sequence: 70
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ERROR_ROW_COUNT (
+            reportColumnQueryId: 9
+            derivedColumn: N
+            heading {
+                heading: Error Row Count
+                alignment: center
+            }
+            layout {
+                sequence: 90
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column IS_JOB (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Is Job
+                alignment: center
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column LOG_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Log Id
+                alignment: center
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column STARTED_AT (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Started At
+                alignment: center
+            }
+            layout {
+                sequence: 60
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column STATUS (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Status
+                alignment: center
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column SUCCESSFUL_ROW_COUNT (
+            reportColumnQueryId: 8
+            derivedColumn: N
+            heading {
+                heading: Successful Row Count
+                alignment: center
+            }
+            layout {
+                sequence: 80
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    region messages (
+        name: Messages
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select m.automation_log_id                                         as automation_log_id
+                     , to_char(m.message_timestamp, 'YYYY-MM-DD HH24:MI:SS')       as message_at
+                     , m.message_type                                              as message_type
+                     , m.action_name                                               as action_name
+                     , m.pk_value                                                  as pk_value
+                     , m.message                                                   as message
+                  from apex_automation_msg_log m
+                 where (:P1600_LOG_ID is null or m.automation_log_id = :P1600_LOG_ID)
+                 order by m.message_timestamp desc
+                ```
+            pageItemsToSubmit: P1600_LOG_ID
+        }
+        layout {
+            sequence: 50
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        advanced {
+            regionDisplaySelector: true
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P1600_LOG_ID
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column ACTION_NAME (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Action Name
+                alignment: center
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column AUTOMATION_LOG_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Automation Log Id
+                alignment: center
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column MESSAGE (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Message
+                alignment: center
+            }
+            layout {
+                sequence: 60
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column MESSAGE_AT (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Message At
+                alignment: center
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column MESSAGE_TYPE (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Message Type
+                alignment: center
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column PK_VALUE (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Pk Value
+                alignment: center
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    pageItem P1600_LOG_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            slot: body
+        }
+    )
+
+)
+
