@@ -1,0 +1,12 @@
+pageGroup administration (
+    name: Administration
+)
+
+pageGroup capworks (
+    name: CapWorks
+)
+
+pageGroup jobs (
+    name: Jobs
+)
+

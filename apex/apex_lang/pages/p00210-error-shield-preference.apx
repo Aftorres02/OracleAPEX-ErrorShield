@@ -1,0 +1,298 @@
+page 210 (
+    name: Error Shield Preference
+    alias: ERROR-SHIELD-PREFERENCE
+    title: Error Shield Preference
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
+    }
+    dialog {
+        resizable: false
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region buttons (
+        name: Buttons
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: dialogFooter
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        settings {
+            outputAs: text
+        }
+    )
+
+    region error-shield-preference (
+        name: Error Shield Preference
+        type: form
+        source {
+            location: localDatabase
+            tableName: LOGGER_PREFS
+            includeRowidColumn: true
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+    )
+
+    pageItem P210_PREF_NAME (
+        type: displayOnly
+        label {
+            label: Pref Name
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @error-shield-preference
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @error-shield-preference
+            column: PREF_NAME
+            dataType: varchar2
+        }
+    )
+
+    pageItem P210_PREF_TYPE (
+        type: displayOnly
+        label {
+            label: Pref Type
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @error-shield-preference
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @error-shield-preference
+            column: PREF_TYPE
+            dataType: varchar2
+        }
+    )
+
+    pageItem P210_PREF_VALUE (
+        type: textField
+        label {
+            label: Pref Value
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @error-shield-preference
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 60
+        }
+        validation {
+            valueRequired: true
+            maxLength: 255
+        }
+        source {
+            formRegion: @error-shield-preference
+            column: PREF_VALUE
+            dataType: varchar2
+        }
+    )
+
+    pageItem P210_ROWID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @error-shield-preference
+            slot: regionBody
+        }
+        source {
+            formRegion: @error-shield-preference
+            column: ROWID
+            dataType: rowid
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    button cancel (
+        buttonName: CANCEL
+        label: Cancel
+        layout {
+            sequence: 10
+            region: @buttons
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: triggerAction
+        }
+
+        triggerAction native-dialog-cancel (
+            action: cancelDialog
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    button create (
+        buttonName: CREATE
+        label: Create
+        layout {
+            sequence: 40
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+        }
+        serverSideCondition {
+            type: itemIsNull
+            item: P210_ROWID
+        }
+    )
+
+    button delete (
+        buttonName: DELETE
+        label: Delete
+        layout {
+            sequence: 20
+            region: @buttons
+            slot: delete
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            executeValidations: false
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: delete
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: &APP_TEXT$DELETE_MSG!RAW.
+            style: danger
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P210_ROWID
+        }
+    )
+
+    button save (
+        buttonName: SAVE
+        label: Apply Changes
+        layout {
+            sequence: 30
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P210_ROWID
+        }
+    )
+
+    process close-dialog (
+        name: Close Dialog
+        type: closeDialog
+        settings {
+            showSuccessMessages: false
+        }
+        execution {
+            sequence: 50
+        }
+        advanced {
+            executionMappingIdentifier: 382140088463074932
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: CREATE,SAVE,DELETE
+        }
+    )
+
+    process initialize-form-error-shield-preference (
+        name: Initialize form Error Shield Preference
+        type: formInitialization
+        formRegion: @error-shield-preference
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 382139214047074932
+        }
+    )
+
+    process process-form-error-shield-preference (
+        name: Process form Error Shield Preference
+        type: formAutoRowProcessing
+        formRegion: @error-shield-preference
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 382139607707074932
+        }
+    )
+
+)
+

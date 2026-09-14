@@ -1,0 +1,647 @@
+page 110 (
+    name: Review Incident
+    alias: REVIEW-INCIDENT
+    title: Review Incident
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
+    }
+    dialog {
+        width: 1000
+        resizable: false
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region audit (
+        name: Audit
+        type: staticContent
+        layout {
+            sequence: 10
+            parentRegion: @review-incident
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+    )
+
+    region dialog (
+        name: Dialog
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: dialogFooter
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            regionDisplaySelector: true
+        }
+    )
+
+    region review-incident (
+        name: Review Incident
+        type: form
+        source {
+            location: localDatabase
+            tableName: ERSH_SHIELD_INCIDENTS
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        advanced {
+            regionDisplaySelector: true
+        }
+    )
+
+    pageItem P110_ACTIVE_YN (
+        type: displayOnly
+        label {
+            label: Active Yn
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @audit
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: ACTIVE_YN
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_APPLICATION_ID (
+        type: displayOnly
+        label {
+            label: Application Id
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: APPLICATION_ID
+            dataType: number
+        }
+    )
+
+    pageItem P110_APP_USER (
+        type: displayOnly
+        label {
+            label: App User
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: APP_USER
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_COMPONENT_NAME (
+        type: displayOnly
+        label {
+            label: Component Name
+            alignment: left
+        }
+        layout {
+            sequence: 100
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: COMPONENT_NAME
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_COMPONENT_TYPE (
+        type: displayOnly
+        label {
+            label: Component Type
+            alignment: left
+        }
+        layout {
+            sequence: 90
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: COMPONENT_TYPE
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_CREATED_BY (
+        type: displayOnly
+        label {
+            label: Created By
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @audit
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: CREATED_BY
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_CREATED_ON (
+        type: displayOnly
+        label {
+            label: Created On
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @audit
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: CREATED_ON
+            dataType: timestampWithLocalTimeZone
+        }
+    )
+
+    pageItem P110_ERROR_FINGERPRINT (
+        type: displayOnly
+        label {
+            label: Error Fingerprint
+            alignment: left
+        }
+        layout {
+            sequence: 130
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: ERROR_FINGERPRINT
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_ERROR_SUMMARY (
+        type: displayOnly
+        label {
+            label: Error Summary
+            alignment: left
+        }
+        layout {
+            sequence: 120
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: ERROR_SUMMARY
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_LAST_UPDATED_BY (
+        type: displayOnly
+        label {
+            label: Last Updated By
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @audit
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: LAST_UPDATED_BY
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_LAST_UPDATED_ON (
+        type: displayOnly
+        label {
+            label: Last Updated On
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @audit
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: LAST_UPDATED_ON
+            dataType: timestampWithLocalTimeZone
+        }
+    )
+
+    pageItem P110_LOGGER_LOG_ID (
+        type: hidden
+        layout {
+            sequence: 20
+            region: @review-incident
+            slot: regionBody
+        }
+        source {
+            formRegion: @review-incident
+            column: LOGGER_LOG_ID
+            dataType: number
+        }
+    )
+
+    pageItem P110_OCCURRENCE_COUNT (
+        type: displayOnly
+        label {
+            label: Occurrence Count
+            alignment: left
+        }
+        layout {
+            sequence: 70
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: OCCURRENCE_COUNT
+            dataType: number
+        }
+    )
+
+    pageItem P110_ORA_SQLCODE (
+        type: displayOnly
+        label {
+            label: Ora Sqlcode
+            alignment: left
+        }
+        layout {
+            sequence: 110
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: ORA_SQLCODE
+            dataType: number
+        }
+    )
+
+    pageItem P110_PAGE_ID (
+        type: displayOnly
+        label {
+            label: Page Id
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: PAGE_ID
+            dataType: number
+        }
+    )
+
+    pageItem P110_REQUEST (
+        type: displayOnly
+        label {
+            label: Request
+            alignment: left
+        }
+        layout {
+            sequence: 80
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: REQUEST
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_RESOLUTION_NOTES (
+        type: richTextEditor
+        label {
+            label: Resolution Notes
+            alignment: left
+        }
+        settings {
+            minHeight: 180
+        }
+        layout {
+            sequence: 150
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: RESOLUTION_NOTES
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_RESOLVED_BY (
+        type: displayOnly
+        label {
+            label: Resolved By
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @audit
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: RESOLVED_BY
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_RESOLVED_ON (
+        type: displayOnly
+        label {
+            label: Resolved On
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @audit
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: RESOLVED_ON
+            dataType: timestampWithLocalTimeZone
+        }
+    )
+
+    pageItem P110_RESOLVED_YN (
+        type: switch
+        label {
+            label: Resolved?
+            alignment: left
+        }
+        layout {
+            sequence: 160
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @review-incident
+            column: RESOLVED_YN
+            dataType: varchar2
+        }
+    )
+
+    pageItem P110_SHIELD_INCIDENT_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @review-incident
+            slot: regionBody
+        }
+        source {
+            formRegion: @review-incident
+            column: SHIELD_INCIDENT_ID
+            dataType: number
+            queryOnly: true
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P110_TIME_BUCKET (
+        type: displayOnly
+        label {
+            label: Time Bucket
+            alignment: left
+        }
+        layout {
+            sequence: 60
+            region: @review-incident
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @review-incident
+            column: TIME_BUCKET
+            dataType: number
+        }
+    )
+
+    button cancel (
+        buttonName: CANCEL
+        label: Cancel
+        layout {
+            sequence: 20
+            region: @dialog
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+    )
+
+    button save (
+        buttonName: SAVE
+        label: Save
+        layout {
+            sequence: 10
+            region: @dialog
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+    )
+
+    process initialize-form-review-incident (
+        name: Initialize form Review Incident
+        type: formInitialization
+        formRegion: @review-incident
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 377201756385175310
+        }
+    )
+
+    process review-incident (
+        name: Review Incident
+        type: formAutoRowProcessing
+        formRegion: @review-incident
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 377204103111175334
+        }
+    )
+
+)
+

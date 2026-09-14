@@ -1,0 +1,452 @@
+page 1300 (
+    name: Job-Executions
+    alias: JOB-EXECUTIONS
+    title: Job-Executions
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region job-executions (
+        name: Job-Executions
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                with w_runs as (
+                  select r.owner                                          as owner
+                       , r.job_name                                       as job_name
+                       , r.job_subname                                     as job_subname
+                       , r.log_id                                         as log_id
+                       , r.log_date                                       as log_date
+                       , r.status                                         as status
+                       , r.error#                                        as error_code
+                       , r.req_start_date                                 as req_start_date
+                       , r.actual_start_date                              as actual_start_date
+                       , r.session_id                                     as session_id
+                       , r.additional_info                                as additional_info
+                       , round(
+                           extract(day    from r.run_duration) * 86400
+                         + extract(hour   from r.run_duration) * 3600
+                         + extract(minute from r.run_duration) * 60
+                         + extract(second from r.run_duration)
+                         , 1)                                             as run_secs
+                       , round(
+                           extract(day    from r.cpu_used) * 86400
+                         + extract(hour   from r.cpu_used) * 3600
+                         + extract(minute from r.cpu_used) * 60
+                         + extract(second from r.cpu_used)
+                         , 2)                                             as cpu_secs
+                    from all_scheduler_job_run_details r
+                   where r.log_date >= systimestamp - numtodsinterval(nvl(:P1030_DAYS, 7), 'day')
+                     and (:P1030_STATUS   is null or r.status   = :P1030_STATUS)
+                     and (:P1030_JOB_NAME is null or r.job_name = :P1030_JOB_NAME)
+                )
+                select w.log_id                                           as log_id
+                     , w.owner                                            as owner
+                     , w.job_name                                         as job_name
+                     , w.job_subname                                       as job_subname
+                     , w.status                                           as status
+                     , w.error_code                                       as error_code
+                     , w.actual_start_date                                as actual_start_date
+                     , w.req_start_date                                   as req_start_date
+                     , w.run_secs                                         as run_secs
+                     , w.cpu_secs                                         as cpu_secs
+                     , w.session_id                                       as session_id
+                     , w.additional_info                                  as additional_info
+                     , case when j.job_name is null then 'Y' else 'N' end as job_dropped_yn
+                     , j.state                                            as current_state
+                     , j.job_class                                        as job_class
+                  from w_runs w
+                  left join all_scheduler_jobs j
+                    on  j.owner    = w.owner
+                    and j.job_name = w.job_name
+                 order by nvl(w.actual_start_date, w.log_date) desc
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No data found.
+            whenMoreDataFound: The maximum row count for this report is #MAX_ROW_COUNT# rows.  Please apply a filter to reduce the number of records in your query.
+        }
+        searchBar {
+            rowsPerPageSelector: true
+        }
+        actionsMenu {
+            rowsPerPage: false
+            savePublicReport: true
+        }
+        advanced {
+            savedReportMappingIdentifier: 423004790235911412
+        }
+
+        column ACTUAL_START_DATE (
+            type: plainText
+            heading {
+                heading: Actual Start Date
+            }
+            layout {
+                sequence: 7
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        column ADDITIONAL_INFO (
+            type: plainText
+            heading {
+                heading: Additional Info
+            }
+            layout {
+                sequence: 12
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: L
+            }
+        )
+
+        column CPU_SECS (
+            type: plainText
+            heading {
+                heading: Cpu Secs
+                alignment: end
+            }
+            layout {
+                sequence: 10
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: J
+            }
+        )
+
+        column CURRENT_STATE (
+            type: plainText
+            heading {
+                heading: Current State
+            }
+            layout {
+                sequence: 14
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: N
+            }
+        )
+
+        column ERROR_CODE (
+            type: plainText
+            heading {
+                heading: Error Code
+                alignment: end
+            }
+            layout {
+                sequence: 6
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column JOB_CLASS (
+            type: plainText
+            heading {
+                heading: Job Class
+            }
+            layout {
+                sequence: 15
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: O
+            }
+        )
+
+        column JOB_DROPPED_YN (
+            type: plainText
+            heading {
+                heading: Job Dropped Yn
+            }
+            layout {
+                sequence: 13
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: M
+            }
+        )
+
+        column JOB_NAME (
+            type: plainText
+            heading {
+                heading: Job Name
+            }
+            layout {
+                sequence: 3
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column JOB_SUBNAME (
+            type: plainText
+            heading {
+                heading: Job Subname
+            }
+            layout {
+                sequence: 4
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column LOG_ID (
+            type: plainText
+            heading {
+                heading: Log Id
+                alignment: end
+            }
+            layout {
+                sequence: 1
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column OWNER (
+            type: plainText
+            heading {
+                heading: Owner
+            }
+            layout {
+                sequence: 2
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column REQ_START_DATE (
+            type: plainText
+            heading {
+                heading: Req Start Date
+            }
+            layout {
+                sequence: 8
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: H
+            }
+        )
+
+        column RUN_SECS (
+            type: plainText
+            heading {
+                heading: Run Secs
+                alignment: end
+            }
+            layout {
+                sequence: 9
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: I
+            }
+        )
+
+        column SESSION_ID (
+            type: plainText
+            heading {
+                heading: Session Id
+            }
+            layout {
+                sequence: 11
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: K
+            }
+        )
+
+        column STATUS (
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 5
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        page {
+            borderWidth: 0.5
+            borderColor: #666666
+        }
+        pageHeader {
+            pageHeaderText: Job-Executions
+        }
+
+        savedReport 4230112 (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn ACTUAL_START_DATE (
+                sequence: 7
+            )
+
+            displayColumn ADDITIONAL_INFO (
+                sequence: 12
+            )
+
+            displayColumn CPU_SECS (
+                sequence: 10
+            )
+
+            displayColumn CURRENT_STATE (
+                sequence: 14
+            )
+
+            displayColumn ERROR_CODE (
+                sequence: 6
+            )
+
+            displayColumn JOB_CLASS (
+                sequence: 15
+            )
+
+            displayColumn JOB_DROPPED_YN (
+                sequence: 13
+            )
+
+            displayColumn JOB_NAME (
+                sequence: 3
+            )
+
+            displayColumn JOB_SUBNAME (
+                sequence: 4
+            )
+
+            displayColumn LOG_ID (
+                sequence: 1
+            )
+
+            displayColumn OWNER (
+                sequence: 2
+            )
+
+            displayColumn REQ_START_DATE (
+                sequence: 8
+            )
+
+            displayColumn RUN_SECS (
+                sequence: 9
+            )
+
+            displayColumn SESSION_ID (
+                sequence: 11
+            )
+
+            displayColumn STATUS (
+                sequence: 5
+            )
+
+        )
+
+    )
+
+)
+

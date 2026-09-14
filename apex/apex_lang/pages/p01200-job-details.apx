@@ -1,0 +1,533 @@
+page 1200 (
+    name: Job - Details
+    alias: JOB-DETAILS
+    title: Job - Details
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region job-details (
+        name: Job - Details
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select j.owner                                            as owner
+                     , j.job_name                                         as job_name
+                     , j.job_subname                                       as job_subname
+                     , j.state                                            as state
+                     , j.enabled                                          as enabled
+                     , j.job_type                                         as job_type
+                     , j.job_action                                       as job_action
+                     , j.number_of_arguments                              as number_of_arguments
+                     , j.program_owner                                    as program_owner
+                     , j.program_name                                     as program_name
+                     , j.schedule_owner                                   as schedule_owner
+                     , j.schedule_name                                    as schedule_name
+                     , j.schedule_type                                    as schedule_type
+                     , j.repeat_interval                                  as repeat_interval
+                     , j.start_date                                       as start_date
+                     , j.end_date                                         as end_date
+                     , j.job_class                                        as job_class
+                     , j.job_priority                                     as job_priority
+                     , j.restartable                                      as restartable
+                     , j.auto_drop                                        as auto_drop
+                     , j.max_runs                                         as max_runs
+                     , j.max_failures                                     as max_failures
+                     , j.max_run_duration                                 as max_run_duration
+                     , j.logging_level                                    as logging_level
+                     , j.run_count                                        as run_count
+                     , j.failure_count                                     as failure_count
+                     , j.retry_count                                      as retry_count
+                     , j.last_start_date                                  as last_start_date
+                     , round(
+                         extract(day    from j.last_run_duration) * 86400
+                       + extract(hour   from j.last_run_duration) * 3600
+                       + extract(minute from j.last_run_duration) * 60
+                       + extract(second from j.last_run_duration)
+                       , 1)                                               as last_run_secs
+                     , j.next_run_date                                    as next_run_date
+                     , j.job_creator                                      as job_creator
+                     , j.client_id                                        as client_id
+                     , j.comments                                          as comments
+                  from all_scheduler_jobs j
+                 where j.owner    = :P1200_OWNER
+                   and j.job_name = :P1200_JOB_NAME
+                ```
+            pageItemsToSubmit: [
+                P1200_OWNER
+                P1200_JOB_NAME
+            ]
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            template: @/value-attribute-pairs-column
+            templateOptions: [
+                #DEFAULT#
+                t-AVPList--fixedLabelLarge
+                t-AVPList--leftAligned
+                t-Report--hideNoPagination
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column AUTO_DROP (
+            reportColumnQueryId: 20
+            derivedColumn: N
+            heading {
+                heading: Auto Drop
+                alignment: center
+            }
+            layout {
+                sequence: 200
+            }
+        )
+
+        column CLIENT_ID (
+            reportColumnQueryId: 32
+            derivedColumn: N
+            heading {
+                heading: Client Id
+                alignment: center
+            }
+            layout {
+                sequence: 320
+            }
+        )
+
+        column COMMENTS (
+            reportColumnQueryId: 33
+            derivedColumn: N
+            heading {
+                heading: Comments
+                alignment: center
+            }
+            layout {
+                sequence: 330
+            }
+        )
+
+        column ENABLED (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Enabled
+                alignment: center
+            }
+            layout {
+                sequence: 50
+            }
+        )
+
+        column END_DATE (
+            reportColumnQueryId: 16
+            derivedColumn: N
+            heading {
+                heading: End Date
+                alignment: center
+            }
+            layout {
+                sequence: 160
+            }
+        )
+
+        column FAILURE_COUNT (
+            reportColumnQueryId: 26
+            derivedColumn: N
+            heading {
+                heading: Failure Count
+                alignment: center
+            }
+            layout {
+                sequence: 260
+            }
+        )
+
+        column JOB_ACTION (
+            reportColumnQueryId: 7
+            derivedColumn: N
+            heading {
+                heading: Job Action
+                alignment: center
+            }
+            layout {
+                sequence: 70
+            }
+        )
+
+        column JOB_CLASS (
+            reportColumnQueryId: 17
+            derivedColumn: N
+            heading {
+                heading: Job Class
+                alignment: center
+            }
+            layout {
+                sequence: 170
+            }
+        )
+
+        column JOB_CREATOR (
+            reportColumnQueryId: 31
+            derivedColumn: N
+            heading {
+                heading: Job Creator
+                alignment: center
+            }
+            layout {
+                sequence: 310
+            }
+        )
+
+        column JOB_NAME (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Job Name
+                alignment: center
+            }
+            layout {
+                sequence: 20
+            }
+        )
+
+        column JOB_PRIORITY (
+            reportColumnQueryId: 18
+            derivedColumn: N
+            heading {
+                heading: Job Priority
+                alignment: center
+            }
+            layout {
+                sequence: 180
+            }
+        )
+
+        column JOB_SUBNAME (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Job Subname
+                alignment: center
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column JOB_TYPE (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Job Type
+                alignment: center
+            }
+            layout {
+                sequence: 60
+            }
+        )
+
+        column LAST_RUN_SECS (
+            reportColumnQueryId: 29
+            derivedColumn: N
+            heading {
+                heading: Last Run Secs
+                alignment: center
+            }
+            layout {
+                sequence: 290
+            }
+        )
+
+        column LAST_START_DATE (
+            reportColumnQueryId: 28
+            derivedColumn: N
+            heading {
+                heading: Last Start Date
+                alignment: center
+            }
+            layout {
+                sequence: 280
+            }
+        )
+
+        column LOGGING_LEVEL (
+            reportColumnQueryId: 24
+            derivedColumn: N
+            heading {
+                heading: Logging Level
+                alignment: center
+            }
+            layout {
+                sequence: 240
+            }
+        )
+
+        column MAX_FAILURES (
+            reportColumnQueryId: 22
+            derivedColumn: N
+            heading {
+                heading: Max Failures
+                alignment: center
+            }
+            layout {
+                sequence: 220
+            }
+        )
+
+        column MAX_RUNS (
+            reportColumnQueryId: 21
+            derivedColumn: N
+            heading {
+                heading: Max Runs
+                alignment: center
+            }
+            layout {
+                sequence: 210
+            }
+        )
+
+        column MAX_RUN_DURATION (
+            reportColumnQueryId: 23
+            derivedColumn: N
+            heading {
+                heading: Max Run Duration
+                alignment: center
+            }
+            layout {
+                sequence: 230
+            }
+        )
+
+        column NEXT_RUN_DATE (
+            reportColumnQueryId: 30
+            derivedColumn: N
+            heading {
+                heading: Next Run Date
+                alignment: center
+            }
+            layout {
+                sequence: 300
+            }
+        )
+
+        column NUMBER_OF_ARGUMENTS (
+            reportColumnQueryId: 8
+            derivedColumn: N
+            heading {
+                heading: Number Of Arguments
+                alignment: center
+            }
+            layout {
+                sequence: 80
+            }
+        )
+
+        column OWNER (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Owner
+                alignment: center
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        column PROGRAM_NAME (
+            reportColumnQueryId: 10
+            derivedColumn: N
+            heading {
+                heading: Program Name
+                alignment: center
+            }
+            layout {
+                sequence: 100
+            }
+        )
+
+        column PROGRAM_OWNER (
+            reportColumnQueryId: 9
+            derivedColumn: N
+            heading {
+                heading: Program Owner
+                alignment: center
+            }
+            layout {
+                sequence: 90
+            }
+        )
+
+        column REPEAT_INTERVAL (
+            reportColumnQueryId: 14
+            derivedColumn: N
+            heading {
+                heading: Repeat Interval
+                alignment: center
+            }
+            layout {
+                sequence: 140
+            }
+        )
+
+        column RESTARTABLE (
+            reportColumnQueryId: 19
+            derivedColumn: N
+            heading {
+                heading: Restartable
+                alignment: center
+            }
+            layout {
+                sequence: 190
+            }
+        )
+
+        column RETRY_COUNT (
+            reportColumnQueryId: 27
+            derivedColumn: N
+            heading {
+                heading: Retry Count
+                alignment: center
+            }
+            layout {
+                sequence: 270
+            }
+        )
+
+        column RUN_COUNT (
+            reportColumnQueryId: 25
+            derivedColumn: N
+            heading {
+                heading: Run Count
+                alignment: center
+            }
+            layout {
+                sequence: 250
+            }
+        )
+
+        column SCHEDULE_NAME (
+            reportColumnQueryId: 12
+            derivedColumn: N
+            heading {
+                heading: Schedule Name
+                alignment: center
+            }
+            layout {
+                sequence: 120
+            }
+        )
+
+        column SCHEDULE_OWNER (
+            reportColumnQueryId: 11
+            derivedColumn: N
+            heading {
+                heading: Schedule Owner
+                alignment: center
+            }
+            layout {
+                sequence: 110
+            }
+        )
+
+        column SCHEDULE_TYPE (
+            reportColumnQueryId: 13
+            derivedColumn: N
+            heading {
+                heading: Schedule Type
+                alignment: center
+            }
+            layout {
+                sequence: 130
+            }
+        )
+
+        column START_DATE (
+            reportColumnQueryId: 15
+            derivedColumn: N
+            heading {
+                heading: Start Date
+                alignment: center
+            }
+            layout {
+                sequence: 150
+            }
+        )
+
+        column STATE (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: State
+                alignment: center
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+    )
+
+    pageItem P1200_JOB_NAME (
+        type: hidden
+        layout {
+            sequence: 20
+            region: @job-details
+            slot: regionBody
+        }
+    )
+
+    pageItem P1200_OWNER (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @job-details
+            slot: regionBody
+        }
+    )
+
+)
+
