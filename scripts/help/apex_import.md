@@ -1,8 +1,9 @@
 # Import APEX App (repo → DB)
 
-Pushes `apex/apex_lang/` into a target schema/workspace, replacing
-application 10400 there. Run from `release/` (uses `../apex/apex_lang`,
-relative to cwd). Schema/workspace come from `release/load_env_vars.sql`.
+Pushes `apex/apex_lang/app_10400/` into a target schema/workspace, replacing
+application 10400 there. Run from `release/` (uses
+`../apex/apex_lang/app_10400`, relative to cwd). Schema/workspace come from
+`release/load_env_vars.sql`.
 
 Already connected:
 
