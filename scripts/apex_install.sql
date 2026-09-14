@@ -1,25 +1,30 @@
 -- =============================================================================
 -- APEX Application Install
 -- =============================================================================
--- Installs APEX application 100 into the target schema and workspace.
--- Run this script from SQLcl inside the repo root.
+-- Imports the split APEXlang export that lives in apex/apex_lang/ (produced by
+-- apex/apex_export.sql: `apex export -applicationid 10400 -dir apex -split
+-- -expType READABLE_YAML`). The application id is read from
+-- apex/apex_lang/deployments/default.json (currently 10400); schema and
+-- workspace are read from env_schema_name / env_apex_workspace, defined in
+-- release/load_env_vars.sql.
 --
--- Usage:
---   @scripts/apex_install.sql
+-- Assumes the current working directory is release/ (the documented entry
+-- point for a release, see release/README.md), so apex/apex_lang/ resolves
+-- as ../apex/apex_lang from here.
+--
+-- Usage (as part of a release):
+--   @@../scripts/apex_install.sql   -- called from release/all_apex.sql
+--
+-- Usage (standalone):
+--   cd release
+--   sql <connection>
+--   @@load_env_vars.sql
+--   @../scripts/apex_install.sql
 -- =============================================================================
 
 set serveroutput on size unlimited;
-set define off;
+set define on;
+set verify off;
 
--- -----------------------------------------------------------------------------
--- Configure the install target
--- -----------------------------------------------------------------------------
-begin
-  apex_application_install.set_application_id(100);
-  apex_application_install.set_schema('MY_SCHEMA');
-  apex_application_install.set_workspace('MY_WORKSPACE');
-end;
-/
-
--- Run the exported application file
-@../apex/f100.sql
+prompt *** Importing APEX Application (schema: &env_schema_name., workspace: &env_apex_workspace.) ***
+apex import -input ../apex/apex_lang -schema &env_schema_name. -workspace &env_apex_workspace.
