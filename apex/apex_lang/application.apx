@@ -58,6 +58,10 @@ app ERROR-SHIELD (
     reportPrinting {
         type: useInstanceSettings
     }
+    errorHandling {
+        defaultDisplayLocation: inlineWithFieldAndInNotification
+        errorHandlingFunctionName: ersh_error_handler_api.apex_error_handling
+    }
     runtime {
         allowFeedback: true
         accessibleReadOnlyItems: false
