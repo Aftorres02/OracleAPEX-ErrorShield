@@ -42,27 +42,7 @@ page 1000 (
         type: classicReport
         source {
             location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                with w_jobs as (
-                  select case
-                           when j.job_name like 'DBMS\_JOB$\_%' escape '\' then 'DBMS_JOB legacy'
-                           else 'SCHEDULER'
-                         end                                                       as job_source
-                       , j.state                                                   as state
-                       , j.enabled                                                 as enabled
-                    from all_scheduler_jobs j
-                )
-                select w.job_source                                                as job_source
-                     , count(*)                                                    as total_cnt
-                     , count(case when w.state in ('BROKEN', 'FAILED') then 1 end) as problem_cnt
-                     , count(case when w.state = 'RUNNING'             then 1 end) as running_cnt
-                     , count(case when w.enabled = 'FALSE'             then 1 end) as disabled_cnt
-                  from w_jobs w
-                 group by w.job_source
-                 order by w.job_source
-                ```
+            tableName: ERSH_JOBS_HEALTH_BY_SOURCE_VW
         }
         layout {
             sequence: 20
@@ -172,20 +152,7 @@ page 1000 (
         type: classicReport
         source {
             location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                select j.owner                                                     as owner
-                     , j.job_name                                                  as job_name
-                     , to_char(j.next_run_date, 'HH24:MI')                         as next_run_at
-                     , j.schedule_type                                             as schedule_type
-                     , j.repeat_interval                                           as repeat_interval
-                  from all_scheduler_jobs j
-                 where j.enabled       = 'TRUE'
-                   and j.next_run_date is not null
-                   and j.next_run_date <= systimestamp + interval '60' minute
-                 order by j.next_run_date
-                ```
+            tableName: ERSH_JOBS_NEXT_RUNS_VW
         }
         layout {
             sequence: 30
@@ -300,28 +267,7 @@ page 1000 (
         type: classicReport
         source {
             location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                select d.log_id                                                    as log_id
-                     , d.owner                                                     as owner
-                     , d.job_name                                                  as job_name
-                     , d.status                                                     as status
-                     , d.error#                                                    as error_code
-                     , to_char(d.actual_start_date, 'YYYY-MM-DD HH24:MI')          as started_at
-                     , round(
-                         extract(day    from d.run_duration) * 86400
-                       + extract(hour   from d.run_duration) * 3600
-                       + extract(minute from d.run_duration) * 60
-                       + extract(second from d.run_duration)
-                       , 1)                                                        as run_secs
-                     , substr(d.additional_info, 1, 200)                           as additional_info
-                  from all_scheduler_job_run_details d
-                 where d.log_date >= systimestamp - interval '3' day
-                   and nvl(d.status, 'UNKNOWN') <> 'SUCCEEDED'
-                 order by d.log_date desc
-                 fetch first 20 rows only
-                ```
+            tableName: ERSH_JOBS_RECENT_FAILURES_VW
         }
         layout {
             sequence: 40
@@ -476,34 +422,7 @@ page 1000 (
         type: classicReport
         source {
             location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                with w_jobs as (
-                  select count(*)                                                    as visible_cnt
-                       , count(case when j.enabled = 'TRUE'              then 1 end) as enabled_cnt
-                       , count(case when j.state in ('BROKEN', 'FAILED') then 1 end) as broken_cnt
-                    from all_scheduler_jobs j
-                )
-                , w_running as (
-                  select count(*)                                                    as running_cnt
-                    from all_scheduler_running_jobs r
-                )
-                , w_failed as (
-                  select count(*)                                                    as failed_cnt
-                    from all_scheduler_job_run_details d
-                   where d.log_date >= systimestamp - interval '1' day
-                     and nvl(d.status, 'UNKNOWN') <> 'SUCCEEDED'
-                )
-                select j.visible_cnt                                                 as visible_jobs
-                     , j.enabled_cnt                                                 as enabled
-                     , j.broken_cnt                                                  as broken_or_failed
-                     , r.running_cnt                                                 as running_now
-                     , f.failed_cnt                                                  as failed_runs_24h
-                  from w_jobs      j
-                 cross join w_running r
-                 cross join w_failed  f
-                ```
+            tableName: ERSH_JOBS_STATUS_VW
         }
         layout {
             sequence: 10

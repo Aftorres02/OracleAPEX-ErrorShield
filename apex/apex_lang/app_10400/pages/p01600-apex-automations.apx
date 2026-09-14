@@ -20,31 +20,7 @@ page 1600 (
         type: classicReport
         source {
             location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                select a.application_id                                            as application_id
-                     , a.application_name                                          as application_name
-                     , a.name                                                      as automation_name
-                     , a.static_id                                                 as static_id
-                     , a.trigger_type                                              as trigger_type
-                     , a.polling_interval                                          as polling_interval
-                     , a.polling_status                                            as polling_status
-                     , a.polling_last_run_timestamp                                as last_run_on
-                     , a.polling_next_run_timestamp                                as next_run_on
-                     , a.result_type                                               as result_type
-                     , a.query_type                                                as query_type
-                     , a.table_owner                                               as table_owner
-                     , a.table_name                                                as table_name
-                     , a.max_rows_to_process                                       as max_rows_to_process
-                     , a.error_handling_type                                       as error_handling_type
-                     , a.build_option                                              as build_option
-                     , a.component_comment                                         as component_comment
-                     , a.last_updated_on                                           as last_updated_on
-                  from apex_appl_automations a
-                 order by a.application_id
-                        , a.name
-                ```
+            tableName: ERSH_APEX_AUTOMATIONS_VW
         }
         layout {
             sequence: 20
@@ -372,41 +348,7 @@ page 1600 (
         type: classicReport
         source {
             location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                with w_log as (
-                  select l.id                                                      as log_id
-                       , l.application_id                                          as application_id
-                       , l.automation_id                                           as automation_id
-                       , l.automation_name                                         as automation_name
-                       , l.is_job                                                  as is_job
-                       , l.status                                                  as status
-                       , l.start_timestamp                                         as start_timestamp
-                       , l.end_timestamp                                           as end_timestamp
-                       , l.successful_row_count                                    as successful_row_count
-                       , l.error_row_count                                         as error_row_count
-                       , l.end_timestamp - l.start_timestamp                       as run_interval
-                    from apex_automation_log l
-                   where l.start_timestamp >= systimestamp - interval '7' day
-                )
-                select w.log_id                                                    as log_id
-                     , w.application_id                                            as application_id
-                     , w.automation_name                                           as automation_name
-                     , w.status                                                    as status
-                     , w.is_job                                                    as is_job
-                     , to_char(w.start_timestamp, 'YYYY-MM-DD HH24:MI:SS')         as started_at
-                     , round(
-                         extract(day    from w.run_interval) * 86400
-                       + extract(hour   from w.run_interval) * 3600
-                       + extract(minute from w.run_interval) * 60
-                       + extract(second from w.run_interval)
-                       , 1)                                                        as duration_secs
-                     , w.successful_row_count                                      as successful_row_count
-                     , w.error_row_count                                           as error_row_count
-                  from w_log w
-                 order by w.start_timestamp desc
-                ```
+            tableName: ERSH_APEX_AUTOMATION_EXECUTIONS_VW
         }
         layout {
             sequence: 40
@@ -588,18 +530,10 @@ page 1600 (
         type: classicReport
         source {
             location: localDatabase
-            type: sqlQuery
-            sqlQuery:
+            tableName: ERSH_APEX_AUTOMATION_MESSAGES_VW
+            whereClause:
                 ```sql
-                select m.automation_log_id                                         as automation_log_id
-                     , to_char(m.message_timestamp, 'YYYY-MM-DD HH24:MI:SS')       as message_at
-                     , m.message_type                                              as message_type
-                     , m.action_name                                               as action_name
-                     , m.pk_value                                                  as pk_value
-                     , m.message                                                   as message
-                  from apex_automation_msg_log m
-                 where (:P1600_LOG_ID is null or m.automation_log_id = :P1600_LOG_ID)
-                 order by m.message_timestamp desc
+                (:P1600_LOG_ID is null or automation_log_id = :P1600_LOG_ID)
                 ```
             pageItemsToSubmit: P1600_LOG_ID
         }
