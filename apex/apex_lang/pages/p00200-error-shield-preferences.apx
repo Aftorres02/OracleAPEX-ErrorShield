@@ -1,7 +1,7 @@
 page 200 (
-    name: Error Shield Preferences
+    name: Application Preferences
     alias: ERROR-SHIELD-PREFERENCES
-    title: Error Shield Preferences
+    title: Application Preferences
     appearance {
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
@@ -87,6 +87,9 @@ page 200 (
             }
             source {
                 dataType: STRING
+            }
+            enableUsersTo {
+                filter: true
             }
             advanced {
                 endUserAlias: D

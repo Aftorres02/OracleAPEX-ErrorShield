@@ -50,3 +50,65 @@ lov user-theme-preference (
 
 )
 
+lov logger-level (
+    name: LOGGER_LEVEL_VALUES
+    source {
+        location: staticValues
+    }
+
+    entry off (
+        sequence: 10
+        display: OFF
+        return: OFF
+    )
+
+    entry permanent (
+        sequence: 20
+        display: PERMANENT
+        return: PERMANENT
+    )
+
+    entry error (
+        sequence: 30
+        display: ERROR
+        return: ERROR
+    )
+
+    entry warning (
+        sequence: 40
+        display: WARNING
+        return: WARNING
+    )
+
+    entry information (
+        sequence: 50
+        display: INFORMATION
+        return: INFORMATION
+    )
+
+    entry debug (
+        sequence: 60
+        display: DEBUG
+        return: DEBUG
+    )
+
+    entry timing (
+        sequence: 70
+        display: TIMING
+        return: TIMING
+    )
+
+    entry sys-context (
+        sequence: 80
+        display: SYS_CONTEXT
+        return: SYS_CONTEXT
+    )
+
+    entry apex (
+        sequence: 90
+        display: APEX
+        return: APEX
+    )
+
+)
+

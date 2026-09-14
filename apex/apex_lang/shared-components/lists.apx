@@ -167,7 +167,7 @@ list navigation-menu (
     )
 
     entry error-shield-preferences (
-        label: Error Shield Preferences
+        label: Application Preferences
         layout {
             sequence: 30
         }
