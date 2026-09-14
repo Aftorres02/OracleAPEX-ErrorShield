@@ -1,7 +1,7 @@
 --
 define env_schema_name = LOGGER_USER
-define env_apex_app_ids = NONE
-define env_apex_workspace = NONE
+define env_apex_app_ids = 10400
+define env_apex_workspace = LOGGER_USER
 
 
 prompt ENV variables

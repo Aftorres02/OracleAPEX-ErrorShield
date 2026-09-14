@@ -1,3 +1,5 @@
 --
 prompt *** APEX Installation ***
-prompt *** App: 4000 ***
+prompt *** App: &env_apex_app_ids. ***
+
+@@../scripts/apex_install.sql
