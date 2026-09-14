@@ -88,9 +88,6 @@ page 200 (
             source {
                 dataType: STRING
             }
-            enableUsersTo {
-                filter: true
-            }
             advanced {
                 endUserAlias: D
             }

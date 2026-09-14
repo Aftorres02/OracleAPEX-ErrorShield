@@ -160,6 +160,10 @@ page 210 (
             label: Pref Value
             alignment: left
         }
+        lov {
+            type: sharedComponent
+            lov: @logger-level
+        }
         layout {
             sequence: 41
             region: @error-shield-preference
@@ -169,10 +173,6 @@ page 210 (
         appearance {
             template: @/required-floating
             templateOptions: #DEFAULT#
-        }
-        lov {
-            type: sharedComponent
-            lov: @logger-level
         }
         validation {
             valueRequired: true
@@ -335,14 +335,26 @@ page 210 (
         name: Populate Pref Value LOV
         type: executeCode
         source {
-            plsqlCode:
-                ```plsql
-                :P210_PREF_VALUE_LOV := :P210_PREF_VALUE;
-                ```
+            plsqlCode: :P210_PREF_VALUE_LOV := :P210_PREF_VALUE;
         }
         execution {
             sequence: 20
             point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 17081442765554011
+        }
+    )
+
+    process process-form-error-shield-preference (
+        name: Process form Error Shield Preference
+        type: formAutoRowProcessing
+        formRegion: @error-shield-preference
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 382139607707074932
         }
     )
 
@@ -363,21 +375,12 @@ page 210 (
         execution {
             sequence: 5
         }
+        advanced {
+            executionMappingIdentifier: 17081534770554011
+        }
         serverSideCondition {
             type: requestIsContainedInValue
             value: CREATE,SAVE
-        }
-    )
-
-    process process-form-error-shield-preference (
-        name: Process form Error Shield Preference
-        type: formAutoRowProcessing
-        formRegion: @error-shield-preference
-        execution {
-            sequence: 10
-        }
-        advanced {
-            executionMappingIdentifier: 382139607707074932
         }
     )
 
