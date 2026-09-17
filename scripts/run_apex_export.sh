@@ -10,12 +10,18 @@
 # behind. The single-file export doesn't need this: -overwrite-files
 # overwrites that one file directly.
 #
-# Usage:
-#   cd "/Users/angel.flores/GIT/p_aftorres02/OracleAPEX-ErrorShield"
-#   ./run_apex_export.sh
+# Resolves the repo root from this script's own location, so it works
+# regardless of where the repo is cloned or which directory it's run from.
+#
+# Usage (from anywhere):
+#   ./scripts/run_apex_export.sh
 # --------------------------------------------------------------------------
 
-cd "/Users/angel.flores/GIT/p_aftorres02/OracleAPEX-ErrorShield"
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "$script_dir/.." && pwd)"
+cd "$repo_root"
 
 # Clean up the previous split export here (not inside SQLcl's "host" command -
 # on this machine SQLcl's host command fails with "Cannot run program bash",
