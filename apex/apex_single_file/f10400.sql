@@ -33,7 +33,7 @@ prompt APPLICATION 10400 - Error Shield
 -- Application Export:
 --   Application:     10400
 --   Name:            Error Shield
---   Date and Time:   03:48 Thursday September 17, 2026
+--   Date and Time:   16:04 Thursday September 17, 2026
 --   Exported By:     LOGGER_USER
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -121,7 +121,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Error Shield'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
-,p_files_version=>2461301034821
+,p_files_version=>2461301160343
 ,p_print_server_type=>'INSTANCE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -213,7 +213,7 @@ wwv_flow_imp_shared.create_plugin(
 ,p_standard_attributes=>'ONLOAD'
 ,p_substitute_attributes=>true
 ,p_version_identifier=>'1.0'
-,p_files_version=>2461301034821
+,p_files_version=>2461301160343
 );
 wwv_flow_imp_shared.create_plugin_attribute(
  p_id=>wwv_flow_imp.id(768502383825867682)
@@ -673,7 +673,7 @@ wwv_flow_imp_shared.create_list_item(
 wwv_flow_imp_shared.create_list_item(
  p_id=>wwv_flow_imp.id(382489367394296420)
 ,p_list_item_display_sequence=>40
-,p_list_item_link_text=>'Looger Logs'
+,p_list_item_link_text=>'Logger Logs'
 ,p_static_id=>'looger-logs'
 ,p_list_item_link_target=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.'
 ,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
@@ -688,16 +688,6 @@ wwv_flow_imp_shared.create_list_item(
 ,p_parent_list_item_id=>wwv_flow_imp.id(422972072521875614)
 ,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
 ,p_list_item_current_for_pages=>'1400'
-);
-wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(428264260363282520)
-,p_list_item_display_sequence=>110
-,p_list_item_link_text=>'Timeline'
-,p_static_id=>'timeline'
-,p_list_item_link_target=>'f?p=&APP_ID.:1500:&SESSION.::&DEBUG.'
-,p_parent_list_item_id=>wwv_flow_imp.id(422972072521875614)
-,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
-,p_list_item_current_for_pages=>'1500'
 );
 end;
 /
@@ -782,7 +772,10 @@ wwv_flow_imp_shared.create_security_scheme(
 ,p_static_id=>'administration-rights'
 ,p_scheme_type=>'NATIVE_FUNCTION_BODY'
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
-  'plsql_function_body', 'return true;')).to_clob
+  'plsql_function_body', wwv_flow_string.join(wwv_flow_t_varchar2(
+    '-- TODO_AF_09-17-2026 Replace with a real role model. Today every',
+    '-- authenticated user is an administrator. See ERSH-043.',
+    'return true;')))).to_clob
 ,p_error_message=>'Insufficient privileges, user is not an Administrator'
 ,p_caching=>'BY_USER_BY_PAGE_VIEW'
 );
@@ -1062,7 +1055,7 @@ wwv_flow_imp_shared.create_menu_option(
 );
 wwv_flow_imp_shared.create_menu_option(
  p_id=>wwv_flow_imp.id(382490036921296421)
-,p_short_name=>'Looger Logs'
+,p_short_name=>'Logger Logs'
 ,p_static_id=>'looger-logs'
 ,p_link=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.'
 ,p_page_id=>400
@@ -1131,7 +1124,7 @@ wwv_flow_imp_shared.create_theme(
 ,p_default_required_label=>1610598484065263269
 ,p_default_navbar_list_template=>2849019392706229583
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_theme_file_prefix(42),'#APEX_FILES#themes/theme_42/26.1/')
-,p_files_version=>2461301034821
+,p_files_version=>2461301160343
 ,p_icon_library=>'FONTAPEX'
 ,p_javascript_file_urls=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '#APEX_FILES#libraries/apex/#MIN_DIRECTORY#widget.stickyWidget#MIN#.js?v=#APEX_VERSION#',
@@ -1603,7 +1596,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_column=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(17645711494992413)
+ p_id=>wwv_flow_imp.id(17838874002404601)
 ,p_branch_name=>'Go to Found Incident'
 ,p_branch_action=>'f?p=&APP_ID.:110:&SESSION.::&DEBUG.::P110_SHIELD_INCIDENT_ID:&P100_FOUND_INCIDENT_ID.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
@@ -2763,9 +2756,9 @@ prompt --application/pages/page_00400
 begin
 wwv_flow_imp_page.create_page(
  p_id=>400
-,p_name=>'Looger Logs'
-,p_alias=>'LOOGER-LOGS'
-,p_step_title=>'Looger Logs'
+,p_name=>'Logger Logs'
+,p_alias=>'LOGGER-LOGS'
+,p_step_title=>'Logger Logs'
 ,p_autocomplete_on_off=>'OFF'
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
@@ -3184,7 +3177,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_required_patch=>wwv_flow_imp.id(381905544746018346)
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(17646300020992495)
+ p_id=>wwv_flow_imp.id(17839448159404637)
 ,p_branch_action=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
 ,p_branch_type=>'REDIRECT_URL'
@@ -5965,7 +5958,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_row=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(17647536543992603)
+ p_id=>wwv_flow_imp.id(17840670281404690)
 ,p_branch_name=>'Branch to Admin Page'
 ,p_branch_action=>'f?p=&APP_ID.:10000:&SESSION.::&DEBUG.:RP&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'

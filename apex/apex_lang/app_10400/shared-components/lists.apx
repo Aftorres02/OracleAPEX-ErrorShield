@@ -295,7 +295,7 @@ list navigation-menu (
     )
 
     entry looger-logs (
-        label: Looger Logs
+        label: Logger Logs
         layout {
             sequence: 40
         }
@@ -326,23 +326,6 @@ list navigation-menu (
         link {
             target: {
                 page: 1400
-            }
-        }
-    )
-
-    entry timeline (
-        label: Timeline
-        layout {
-            sequence: 110
-            parentEntry: @jobs-dashboard
-        }
-        isCurrent {
-            type: pages
-            pages: 1500
-        }
-        link {
-            target: {
-                page: 1500
             }
         }
     )

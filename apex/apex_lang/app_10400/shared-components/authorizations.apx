@@ -2,7 +2,12 @@ authorization administration-rights (
     name: Administration Rights
     type: plSqlFunctionBody
     settings {
-        plsqlFunctionBody: return true;
+        plsqlFunctionBody:
+            ```plsql
+            -- TODO_AF_09-17-2026 Replace with a real role model. Today every
+            -- authenticated user is an administrator. See ERSH-043.
+            return true;
+            ```
     }
     error {
         errorMessage: Insufficient privileges, user is not an Administrator
