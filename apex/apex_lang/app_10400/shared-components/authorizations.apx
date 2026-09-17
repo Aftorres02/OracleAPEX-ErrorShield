@@ -4,8 +4,8 @@ authorization administration-rights (
     settings {
         plsqlFunctionBody:
             ```plsql
-            -- TODO_AF_09-17-2026 Reemplazar por modelo de roles real. Hoy todo
-            -- usuario autenticado es administrador. Ver ERSH-043.
+            -- TODO_AF_09-17-2026 Replace with a real role model. Today every
+            -- authenticated user is an administrator. See ERSH-043.
             return true;
             ```
     }

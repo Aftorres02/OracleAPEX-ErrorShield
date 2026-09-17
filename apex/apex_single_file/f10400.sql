@@ -772,8 +772,8 @@ wwv_flow_imp_shared.create_security_scheme(
 ,p_static_id=>'administration-rights'
 ,p_scheme_type=>'NATIVE_FUNCTION_BODY'
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
-  'plsql_function_body', '-- TODO_AF_09-17-2026 Reemplazar por modelo de roles real. Hoy todo
--- usuario autenticado es administrador. Ver ERSH-043.
+  'plsql_function_body', '-- TODO_AF_09-17-2026 Replace with a real role model. Today every
+-- authenticated user is an administrator. See ERSH-043.
 return true;')).to_clob
 ,p_error_message=>'Insufficient privileges, user is not an Administrator'
 ,p_caching=>'BY_USER_BY_PAGE_VIEW'
