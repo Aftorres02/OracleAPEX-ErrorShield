@@ -1,6 +1,6 @@
 page 400 (
     name: Logger Logs
-    alias: LOOGER-LOGS
+    alias: LOGGER-LOGS
     title: Logger Logs
     appearance {
         pageTemplate: @/standard
