@@ -13,8 +13,18 @@ create or replace view ersh_shield_incidents_vw
 as
 with w_base as (
   select si.shield_incident_id                                      as shield_incident_id
-       -- Zero-padded reference matching the format shown to end users
-       , lpad(to_char(si.logger_log_id), 10, '0')                  as reference_display
+       -- Zero-padded reference matching the format shown to end users.
+       -- Must mirror log_and_mask_error's own formula (ERSH preference
+       -- REFERENCE_DISPLAY_MIN_DIGITS, not a hardcoded width) or this column
+       -- silently drifts from what the user actually sees on screen (ERSH-017).
+       , lpad(
+           to_char(si.logger_log_id)
+         , greatest(
+             to_number(logger.get_pref('REFERENCE_DISPLAY_MIN_DIGITS', 'ERSH'))
+           , length(to_char(si.logger_log_id))
+           )
+         , '0'
+         )                                                          as reference_display
        , si.logger_log_id                                           as logger_log_id
        -- APEX correlation
        , si.application_id                                          as application_id

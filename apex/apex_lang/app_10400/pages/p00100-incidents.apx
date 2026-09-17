@@ -14,12 +14,25 @@ page 100 (
         formAutoComplete: false
     }
 
+    region find-incident (
+        name: Find Incident
+        type: staticContent
+        layout {
+            sequence: 5
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
     region incidents (
         name: Incidents
         type: interactiveReport
         source {
             location: localDatabase
-            tableName: ERSH_SHIELD_INCIDENTS
+            tableName: ERSH_SHIELD_INCIDENTS_VW
         }
         layout {
             sequence: 10
@@ -56,22 +69,6 @@ page 100 (
         advanced {
             savedReportMappingIdentifier: 382121529995033210
         }
-
-        column ACTIVE_YN (
-            type: plainText
-            heading {
-                heading: Active Yn
-            }
-            layout {
-                sequence: 18
-            }
-            source {
-                dataType: STRING
-            }
-            advanced {
-                endUserAlias: R
-            }
-        )
 
         column APPLICATION_ID (
             type: plainText
@@ -139,22 +136,6 @@ page 100 (
             }
         )
 
-        column CREATED_BY (
-            type: plainText
-            heading {
-                heading: Created By
-            }
-            layout {
-                sequence: 19
-            }
-            source {
-                dataType: STRING
-            }
-            advanced {
-                endUserAlias: S
-            }
-        )
-
         column CREATED_ON (
             type: plainText
             heading {
@@ -172,22 +153,6 @@ page 100 (
             }
         )
 
-        column ERROR_FINGERPRINT (
-            type: plainText
-            heading {
-                heading: Error Fingerprint
-            }
-            layout {
-                sequence: 11
-            }
-            source {
-                dataType: STRING
-            }
-            advanced {
-                endUserAlias: K
-            }
-        )
-
         column ERROR_SUMMARY (
             type: plainText
             heading {
@@ -201,22 +166,6 @@ page 100 (
             }
             advanced {
                 endUserAlias: J
-            }
-        )
-
-        column LAST_UPDATED_BY (
-            type: plainText
-            heading {
-                heading: Last Updated By
-            }
-            layout {
-                sequence: 21
-            }
-            source {
-                dataType: STRING
-            }
-            advanced {
-                endUserAlias: U
             }
         )
 
@@ -306,6 +255,22 @@ page 100 (
             }
             advanced {
                 endUserAlias: D
+            }
+        )
+
+        column REFERENCE_DISPLAY (
+            type: plainText
+            heading {
+                heading: Reference Display
+            }
+            layout {
+                sequence: 11
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: K
             }
         )
 
@@ -408,24 +373,6 @@ page 100 (
             }
         )
 
-        column TIME_BUCKET (
-            type: plainText
-            heading {
-                heading: Time Bucket
-                alignment: end
-            }
-            layout {
-                sequence: 12
-                columnAlignment: end
-            }
-            source {
-                dataType: NUMBER
-            }
-            advanced {
-                endUserAlias: L
-            }
-        )
-
         page {
             borderWidth: 0.5
             borderColor: #666666
@@ -439,10 +386,6 @@ page 100 (
             view {
                 rowsPerPage: 50
             }
-
-            displayColumn ACTIVE_YN (
-                sequence: 14
-            )
 
             displayColumn APPLICATION_ID (
                 sequence: 1
@@ -460,24 +403,16 @@ page 100 (
                 sequence: 5
             )
 
-            displayColumn CREATED_BY (
-                sequence: 15
-            )
-
             displayColumn CREATED_ON (
-                sequence: 16
+                sequence: 14
             )
 
             displayColumn ERROR_SUMMARY (
                 sequence: 4
             )
 
-            displayColumn LAST_UPDATED_BY (
-                sequence: 17
-            )
-
             displayColumn LAST_UPDATED_ON (
-                sequence: 18
+                sequence: 15
             )
 
             displayColumn OCCURRENCE_COUNT (
@@ -490,6 +425,10 @@ page 100 (
 
             displayColumn PAGE_ID (
                 sequence: 2
+            )
+
+            displayColumn REFERENCE_DISPLAY (
+                sequence: 8
             )
 
             displayColumn RESOLUTION_NOTES (
@@ -508,10 +447,6 @@ page 100 (
                 sequence: 10
             )
 
-            displayColumn TIME_BUCKET (
-                sequence: 8
-            )
-
             sort (
                 column: CREATED_ON
                 sort {
@@ -522,6 +457,129 @@ page 100 (
 
         )
 
+    )
+
+    pageItem P100_FOUND_INCIDENT_ID (
+        type: hidden
+        layout {
+            sequence: 20
+            region: @find-incident
+            slot: regionBody
+        }
+    )
+
+    pageItem P100_SEARCH_CODE (
+        type: textField
+        label {
+            label: Reference Code
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @find-incident
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            valuePlaceholder: e.g. 0000005003
+        }
+        validation {
+            maxLength: 20
+        }
+    )
+
+    button find-incident (
+        buttonName: FIND_INCIDENT
+        label: Find Incident
+        layout {
+            sequence: 20
+            region: @find-incident
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    process find-incident (
+        name: Find Incident
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                  l_code           varchar2(4000);
+                  l_logger_log_id  number;
+                begin
+                  :P100_FOUND_INCIDENT_ID := null;
+                  l_code := trim(:P100_SEARCH_CODE);
+                
+                  begin
+                    l_logger_log_id := to_number(l_code);
+                  exception
+                    when others then
+                      l_logger_log_id := null;
+                  end;
+                
+                  if l_logger_log_id is null then
+                    apex_error.add_error(
+                        p_message          => 'Enter a valid reference code (digits only).'
+                      , p_display_location => apex_error.c_inline_with_field_and_notif
+                      , p_page_item_name   => 'P100_SEARCH_CODE'
+                    );
+                    return;
+                  end if;
+                
+                  begin
+                    select shield_incident_id
+                      into :P100_FOUND_INCIDENT_ID
+                      from ersh_incident_occurrences_vw
+                     where logger_log_id = l_logger_log_id;
+                  exception
+                    when no_data_found then
+                      apex_error.add_error(
+                          p_message          => 'No incident found for reference code ' || l_code || '.'
+                        , p_display_location => apex_error.c_inline_with_field_and_notif
+                        , p_page_item_name   => 'P100_SEARCH_CODE'
+                      );
+                  end;
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 17641373874968060
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: FIND_INCIDENT
+        }
+    )
+
+    branch (
+        name: Go to Found Incident
+        execution {
+            sequence: 10
+        }
+        behavior {
+            target: {
+                page: 110
+                items: {
+                    P110_SHIELD_INCIDENT_ID: &P100_FOUND_INCIDENT_ID.
+                }
+            }
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P100_FOUND_INCIDENT_ID
+        }
     )
 
 )

@@ -33,3 +33,6 @@ prompt @../tables/ersh_error_lookup.sql
 
 prompt @../tables/ersh_shield_incidents.sql
 @@../tables/ersh_shield_incidents.sql
+
+prompt @../tables/ersh_incident_occurrences.sql
+@@../tables/ersh_incident_occurrences.sql
