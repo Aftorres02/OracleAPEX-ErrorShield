@@ -79,7 +79,11 @@ create or replace package ersh_error_handler_api is
   /**
    * Inserts or increments a row in ersh_shield_incidents using a 30-second
    * time bucket and a SHA-256 fingerprint as the dedup key (Option A).
-   * Autonomous commit so it persists even if the caller rolls back.
+   * Autonomous commit so it persists even if the caller rolls back. Also
+   * inserts a child ersh_incident_occurrences row for every hit, so a
+   * single logger_log_id/app_user is never lost to the parent dedup.
+   *
+   * @issue ERSH-010
    *
    * @param p_application_id  APEX application ID
    * @param p_page_id         APEX page ID

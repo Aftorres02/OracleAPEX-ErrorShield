@@ -531,10 +531,7 @@ page 1600 (
         source {
             location: localDatabase
             tableName: ERSH_APEX_AUTOMATION_MESSAGES_VW
-            whereClause:
-                ```sql
-                (:P1600_LOG_ID is null or automation_log_id = :P1600_LOG_ID)
-                ```
+            whereClause: (:P1600_LOG_ID is null or automation_log_id = :P1600_LOG_ID)
             pageItemsToSubmit: P1600_LOG_ID
         }
         layout {

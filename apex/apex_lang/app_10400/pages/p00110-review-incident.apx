@@ -52,6 +52,83 @@ page 110 (
         }
     )
 
+    region occurrences (
+        name: Occurrences
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select o.app_user          as app_user
+                     , o.reference_display as reference_display
+                     , o.occurred_on       as occurred_on
+                  from ersh_incident_occurrences_vw o
+                 where o.shield_incident_id = :P110_SHIELD_INCIDENT_ID
+                 order by o.occurred_on desc
+                ```
+            pageItemsToSubmit: P110_SHIELD_INCIDENT_ID
+        }
+        layout {
+            sequence: 20
+            parentRegion: @review-incident
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        messages {
+            whenNoDataFound: No occurrences recorded.
+        }
+
+        column APP_USER (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: App User
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        column OCCURRED_ON (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Occurred On
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column REFERENCE_DISPLAY (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Reference Display
+            }
+            layout {
+                sequence: 20
+            }
+        )
+
+    )
+
     region review-incident (
         name: Review Incident
         type: form

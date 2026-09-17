@@ -33,16 +33,16 @@ prompt APPLICATION 10400 - Error Shield
 -- Application Export:
 --   Application:     10400
 --   Name:            Error Shield
---   Date and Time:   05:32 Monday September 14, 2026
+--   Date and Time:   03:48 Thursday September 17, 2026
 --   Exported By:     LOGGER_USER
 --   Flashback:       0
 --   Export Type:     Application Export
 --     Pages:                     20
---       Items:                   52
+--       Items:                   54
 --       Validations:              1
---       Processes:               15
---       Regions:                 38
---       Buttons:                 15
+--       Processes:               16
+--       Regions:                 40
+--       Buttons:                 16
 --       Dynamic Actions:          2
 --     Shared Components:
 --       Logic:
@@ -121,7 +121,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Error Shield'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
-,p_files_version=>2461298050836
+,p_files_version=>2461301034821
 ,p_print_server_type=>'INSTANCE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -213,7 +213,7 @@ wwv_flow_imp_shared.create_plugin(
 ,p_standard_attributes=>'ONLOAD'
 ,p_substitute_attributes=>true
 ,p_version_identifier=>'1.0'
-,p_files_version=>2461298050836
+,p_files_version=>2461301034821
 );
 wwv_flow_imp_shared.create_plugin_attribute(
  p_id=>wwv_flow_imp.id(768502383825867682)
@@ -1131,7 +1131,7 @@ wwv_flow_imp_shared.create_theme(
 ,p_default_required_label=>1610598484065263269
 ,p_default_navbar_list_template=>2849019392706229583
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_theme_file_prefix(42),'#APEX_FILES#themes/theme_42/26.1/')
-,p_files_version=>2461298050836
+,p_files_version=>2461301034821
 ,p_icon_library=>'FONTAPEX'
 ,p_javascript_file_urls=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '#APEX_FILES#libraries/apex/#MIN_DIRECTORY#widget.stickyWidget#MIN#.js?v=#APEX_VERSION#',
@@ -1295,6 +1295,19 @@ wwv_flow_imp_page.create_page(
 ,p_protection_level=>'C'
 );
 wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(17640820228968005)
+,p_plug_name=>'Find Incident'
+,p_static_id=>'find-incident'
+,p_region_template_options=>'#DEFAULT#'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382121469095033210)
 ,p_plug_name=>'Incidents'
 ,p_static_id=>'incidents'
@@ -1303,7 +1316,7 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_display_sequence=>10
 ,p_plug_item_display_point=>'ABOVE'
 ,p_query_type=>'TABLE'
-,p_query_table=>'ERSH_SHIELD_INCIDENTS'
+,p_query_table=>'ERSH_SHIELD_INCIDENTS_VW'
 ,p_include_rowid_column=>false
 ,p_plug_source_type=>'NATIVE_IR'
 ,p_prn_content_disposition=>'ATTACHMENT'
@@ -1357,17 +1370,6 @@ wwv_flow_imp_page.create_worksheet(
 ,p_internal_uid=>382121529995033210
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(382128773513033220)
-,p_db_column_name=>'ACTIVE_YN'
-,p_display_order=>18
-,p_column_identifier=>'R'
-,p_column_label=>'Active Yn'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(382122718993033217)
 ,p_db_column_name=>'APPLICATION_ID'
 ,p_display_order=>3
@@ -1413,17 +1415,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_available_clientside=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(382129163571033221)
-,p_db_column_name=>'CREATED_BY'
-,p_display_order=>19
-,p_column_identifier=>'S'
-,p_column_label=>'Created By'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(382129561517033221)
 ,p_db_column_name=>'CREATED_ON'
 ,p_display_order=>20
@@ -1436,33 +1427,11 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_available_clientside=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(382125948157033218)
-,p_db_column_name=>'ERROR_FINGERPRINT'
-,p_display_order=>11
-,p_column_identifier=>'K'
-,p_column_label=>'Error Fingerprint'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(382125563677033218)
 ,p_db_column_name=>'ERROR_SUMMARY'
 ,p_display_order=>10
 ,p_column_identifier=>'J'
 ,p_column_label=>'Error Summary'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(382129948656033221)
-,p_db_column_name=>'LAST_UPDATED_BY'
-,p_display_order=>21
-,p_column_identifier=>'U'
-,p_column_label=>'Last Updated By'
 ,p_column_type=>'STRING'
 ,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
@@ -1525,6 +1494,17 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_type=>'NUMBER'
 ,p_heading_alignment=>'RIGHT'
 ,p_column_alignment=>'RIGHT'
+,p_use_as_row_header=>'N'
+,p_available_clientside=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(17640982425968007)
+,p_db_column_name=>'REFERENCE_DISPLAY'
+,p_display_order=>11
+,p_column_identifier=>'K'
+,p_column_label=>'Reference Display'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
 ,p_available_clientside=>'N'
 );
@@ -1596,18 +1576,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 ,p_available_clientside=>'N'
 );
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(382126386489033218)
-,p_db_column_name=>'TIME_BUCKET'
-,p_display_order=>12
-,p_column_identifier=>'L'
-,p_column_label=>'Time Bucket'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
 wwv_flow_imp_page.create_worksheet_rpt(
  p_id=>wwv_flow_imp.id(382131172654038778)
 ,p_application_user=>'APXWS_DEFAULT'
@@ -1615,9 +1583,114 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_report_alias=>'3821312'
 ,p_status=>'PUBLIC'
 ,p_is_default=>'Y'
-,p_report_columns=>'APPLICATION_ID:PAGE_ID:APP_USER:ERROR_SUMMARY:COMPONENT_TYPE:COMPONENT_NAME:ORA_SQLCODE:TIME_BUCKET:OCCURRENCE_COUNT:RESOLVED_YN:RESOLVED_BY:RESOLVED_ON:RESOLUTION_NOTES:ACTIVE_YN:CREATED_BY:CREATED_ON:LAST_UPDATED_BY:LAST_UPDATED_ON'
+,p_report_columns=>'APPLICATION_ID:PAGE_ID:APP_USER:ERROR_SUMMARY:COMPONENT_TYPE:COMPONENT_NAME:ORA_SQLCODE:REFERENCE_DISPLAY:OCCURRENCE_COUNT:RESOLVED_YN:RESOLVED_BY:RESOLVED_ON:RESOLUTION_NOTES:CREATED_ON:LAST_UPDATED_ON'
 ,p_sort_column_1=>'CREATED_ON'
 ,p_sort_direction_1=>'DESC'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(17641222761968059)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_imp.id(17640820228968005)
+,p_button_name=>'FIND_INCIDENT'
+,p_static_id=>'find-incident'
+,p_show_as_disabled=>false
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4073839297780169708
+,p_button_image_alt=>'Find Incident'
+,p_warn_on_unsaved_changes=>null
+,p_grid_new_row=>'N'
+,p_grid_new_column=>'Y'
+);
+wwv_flow_imp_page.create_page_branch(
+ p_id=>wwv_flow_imp.id(17645711494992413)
+,p_branch_name=>'Go to Found Incident'
+,p_branch_action=>'f?p=&APP_ID.:110:&SESSION.::&DEBUG.::P110_SHIELD_INCIDENT_ID:&P100_FOUND_INCIDENT_ID.&success_msg=#SUCCESS_MSG#'
+,p_branch_point=>'AFTER_PROCESSING'
+,p_branch_type=>'REDIRECT_URL'
+,p_branch_sequence=>10
+,p_branch_condition_type=>'ITEM_IS_NOT_NULL'
+,p_branch_condition=>'P100_FOUND_INCIDENT_ID'
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(17641164220968059)
+,p_name=>'P100_FOUND_INCIDENT_ID'
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_imp.id(17640820228968005)
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_HIDDEN'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'value_protected', 'Y')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(17641064191968056)
+,p_name=>'P100_SEARCH_CODE'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(17640820228968005)
+,p_prompt=>'Reference Code'
+,p_placeholder=>'e.g. 0000005003'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cMaxlength=>20
+,p_begin_on_new_line=>'N'
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'disabled', 'N',
+  'submit_when_enter_pressed', 'N',
+  'subtype', 'TEXT',
+  'trim_spaces', 'BOTH')).to_clob
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(17641373874968060)
+,p_process_sequence=>10
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'Find Incident'
+,p_static_id=>'find-incident'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'declare',
+'  l_code           varchar2(4000);',
+'  l_logger_log_id  number;',
+'begin',
+'  :P100_FOUND_INCIDENT_ID := null;',
+'  l_code := trim(:P100_SEARCH_CODE);',
+'',
+'  begin',
+'    l_logger_log_id := to_number(l_code);',
+'  exception',
+'    when others then',
+'      l_logger_log_id := null;',
+'  end;',
+'',
+'  if l_logger_log_id is null then',
+'    apex_error.add_error(',
+'        p_message          => ''Enter a valid reference code (digits only).''',
+'      , p_display_location => apex_error.c_inline_with_field_and_notif',
+'      , p_page_item_name   => ''P100_SEARCH_CODE''',
+'    );',
+'    return;',
+'  end if;',
+'',
+'  begin',
+'    select shield_incident_id',
+'      into :P100_FOUND_INCIDENT_ID',
+'      from ersh_incident_occurrences_vw',
+'     where logger_log_id = l_logger_log_id;',
+'  exception',
+'    when no_data_found then',
+'      apex_error.add_error(',
+'          p_message          => ''No incident found for reference code '' || l_code || ''.''',
+'        , p_display_location => apex_error.c_inline_with_field_and_notif',
+'        , p_page_item_name   => ''P100_SEARCH_CODE''',
+'      );',
+'  end;',
+'end;'))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when=>'FIND_INCIDENT'
+,p_process_when_type=>'REQUEST_IN_CONDITION'
+,p_internal_uid=>17641373874968060
 );
 end;
 /
@@ -1664,6 +1737,70 @@ wwv_flow_imp_page.create_page_plug(
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
   'expand_shortcuts', 'N',
   'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(17641694344968062)
+,p_name=>'Occurrences'
+,p_static_id=>'occurrences'
+,p_parent_plug_id=>wwv_flow_imp.id(377201688333175309)
+,p_template=>4073835273271169698
+,p_display_sequence=>20
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_display_point=>'SUB_REGIONS'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select o.app_user          as app_user',
+'     , o.reference_display as reference_display',
+'     , o.occurred_on       as occurred_on',
+'  from ersh_incident_occurrences_vw o',
+' where o.shield_incident_id = :P110_SHIELD_INCIDENT_ID',
+' order by o.occurred_on desc'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P110_SHIELD_INCIDENT_ID'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>15
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No occurrences recorded.'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(17641774190968063)
+,p_query_column_id=>1
+,p_column_alias=>'APP_USER'
+,p_column_display_sequence=>10
+,p_column_heading=>'App User'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(17641978509968064)
+,p_query_column_id=>3
+,p_column_alias=>'OCCURRED_ON'
+,p_column_display_sequence=>30
+,p_column_heading=>'Occurred On'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(17641817694968064)
+,p_query_column_id=>2
+,p_column_alias=>'REFERENCE_DISPLAY'
+,p_column_display_sequence=>20
+,p_column_heading=>'Reference Display'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(377201688333175309)
@@ -3047,7 +3184,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_required_patch=>wwv_flow_imp.id(381905544746018346)
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(17081821757554063)
+ p_id=>wwv_flow_imp.id(17646300020992495)
 ,p_branch_action=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
 ,p_branch_type=>'REDIRECT_URL'
@@ -3482,25 +3619,9 @@ wwv_flow_imp_page.create_report_region(
 ,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
 ,p_component_template_options=>'#DEFAULT#:t-Report--altRowsDefault:t-Report--rowHighlight'
 ,p_source_type=>'NATIVE_SQL_REPORT'
-,p_query_type=>'SQL'
-,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'with w_jobs as (',
-'  select case',
-'           when j.job_name like ''DBMS\_JOB$\_%'' escape ''\'' then ''DBMS_JOB legacy''',
-'           else ''SCHEDULER''',
-'         end                                                       as job_source',
-'       , j.state                                                   as state',
-'       , j.enabled                                                 as enabled',
-'    from all_scheduler_jobs j',
-')',
-'select w.job_source                                                as job_source',
-'     , count(*)                                                    as total_cnt',
-'     , count(case when w.state in (''BROKEN'', ''FAILED'') then 1 end) as problem_cnt',
-'     , count(case when w.state = ''RUNNING''             then 1 end) as running_cnt',
-'     , count(case when w.enabled = ''FALSE''             then 1 end) as disabled_cnt',
-'  from w_jobs w',
-' group by w.job_source',
-' order by w.job_source'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_JOBS_HEALTH_BY_SOURCE_VW'
+,p_include_rowid_column=>false
 ,p_ajax_enabled=>'Y'
 ,p_lazy_loading=>false
 ,p_query_row_template=>2540130677583398057
@@ -3569,18 +3690,9 @@ wwv_flow_imp_page.create_report_region(
 ,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
 ,p_new_grid_row=>false
 ,p_source_type=>'NATIVE_SQL_REPORT'
-,p_query_type=>'SQL'
-,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select j.owner                                                     as owner',
-'     , j.job_name                                                  as job_name',
-'     , to_char(j.next_run_date, ''HH24:MI'')                         as next_run_at',
-'     , j.schedule_type                                             as schedule_type',
-'     , j.repeat_interval                                           as repeat_interval',
-'  from all_scheduler_jobs j',
-' where j.enabled       = ''TRUE''',
-'   and j.next_run_date is not null',
-'   and j.next_run_date <= systimestamp + interval ''60'' minute',
-' order by j.next_run_date'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_JOBS_NEXT_RUNS_VW'
+,p_include_rowid_column=>false
 ,p_ajax_enabled=>'Y'
 ,p_lazy_loading=>false
 ,p_query_row_template=>2540130677583398057
@@ -3648,26 +3760,9 @@ wwv_flow_imp_page.create_report_region(
 ,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
 ,p_component_template_options=>'#DEFAULT#:t-Report--altRowsDefault:t-Report--rowHighlight'
 ,p_source_type=>'NATIVE_SQL_REPORT'
-,p_query_type=>'SQL'
-,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select d.log_id                                                    as log_id',
-'     , d.owner                                                     as owner',
-'     , d.job_name                                                  as job_name',
-'     , d.status                                                     as status',
-'     , d.error#                                                    as error_code',
-'     , to_char(d.actual_start_date, ''YYYY-MM-DD HH24:MI'')          as started_at',
-'     , round(',
-'         extract(day    from d.run_duration) * 86400',
-'       + extract(hour   from d.run_duration) * 3600',
-'       + extract(minute from d.run_duration) * 60',
-'       + extract(second from d.run_duration)',
-'       , 1)                                                        as run_secs',
-'     , substr(d.additional_info, 1, 200)                           as additional_info',
-'  from all_scheduler_job_run_details d',
-' where d.log_date >= systimestamp - interval ''3'' day',
-'   and nvl(d.status, ''UNKNOWN'') <> ''SUCCEEDED''',
-' order by d.log_date desc',
-' fetch first 20 rows only'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_JOBS_RECENT_FAILURES_VW'
+,p_include_rowid_column=>false
 ,p_ajax_enabled=>'Y'
 ,p_lazy_loading=>false
 ,p_query_row_template=>2540130677583398057
@@ -3762,32 +3857,9 @@ wwv_flow_imp_page.create_report_region(
 ,p_region_template_options=>'#DEFAULT#:t-Region--removeHeader js-removeLandmark:t-Region--scrollBody'
 ,p_component_template_options=>'#DEFAULT#:u-colors:t-BadgeList--medium:t-BadgeList--dash:t-BadgeList--fixed:t-Report--hideNoPagination'
 ,p_source_type=>'NATIVE_SQL_REPORT'
-,p_query_type=>'SQL'
-,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'with w_jobs as (',
-'  select count(*)                                                    as visible_cnt',
-'       , count(case when j.enabled = ''TRUE''              then 1 end) as enabled_cnt',
-'       , count(case when j.state in (''BROKEN'', ''FAILED'') then 1 end) as broken_cnt',
-'    from all_scheduler_jobs j',
-')',
-', w_running as (',
-'  select count(*)                                                    as running_cnt',
-'    from all_scheduler_running_jobs r',
-')',
-', w_failed as (',
-'  select count(*)                                                    as failed_cnt',
-'    from all_scheduler_job_run_details d',
-'   where d.log_date >= systimestamp - interval ''1'' day',
-'     and nvl(d.status, ''UNKNOWN'') <> ''SUCCEEDED''',
-')',
-'select j.visible_cnt                                                 as visible_jobs',
-'     , j.enabled_cnt                                                 as enabled',
-'     , j.broken_cnt                                                  as broken_or_failed',
-'     , r.running_cnt                                                 as running_now',
-'     , f.failed_cnt                                                  as failed_runs_24h',
-'  from w_jobs      j',
-' cross join w_running r',
-' cross join w_failed  f'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_JOBS_STATUS_VW'
+,p_include_rowid_column=>false
 ,p_ajax_enabled=>'Y'
 ,p_lazy_loading=>false
 ,p_query_row_template=>2106120299521025145
@@ -3885,56 +3957,9 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_template=>2102002977963900996
 ,p_plug_display_sequence=>10
 ,p_plug_item_display_point=>'ABOVE'
-,p_query_type=>'SQL'
-,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select j.owner                                            as owner',
-'     , j.job_name                                         as job_name',
-'     , j.job_subname                                       as job_subname',
-'     , case',
-'         when j.job_name like ''DBMS\_JOB$\_%'' escape ''\'' then ''DBMS_JOB legacy''',
-'         else ''SCHEDULER''',
-'       end                                                as job_source',
-'     , j.state                                            as state',
-'     , j.enabled                                          as enabled',
-'     , j.job_type                                         as job_type',
-'     , j.job_class                                         as job_class',
-'     , j.schedule_type                                    as schedule_type',
-'     , j.repeat_interval                                  as repeat_interval',
-'     , j.program_name                                     as program_name',
-'     , j.schedule_name                                    as schedule_name',
-'     , j.start_date                                       as start_date',
-'     , j.last_start_date                                  as last_start_date',
-'     , round(',
-'         extract(day    from j.last_run_duration) * 86400',
-'       + extract(hour   from j.last_run_duration) * 3600',
-'       + extract(minute from j.last_run_duration) * 60',
-'       + extract(second from j.last_run_duration)',
-'       , 1)                                               as last_run_secs',
-'     , j.next_run_date                                    as next_run_date',
-'     , j.run_count                                        as run_count',
-'     , j.failure_count                                     as failure_count',
-'     , j.retry_count                                      as retry_count',
-'     , j.max_runs                                         as max_runs',
-'     , j.auto_drop                                        as auto_drop',
-'     , case',
-'         when j.auto_drop       = ''TRUE''',
-'          and j.repeat_interval is null',
-'          and j.schedule_name   is null then ''Y''',
-'         else ''N''',
-'       end                                                as one_shot_yn',
-'     , j.job_creator                                      as job_creator',
-'     , j.client_id                                        as client_id',
-'     , regexp_substr(j.client_id, ''^[^:]*'')               as apex_user',
-'     , substr(j.job_action, 1, 200)                       as job_action_head',
-'     , j.comments                                         as comments',
-'  from all_scheduler_jobs j',
-' order by case',
-'            when j.state in (''BROKEN'', ''FAILED'') then 0',
-'            when j.state = ''RUNNING''             then 1',
-'            else 2',
-'          end',
-'        , j.next_run_date nulls last',
-'        , j.job_name'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_JOBS_INVENTORY_VW'
+,p_include_rowid_column=>false
 ,p_plug_source_type=>'NATIVE_IR'
 ,p_prn_content_disposition=>'ATTACHMENT'
 ,p_prn_units=>'INCHES'
@@ -4339,49 +4364,12 @@ wwv_flow_imp_page.create_report_region(
 ,p_region_template_options=>'#DEFAULT#'
 ,p_component_template_options=>'#DEFAULT#:t-AVPList--fixedLabelLarge:t-AVPList--leftAligned:t-Report--hideNoPagination'
 ,p_source_type=>'NATIVE_SQL_REPORT'
-,p_query_type=>'SQL'
-,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select j.owner                                            as owner',
-'     , j.job_name                                         as job_name',
-'     , j.job_subname                                       as job_subname',
-'     , j.state                                            as state',
-'     , j.enabled                                          as enabled',
-'     , j.job_type                                         as job_type',
-'     , j.job_action                                       as job_action',
-'     , j.number_of_arguments                              as number_of_arguments',
-'     , j.program_owner                                    as program_owner',
-'     , j.program_name                                     as program_name',
-'     , j.schedule_owner                                   as schedule_owner',
-'     , j.schedule_name                                    as schedule_name',
-'     , j.schedule_type                                    as schedule_type',
-'     , j.repeat_interval                                  as repeat_interval',
-'     , j.start_date                                       as start_date',
-'     , j.end_date                                         as end_date',
-'     , j.job_class                                        as job_class',
-'     , j.job_priority                                     as job_priority',
-'     , j.restartable                                      as restartable',
-'     , j.auto_drop                                        as auto_drop',
-'     , j.max_runs                                         as max_runs',
-'     , j.max_failures                                     as max_failures',
-'     , j.max_run_duration                                 as max_run_duration',
-'     , j.logging_level                                    as logging_level',
-'     , j.run_count                                        as run_count',
-'     , j.failure_count                                     as failure_count',
-'     , j.retry_count                                      as retry_count',
-'     , j.last_start_date                                  as last_start_date',
-'     , round(',
-'         extract(day    from j.last_run_duration) * 86400',
-'       + extract(hour   from j.last_run_duration) * 3600',
-'       + extract(minute from j.last_run_duration) * 60',
-'       + extract(second from j.last_run_duration)',
-'       , 1)                                               as last_run_secs',
-'     , j.next_run_date                                    as next_run_date',
-'     , j.job_creator                                      as job_creator',
-'     , j.client_id                                        as client_id',
-'     , j.comments                                          as comments',
-'  from all_scheduler_jobs j',
-' where j.owner    = :P1200_OWNER',
-'   and j.job_name = :P1200_JOB_NAME'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_JOB_DETAILS_VW'
+,p_query_where=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'owner = :P1200_OWNER',
+'  and job_name = :P1200_JOB_NAME'))
+,p_include_rowid_column=>false
 ,p_ajax_enabled=>'Y'
 ,p_ajax_items_to_submit=>'P1200_OWNER,P1200_JOB_NAME'
 ,p_lazy_loading=>false
@@ -4782,57 +4770,13 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_template=>2102002977963900996
 ,p_plug_display_sequence=>10
 ,p_plug_item_display_point=>'ABOVE'
-,p_query_type=>'SQL'
-,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'with w_runs as (',
-'  select r.owner                                          as owner',
-'       , r.job_name                                       as job_name',
-'       , r.job_subname                                     as job_subname',
-'       , r.log_id                                         as log_id',
-'       , r.log_date                                       as log_date',
-'       , r.status                                         as status',
-'       , r.error#                                        as error_code',
-'       , r.req_start_date                                 as req_start_date',
-'       , r.actual_start_date                              as actual_start_date',
-'       , r.session_id                                     as session_id',
-'       , r.additional_info                                as additional_info',
-'       , round(',
-'           extract(day    from r.run_duration) * 86400',
-'         + extract(hour   from r.run_duration) * 3600',
-'         + extract(minute from r.run_duration) * 60',
-'         + extract(second from r.run_duration)',
-'         , 1)                                             as run_secs',
-'       , round(',
-'           extract(day    from r.cpu_used) * 86400',
-'         + extract(hour   from r.cpu_used) * 3600',
-'         + extract(minute from r.cpu_used) * 60',
-'         + extract(second from r.cpu_used)',
-'         , 2)                                             as cpu_secs',
-'    from all_scheduler_job_run_details r',
-'   where r.log_date >= systimestamp - numtodsinterval(nvl(:P1030_DAYS, 7), ''day'')',
-'     and (:P1030_STATUS   is null or r.status   = :P1030_STATUS)',
-'     and (:P1030_JOB_NAME is null or r.job_name = :P1030_JOB_NAME)',
-')',
-'select w.log_id                                           as log_id',
-'     , w.owner                                            as owner',
-'     , w.job_name                                         as job_name',
-'     , w.job_subname                                       as job_subname',
-'     , w.status                                           as status',
-'     , w.error_code                                       as error_code',
-'     , w.actual_start_date                                as actual_start_date',
-'     , w.req_start_date                                   as req_start_date',
-'     , w.run_secs                                         as run_secs',
-'     , w.cpu_secs                                         as cpu_secs',
-'     , w.session_id                                       as session_id',
-'     , w.additional_info                                  as additional_info',
-'     , case when j.job_name is null then ''Y'' else ''N'' end as job_dropped_yn',
-'     , j.state                                            as current_state',
-'     , j.job_class                                        as job_class',
-'  from w_runs w',
-'  left join all_scheduler_jobs j',
-'    on  j.owner    = w.owner',
-'    and j.job_name = w.job_name',
-' order by nvl(w.actual_start_date, w.log_date) desc'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_JOB_EXECUTIONS_VW'
+,p_query_where=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'log_date >= systimestamp - numtodsinterval(nvl(:P1030_DAYS, 7), ''day'')',
+'  and (:P1030_STATUS   is null or status   = :P1030_STATUS)',
+'  and (:P1030_JOB_NAME is null or job_name = :P1030_JOB_NAME)'))
+,p_include_rowid_column=>false
 ,p_plug_source_type=>'NATIVE_IR'
 ,p_prn_content_disposition=>'ATTACHMENT'
 ,p_prn_units=>'INCHES'
@@ -5102,56 +5046,9 @@ wwv_flow_imp_page.create_report_region(
 ,p_region_template_options=>'#DEFAULT#:t-Region--removeHeader js-removeLandmark:t-Region--scrollBody'
 ,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
 ,p_source_type=>'NATIVE_SQL_REPORT'
-,p_query_type=>'SQL'
-,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'with w_running as (',
-'  select r.owner                                                     as owner',
-'       , r.job_name                                                  as job_name',
-'       , r.job_subname                                                as job_subname',
-'       , r.session_id                                                as session_id',
-'       , r.slave_process_id                                          as slave_process_id',
-'       , r.resource_consumer_group                                    as resource_consumer_group',
-'       , round(',
-'           extract(day    from r.elapsed_time) * 86400',
-'         + extract(hour   from r.elapsed_time) * 3600',
-'         + extract(minute from r.elapsed_time) * 60',
-'         + extract(second from r.elapsed_time)',
-'         , 1)                                                        as elapsed_secs',
-'       , round(',
-'           extract(day    from r.cpu_used) * 86400',
-'         + extract(hour   from r.cpu_used) * 3600',
-'         + extract(minute from r.cpu_used) * 60',
-'         + extract(second from r.cpu_used)',
-'         , 2)                                                        as cpu_secs',
-'    from all_scheduler_running_jobs r',
-')',
-'select w.owner                                                       as owner',
-'     , w.job_name                                                    as job_name',
-'     , w.job_subname                                                  as job_subname',
-'     , w.elapsed_secs                                                as elapsed_secs',
-'     , w.cpu_secs                                                    as cpu_secs',
-'     , w.session_id                                                  as session_id',
-'     , w.slave_process_id                                            as slave_process_id',
-'     , w.resource_consumer_group                                      as resource_consumer_group',
-'     , j.job_type                                                    as job_type',
-'     , j.job_class                                                    as job_class',
-'     , j.state                                                       as state',
-'     , j.max_run_duration                                            as max_run_duration',
-'     , case',
-'         when j.max_run_duration is null then ''N''',
-'         when w.elapsed_secs >',
-'              extract(day    from j.max_run_duration) * 86400',
-'            + extract(hour   from j.max_run_duration) * 3600',
-'            + extract(minute from j.max_run_duration) * 60',
-'            + extract(second from j.max_run_duration) then ''Y''',
-'         else ''N''',
-'       end                                                           as over_max_duration_yn',
-'     , substr(j.job_action, 1, 200)                                   as job_action_head',
-'  from w_running w',
-'  left join all_scheduler_jobs j',
-'    on  j.owner    = w.owner',
-'    and j.job_name = w.job_name',
-' order by w.elapsed_secs desc'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_JOBS_RUNNING_VW'
+,p_include_rowid_column=>false
 ,p_ajax_enabled=>'Y'
 ,p_lazy_loading=>false
 ,p_query_row_template=>2540130677583398057
@@ -5348,29 +5245,9 @@ wwv_flow_imp_page.create_report_region(
 ,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
 ,p_component_template_options=>'#DEFAULT#:t-Report--altRowsDefault:t-Report--rowHighlight'
 ,p_source_type=>'NATIVE_SQL_REPORT'
-,p_query_type=>'SQL'
-,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select a.application_id                                            as application_id',
-'     , a.application_name                                          as application_name',
-'     , a.name                                                      as automation_name',
-'     , a.static_id                                                 as static_id',
-'     , a.trigger_type                                              as trigger_type',
-'     , a.polling_interval                                          as polling_interval',
-'     , a.polling_status                                            as polling_status',
-'     , a.polling_last_run_timestamp                                as last_run_on',
-'     , a.polling_next_run_timestamp                                as next_run_on',
-'     , a.result_type                                               as result_type',
-'     , a.query_type                                                as query_type',
-'     , a.table_owner                                               as table_owner',
-'     , a.table_name                                                as table_name',
-'     , a.max_rows_to_process                                       as max_rows_to_process',
-'     , a.error_handling_type                                       as error_handling_type',
-'     , a.build_option                                              as build_option',
-'     , a.component_comment                                         as component_comment',
-'     , a.last_updated_on                                           as last_updated_on',
-'  from apex_appl_automations a',
-' order by a.application_id',
-'        , a.name'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_APEX_AUTOMATIONS_VW'
+,p_include_rowid_column=>false
 ,p_ajax_enabled=>'Y'
 ,p_lazy_loading=>false
 ,p_query_row_template=>2540130677583398057
@@ -5570,39 +5447,9 @@ wwv_flow_imp_page.create_report_region(
 ,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
 ,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
 ,p_source_type=>'NATIVE_SQL_REPORT'
-,p_query_type=>'SQL'
-,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'with w_log as (',
-'  select l.id                                                      as log_id',
-'       , l.application_id                                          as application_id',
-'       , l.automation_id                                           as automation_id',
-'       , l.automation_name                                         as automation_name',
-'       , l.is_job                                                  as is_job',
-'       , l.status                                                  as status',
-'       , l.start_timestamp                                         as start_timestamp',
-'       , l.end_timestamp                                           as end_timestamp',
-'       , l.successful_row_count                                    as successful_row_count',
-'       , l.error_row_count                                         as error_row_count',
-'       , l.end_timestamp - l.start_timestamp                       as run_interval',
-'    from apex_automation_log l',
-'   where l.start_timestamp >= systimestamp - interval ''7'' day',
-')',
-'select w.log_id                                                    as log_id',
-'     , w.application_id                                            as application_id',
-'     , w.automation_name                                           as automation_name',
-'     , w.status                                                    as status',
-'     , w.is_job                                                    as is_job',
-'     , to_char(w.start_timestamp, ''YYYY-MM-DD HH24:MI:SS'')         as started_at',
-'     , round(',
-'         extract(day    from w.run_interval) * 86400',
-'       + extract(hour   from w.run_interval) * 3600',
-'       + extract(minute from w.run_interval) * 60',
-'       + extract(second from w.run_interval)',
-'       , 1)                                                        as duration_secs',
-'     , w.successful_row_count                                      as successful_row_count',
-'     , w.error_row_count                                           as error_row_count',
-'  from w_log w',
-' order by w.start_timestamp desc'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_APEX_AUTOMATION_EXECUTIONS_VW'
+,p_include_rowid_column=>false
 ,p_ajax_enabled=>'Y'
 ,p_lazy_loading=>false
 ,p_query_row_template=>2540130677583398057
@@ -5708,17 +5555,10 @@ wwv_flow_imp_page.create_report_region(
 ,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
 ,p_component_template_options=>'#DEFAULT#:t-Report--altRowsDefault:t-Report--rowHighlight'
 ,p_source_type=>'NATIVE_SQL_REPORT'
-,p_query_type=>'SQL'
-,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select m.automation_log_id                                         as automation_log_id',
-'     , to_char(m.message_timestamp, ''YYYY-MM-DD HH24:MI:SS'')       as message_at',
-'     , m.message_type                                              as message_type',
-'     , m.action_name                                               as action_name',
-'     , m.pk_value                                                  as pk_value',
-'     , m.message                                                   as message',
-'  from apex_automation_msg_log m',
-' where (:P1600_LOG_ID is null or m.automation_log_id = :P1600_LOG_ID)',
-' order by m.message_timestamp desc'))
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_APEX_AUTOMATION_MESSAGES_VW'
+,p_query_where=>'(:P1600_LOG_ID is null or automation_log_id = :P1600_LOG_ID)'
+,p_include_rowid_column=>false
 ,p_display_when_condition=>'P1600_LOG_ID'
 ,p_display_condition_type=>'ITEM_IS_NOT_NULL'
 ,p_ajax_enabled=>'Y'
@@ -6125,7 +5965,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_row=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(17083029073554185)
+ p_id=>wwv_flow_imp.id(17647536543992603)
 ,p_branch_name=>'Branch to Admin Page'
 ,p_branch_action=>'f?p=&APP_ID.:10000:&SESSION.::&DEBUG.:RP&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'

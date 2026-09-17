@@ -606,6 +606,8 @@ create or replace package body ersh_error_handler_api as
    *       - unmatched -> insert full correlation row
    *  4. dup_val_on_index safety net handles rare concurrent inserts.
    *  5. Return shield_incident_id of the resulting row.
+   *  6. Insert a child ersh_incident_occurrences row (this hit's
+   *     logger_log_id/app_user), regardless of whether step 3 deduplicated.
    *
    * @example
    *   ersh_error_handler_api.record_internal_incident(
@@ -620,6 +622,9 @@ create or replace package body ersh_error_handler_api as
    *   );
    *
    * @issue ERSH-001
+   * @issue ERSH-010 Also inserts a row into ersh_incident_occurrences for every
+   *   hit (dedup'd or not), so the individual logger_log_id/app_user shown to
+   *   any one user is never orphaned by the parent MERGE.
    *
    * @author Angel Flores (Consultant)
    * @created April 11, 2026
@@ -727,6 +732,10 @@ create or replace package body ersh_error_handler_api as
     when matched then
       update
          set t.occurrence_count = t.occurrence_count + 1
+           -- Semantics since ERSH-010: this only keeps the logger_log_id of the
+           -- FIRST hit in the bucket. It is no longer "the" reference for the
+           -- incident — the full set of codes shown to every user who hit this
+           -- bucket lives in ersh_incident_occurrences (inserted below).
            , t.logger_log_id    = nvl(t.logger_log_id, p_logger_log_id)
     when not matched then
       insert (
@@ -763,6 +772,25 @@ create or replace package body ersh_error_handler_api as
      where error_fingerprint = l_fingerprint
        and time_bucket       = l_time_bucket;
 
+    -- -----------------------------------------------------------------
+    -- Step 4: Always record this individual hit as a child occurrence row,
+    -- whether the MERGE above inserted a new incident or deduplicated into
+    -- an existing one. occurrence_count on the parent stays denormalized
+    -- (it already counts every hit, including ones where logger.log_error
+    -- itself failed and p_logger_log_id came in null) — this insert is what
+    -- lets one specific logger_log_id resolve back to its incident.
+    -- -----------------------------------------------------------------
+    insert into ersh_incident_occurrences (
+      shield_incident_id
+    , logger_log_id
+    , app_user
+    )
+    values (
+      o_incident_id
+    , p_logger_log_id
+    , p_app_user
+    );
+
     commit;
 
   exception
@@ -782,6 +810,17 @@ create or replace package body ersh_error_handler_api as
         from ersh_shield_incidents
        where error_fingerprint = l_fingerprint
          and time_bucket       = l_time_bucket;
+
+      insert into ersh_incident_occurrences (
+        shield_incident_id
+      , logger_log_id
+      , app_user
+      )
+      values (
+        o_incident_id
+      , p_logger_log_id
+      , p_app_user
+      );
 
       commit;
 

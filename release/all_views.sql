@@ -12,6 +12,9 @@ prompt @../views/logger_logs_terse.sql
 prompt @../views/ersh_shield_incidents_vw.sql
 @@../views/ersh_shield_incidents_vw.sql
 
+prompt @../views/ersh_incident_occurrences_vw.sql
+@@../views/ersh_incident_occurrences_vw.sql
+
 prompt @../views/ersh_jobs_status_vw.sql
 @@../views/ersh_jobs_status_vw.sql
 

@@ -1,1 +1,1 @@
-apex export -applicationid 10400 -dir apex/apex_lang/app_10400 -split -expType READABLE_YAML
+apex export -applicationid 10400 -dir apex/apex_lang/app_10400 -split -expType READABLE_YAML -overwrite-files
