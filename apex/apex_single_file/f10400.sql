@@ -673,7 +673,7 @@ wwv_flow_imp_shared.create_list_item(
 wwv_flow_imp_shared.create_list_item(
  p_id=>wwv_flow_imp.id(382489367394296420)
 ,p_list_item_display_sequence=>40
-,p_list_item_link_text=>'Looger Logs'
+,p_list_item_link_text=>'Logger Logs'
 ,p_static_id=>'looger-logs'
 ,p_list_item_link_target=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.'
 ,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
@@ -688,16 +688,6 @@ wwv_flow_imp_shared.create_list_item(
 ,p_parent_list_item_id=>wwv_flow_imp.id(422972072521875614)
 ,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
 ,p_list_item_current_for_pages=>'1400'
-);
-wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(428264260363282520)
-,p_list_item_display_sequence=>110
-,p_list_item_link_text=>'Timeline'
-,p_static_id=>'timeline'
-,p_list_item_link_target=>'f?p=&APP_ID.:1500:&SESSION.::&DEBUG.'
-,p_parent_list_item_id=>wwv_flow_imp.id(422972072521875614)
-,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
-,p_list_item_current_for_pages=>'1500'
 );
 end;
 /
@@ -782,7 +772,9 @@ wwv_flow_imp_shared.create_security_scheme(
 ,p_static_id=>'administration-rights'
 ,p_scheme_type=>'NATIVE_FUNCTION_BODY'
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
-  'plsql_function_body', 'return true;')).to_clob
+  'plsql_function_body', '-- TODO_AF_09-17-2026 Reemplazar por modelo de roles real. Hoy todo
+-- usuario autenticado es administrador. Ver ERSH-043.
+return true;')).to_clob
 ,p_error_message=>'Insufficient privileges, user is not an Administrator'
 ,p_caching=>'BY_USER_BY_PAGE_VIEW'
 );
@@ -1062,7 +1054,7 @@ wwv_flow_imp_shared.create_menu_option(
 );
 wwv_flow_imp_shared.create_menu_option(
  p_id=>wwv_flow_imp.id(382490036921296421)
-,p_short_name=>'Looger Logs'
+,p_short_name=>'Logger Logs'
 ,p_static_id=>'looger-logs'
 ,p_link=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.'
 ,p_page_id=>400
@@ -2763,9 +2755,9 @@ prompt --application/pages/page_00400
 begin
 wwv_flow_imp_page.create_page(
  p_id=>400
-,p_name=>'Looger Logs'
+,p_name=>'Logger Logs'
 ,p_alias=>'LOOGER-LOGS'
-,p_step_title=>'Looger Logs'
+,p_step_title=>'Logger Logs'
 ,p_autocomplete_on_off=>'OFF'
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'

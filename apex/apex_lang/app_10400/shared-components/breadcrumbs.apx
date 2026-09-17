@@ -121,7 +121,7 @@ breadcrumb breadcrumb (
     )
 
     entry looger-logs (
-        name: Looger Logs
+        name: Logger Logs
         pageNumber: 400
         execution {
             sequence: 10
