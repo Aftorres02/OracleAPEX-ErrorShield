@@ -25,13 +25,6 @@ name: Build CI base image (Oracle + APEX + utPLSQL)
 
 on:
   workflow_dispatch:
-  # TODO_AFLORES_SEPTEMBER-18-2026 temporary bootstrap trigger — remove once
-  # this workflow has run once and is registered with the GitHub API
-  # (workflow_dispatch can't target a workflow that has never run and only
-  # exists on a non-default branch).
-  push:
-    branches:
-      - observability-tests-ci
 
 permissions:
   contents: read
