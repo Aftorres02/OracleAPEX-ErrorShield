@@ -72,6 +72,23 @@ create or replace package ersh_error_handler_api is
   );
 
 
+  /**
+   * Reads the message for a custom error code without raising it. Same
+   * active_yn filter as raise_custom_error: a deactivated or unknown code
+   * both return null, since apex_error.add_error has no use for the
+   * distinction either.
+   *
+   * @issue ERSH-024
+   *
+   * @param p_error_code Business key to look up.
+   * @return             The stored message, or null if the code does not
+   *                     exist or is deactivated.
+   */
+  function get_message(
+    p_error_code                            in ersh_error_lookup.error_code%type
+  ) return ersh_error_lookup.message%type;
+
+
   -- ==========================================================================
   -- Incident tracking
   -- ==========================================================================
