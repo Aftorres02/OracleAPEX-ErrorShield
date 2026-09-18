@@ -24,71 +24,9 @@ begin
         , last_updated_by            varchar2(60 char)
         , last_updated_on            timestamp with local time zone
         , constraint ck_ersh_constraint_lookup_active_yn check (active_yn in ('Y', 'N'))
+        , constraint uk_ersh_constraint_lookup_name unique (constraint_name)
       )
     !';
-  end if;
-end;
-/
-
-
--- -----------------------------------------------------------------------------
--- Constraints
--- -----------------------------------------------------------------------------
-declare
-  l_count pls_integer;
-begin
-  select count(1)
-    into l_count
-    from user_constraints
-   where constraint_name = 'UK_ERSH_CONSTRAINT_LOOKUP_NAME'
-     and table_name = 'ERSH_CONSTRAINT_LOOKUP';
-
-  if l_count = 0 then
-    execute immediate '
-      alter table ersh_constraint_lookup
-        add constraint uk_ersh_constraint_lookup_name unique (constraint_name)
-    ';
-  end if;
-end;
-/
-
-
--- -----------------------------------------------------------------------------
--- ERSH-031: active_yn (added after the initial release; idempotent for
--- installs that already had this table before the column existed).
--- -----------------------------------------------------------------------------
-declare
-  l_count pls_integer;
-begin
-  select count(1)
-    into l_count
-    from user_tab_columns
-   where table_name  = 'ERSH_CONSTRAINT_LOOKUP'
-     and column_name = 'ACTIVE_YN';
-
-  if l_count = 0 then
-    execute immediate q'!
-      alter table ersh_constraint_lookup
-        add active_yn varchar2(1 char) default 'Y' not null
-    !';
-  end if;
-end;
-/
-
-declare
-  l_count pls_integer;
-begin
-  select count(1)
-    into l_count
-    from user_constraints
-   where constraint_name = 'CK_ERSH_CONSTRAINT_LOOKUP_ACTIVE_YN'
-     and table_name      = 'ERSH_CONSTRAINT_LOOKUP';
-
-  if l_count = 0 then
-    execute immediate '
-      alter table ersh_constraint_lookup
-        add constraint ck_ersh_constraint_lookup_active_yn check (active_yn in (''Y'', ''N''))
-    ';
   end if;
 end;
 /

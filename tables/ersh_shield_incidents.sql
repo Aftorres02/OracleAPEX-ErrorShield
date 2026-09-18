@@ -31,10 +31,8 @@ begin
         -- workspace_id: apex_application.get_security_group_id. application_id
         -- is only unique WITHIN a workspace, so two workspaces with the same
         -- application_id would otherwise collide into the same incident.
-        -- Nullable: rows created before this column existed have no reliable
-        -- way to recover which workspace produced them (see
-        -- release/migrations/001_incident_occurrences_backfill_and_workspace_id.sql)
-        -- and are left as legacy/null.
+        -- Nullable since record_internal_incident can be called outside an
+        -- APEX session (no workspace to report).
         , workspace_id        number
         , application_id      number
         , page_id             number
@@ -75,26 +73,6 @@ begin
         , constraint uk_ersh_shield_incidents_bucket      unique (error_fingerprint, time_bucket)
       )
     !';
-  end if;
-end;
-/
-
-
--- =============================================================================
--- 1.1 ERSH-013: workspace_id (added after the initial release; idempotent
---     for installs that already had this table before the column existed).
--- =============================================================================
-declare
-  l_count pls_integer;
-begin
-  select count(1)
-    into l_count
-    from user_tab_columns
-   where table_name  = 'ERSH_SHIELD_INCIDENTS'
-     and column_name = 'WORKSPACE_ID';
-
-  if l_count = 0 then
-    execute immediate 'alter table ersh_shield_incidents add workspace_id number';
   end if;
 end;
 /
@@ -167,7 +145,7 @@ begin
   execute immediate 'comment on table ersh_shield_incidents is ''Groups internal/unexpected APEX errors by fingerprint and 30-second time bucket for admin investigation and resolution tracking.''';
   execute immediate 'comment on column ersh_shield_incidents.shield_incident_id is ''Unique identifier for the incident group (Primary Key).''';
   execute immediate 'comment on column ersh_shield_incidents.logger_log_id is ''ID of the first matching row in logger_logs containing the full error detail.''';
-  execute immediate 'comment on column ersh_shield_incidents.workspace_id is ''APEX workspace (apex_application.get_security_group_id) where the error occurred. Part of the dedup fingerprint since application_id is only unique within a workspace. Null on rows created before this column existed (legacy, see release/migrations/).''';
+  execute immediate 'comment on column ersh_shield_incidents.workspace_id is ''APEX workspace (apex_application.get_security_group_id) where the error occurred. Part of the dedup fingerprint since application_id is only unique within a workspace. Null when recorded outside an APEX session.''';
   execute immediate 'comment on column ersh_shield_incidents.application_id is ''APEX application ID where the error occurred.''';
   execute immediate 'comment on column ersh_shield_incidents.page_id is ''APEX page ID where the error occurred.''';
   execute immediate 'comment on column ersh_shield_incidents.app_user is ''APEX application user at the time of the error.''';
