@@ -42,6 +42,8 @@ create or replace package body ersh_error_handler_api as
    * @issue ERSH-016 Passes p_error.component.type/name through to
    *   record_internal_incident, which already accepted and stored them but
    *   never received a value.
+   * @issue ERSH-013 Passes p_workspace_id (apex_application.get_security_group_id)
+   *   through to record_internal_incident.
    *
    * @param p_log_title       Prefix line written to logger to identify error origin.
    * @param p_error           Original APEX error record (apex_error.t_error).
@@ -82,7 +84,8 @@ create or replace package body ersh_error_handler_api as
     -- Record incident for admin dashboard (autonomous commit; failure is silent)
     begin
       record_internal_incident(
-        p_application_id  => apex_application.g_flow_id
+        p_workspace_id    => apex_application.get_security_group_id
+      , p_application_id  => apex_application.g_flow_id
       , p_page_id         => apex_application.g_flow_step_id
       , p_app_user        => apex_application.g_user
       , p_request         => apex_application.g_request
@@ -164,6 +167,10 @@ create or replace package body ersh_error_handler_api as
    * APEX error handling function. Masks internal errors; maps constraint
    * violations to friendly messages from ersh_constraint_lookup.
    *
+   * @issue ERSH-031 Constraint lookup filters by active_yn = 'Y'. A
+   *   deactivated constraint message behaves as if it were never
+   *   configured: no_data_found, original ORA message shown as-is.
+   *
    * @author Angel Flores (Consultant)
    * @created Monday, March 09, 2026
    *
@@ -223,10 +230,12 @@ create or replace package body ersh_error_handler_api as
           select constraint_message
             into l_result.message
             from ersh_constraint_lookup
-           where constraint_name = l_constraint_name;
+           where constraint_name = l_constraint_name
+             and active_yn       = 'Y';
         exception
           when no_data_found then
-            null; -- Not every constraint has to be in our lookup table.
+            null; -- Not every constraint has to be in our lookup table, and a
+                  -- deactivated one (active_yn = 'N') behaves the same way.
         end;
 
       end if;
@@ -423,8 +432,11 @@ create or replace package body ersh_error_handler_api as
 
 
   /**
-   * Deletes a custom error code from the ersh_error_lookup table.
-   * Delegates to delete_ersh_error_lookup (single implementation / logging scope).
+   * Alias of delete_ersh_error_lookup. Kept for backward compatibility: it
+   * does exactly the same thing under a different name, nothing more.
+   * Frozen as of the 1.0.0 API — do not add divergent behavior here.
+   *
+   * @issue ERSH-029
    *
    * @author Angel Flores (Consultant)
    * @created Monday, March 09, 2026
@@ -453,16 +465,20 @@ create or replace package body ersh_error_handler_api as
    *   );
    *
    * @issue ERSH-004
+   * @issue ERSH-031 Added p_active_yn so a constraint message can be
+   *   deactivated through the package, not just via a raw table update.
    *
    * @author Angel Flores (Consultant)
    * @created April 23, 2026
    *
    * @param p_constraint_name    Unique constraint name (required).
    * @param p_constraint_message Friendly message shown on violation.
+   * @param p_active_yn          Active flag Y or N (default Y).
    */
   procedure merge_ersh_constraint_lookup(
     p_constraint_name                       in ersh_constraint_lookup.constraint_name%type
   , p_constraint_message                    in ersh_constraint_lookup.constraint_message%type
+  , p_active_yn                             in ersh_constraint_lookup.active_yn%type default 'Y'
   )
   is
     l_scope   logger_logs.scope%type := gc_scope_prefix || 'merge_ersh_constraint_lookup';
@@ -470,6 +486,7 @@ create or replace package body ersh_error_handler_api as
   begin
     logger.append_param(l_params, 'p_constraint_name: ', p_constraint_name);
     logger.append_param(l_params, 'p_constraint_message: ', p_constraint_message);
+    logger.append_param(l_params, 'p_active_yn: ', p_active_yn);
     logger.log('START', l_scope, null, l_params);
 
     if p_constraint_name is null then
@@ -479,24 +496,35 @@ create or replace package body ersh_error_handler_api as
       );
     end if;
 
+    if p_active_yn not in ('Y', 'N') then
+      raise_application_error(
+        -20001
+      , 'p_active_yn must be Y or N.'
+      );
+    end if;
+
     merge into ersh_constraint_lookup t
     using (
       select p_constraint_name    as constraint_name
            , p_constraint_message as constraint_message
+           , p_active_yn          as active_yn
         from dual
     ) s
     on (t.constraint_name = s.constraint_name)
     when matched then
       update
       set t.constraint_message = s.constraint_message
+        , t.active_yn          = s.active_yn
     when not matched then
       insert (
         constraint_name
       , constraint_message
+      , active_yn
       )
       values (
         s.constraint_name
       , s.constraint_message
+      , s.active_yn
       );
 
     logger.log('END', l_scope, null, l_params);
@@ -696,7 +724,8 @@ create or replace package body ersh_error_handler_api as
    *
    * @example
    *   ersh_error_handler_api.record_internal_incident(
-   *       p_application_id => apex_application.g_flow_id
+   *       p_workspace_id   => apex_application.get_security_group_id
+   *     , p_application_id => apex_application.g_flow_id
    *     , p_page_id        => apex_application.g_flow_step_id
    *     , p_app_user       => apex_application.g_user
    *     , p_request        => apex_application.g_request
@@ -710,10 +739,14 @@ create or replace package body ersh_error_handler_api as
    * @issue ERSH-010 Also inserts a row into ersh_incident_occurrences for every
    *   hit (dedup'd or not), so the individual logger_log_id/app_user shown to
    *   any one user is never orphaned by the parent MERGE.
+   * @issue ERSH-013 Added p_workspace_id, folded into the fingerprint. APEX
+   *   application IDs are only unique within a workspace, so two workspaces
+   *   running the same application_id used to collide into one incident.
    *
    * @author Angel Flores (Consultant)
    * @created April 11, 2026
    *
+   * @param p_workspace_id    APEX workspace ID (apex_application.get_security_group_id)
    * @param p_application_id  APEX application ID
    * @param p_page_id         APEX page ID
    * @param p_app_user        APEX application user
@@ -726,7 +759,8 @@ create or replace package body ersh_error_handler_api as
    * @param o_incident_id     Shield incident id (new or existing dedup row)
    */
   procedure record_internal_incident(
-    p_application_id                        in number default null
+    p_workspace_id                          in number default null
+  , p_application_id                        in number default null
   , p_page_id                               in number default null
   , p_app_user                              in varchar2 default null
   , p_request                               in varchar2 default null
@@ -752,6 +786,8 @@ create or replace package body ersh_error_handler_api as
     --
     -- Inputs joined with '|' as separator to avoid accidental collisions
     -- between different combinations of short values:
+    --   workspace_id    -> which APEX workspace triggered the error (ERSH-013:
+    --                      application_id alone is only unique per workspace)
     --   application_id  -> which APEX app triggered the error
     --   page_id         -> which page within the app
     --   ora_sqlcode     -> the ORA error code (e.g. -1, -20001), or null
@@ -767,7 +803,8 @@ create or replace package body ersh_error_handler_api as
     -- ---------------------------------------------------------------------
     select rawtohex(
              standard_hash(
-               nvl(to_char(p_application_id), '') || '|'
+               nvl(to_char(p_workspace_id), '') || '|'
+               || nvl(to_char(p_application_id), '') || '|'
                || nvl(to_char(p_page_id), '') || '|'
                || nvl(to_char(p_ora_sqlcode), '') || '|'
                || nvl(substr(p_error_message, 1, 200), '')
@@ -825,6 +862,7 @@ create or replace package body ersh_error_handler_api as
     when not matched then
       insert (
         logger_log_id
+      , workspace_id
       , application_id
       , page_id
       , app_user
@@ -838,6 +876,7 @@ create or replace package body ersh_error_handler_api as
       )
       values (
         p_logger_log_id
+      , p_workspace_id
       , p_application_id
       , p_page_id
       , p_app_user

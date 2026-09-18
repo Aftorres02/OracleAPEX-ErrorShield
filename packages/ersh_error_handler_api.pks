@@ -36,6 +36,14 @@ create or replace package ersh_error_handler_api is
   );
 
 
+  /**
+   * Alias of delete_ersh_error_lookup. Kept for backward compatibility;
+   * frozen as of the 1.0.0 API.
+   *
+   * @issue ERSH-029
+   *
+   * @param p_error_code Business key to remove.
+   */
   procedure delete_custom_error(
     p_error_code                            in ersh_error_lookup.error_code%type
   );
@@ -48,12 +56,16 @@ create or replace package ersh_error_handler_api is
   /**
    * Inserts or updates a row in ersh_constraint_lookup by constraint_name (MERGE).
    *
+   * @issue ERSH-031
+   *
    * @param p_constraint_name    Unique constraint name (must not be null).
    * @param p_constraint_message User-facing message for constraint violations.
+   * @param p_active_yn          Soft flag Y/N (default Y).
    */
   procedure merge_ersh_constraint_lookup(
     p_constraint_name                       in ersh_constraint_lookup.constraint_name%type
   , p_constraint_message                    in ersh_constraint_lookup.constraint_message%type
+  , p_active_yn                             in ersh_constraint_lookup.active_yn%type default 'Y'
   );
 
 
@@ -101,7 +113,10 @@ create or replace package ersh_error_handler_api is
    * single logger_log_id/app_user is never lost to the parent dedup.
    *
    * @issue ERSH-010
+   * @issue ERSH-013 Added p_workspace_id, folded into the fingerprint since
+   *   application_id alone is only unique within a workspace.
    *
+   * @param p_workspace_id    APEX workspace ID (apex_application.get_security_group_id)
    * @param p_application_id  APEX application ID
    * @param p_page_id         APEX page ID
    * @param p_app_user        APEX application user
@@ -114,7 +129,8 @@ create or replace package ersh_error_handler_api is
    * @param o_incident_id     Shield incident id (new or existing dedup row)
    */
   procedure record_internal_incident(
-    p_application_id                        in number default null
+    p_workspace_id                          in number default null
+  , p_application_id                        in number default null
   , p_page_id                               in number default null
   , p_app_user                              in varchar2 default null
   , p_request                               in varchar2 default null
