@@ -102,6 +102,18 @@ drop package logger;
 -- =============================================================================
 prompt *** Dropping views ***
 
+drop view ersh_apex_automation_messages_vw;
+drop view ersh_apex_automation_executions_vw;
+drop view ersh_apex_automations_vw;
+drop view ersh_jobs_running_vw;
+drop view ersh_job_executions_vw;
+drop view ersh_job_details_vw;
+drop view ersh_jobs_inventory_vw;
+drop view ersh_jobs_recent_failures_vw;
+drop view ersh_jobs_next_runs_vw;
+drop view ersh_jobs_health_by_source_vw;
+drop view ersh_jobs_status_vw;
+drop view ersh_incident_occurrences_vw;
 drop view ersh_shield_incidents_vw;
 drop view logger_logs_terse;
 drop view logger_logs_60_min;
@@ -113,6 +125,7 @@ drop view logger_logs_5_min;
 -- =============================================================================
 prompt *** Dropping tables ***
 
+drop table ersh_incident_occurrences cascade constraints purge;
 drop table ersh_shield_incidents cascade constraints purge;
 drop table ersh_error_lookup cascade constraints purge;
 drop table ersh_constraint_lookup cascade constraints purge;
