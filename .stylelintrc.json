@@ -1,0 +1,6 @@
+{
+  "extends": "./.claude/configs/stylelintrc.base.json",
+  "rules": {
+    "selector-class-pattern": "^ersh-[a-z0-9]+(-[a-z0-9]+)*$"
+  }
+}
