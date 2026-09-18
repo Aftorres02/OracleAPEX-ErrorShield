@@ -1,0 +1,214 @@
+name: CI
+
+# Installs a real Oracle Database Free instance + real Oracle APEX + utPLSQL
+# from scratch on every run, then installs ErrorShield (release/_uninstall.sql
+# + _release.sql) and runs the utPLSQL suite in tests/.
+#
+# ersh_error_handler_api.pks references apex_error.t_error in its own
+# signature, so the package cannot even compile — let alone be tested —
+# without real Oracle APEX installed. There is no lighter "DB only" option.
+#
+# The exact command sequence below (utPLSQL headless install, owner schema
+# creation, _uninstall.sql + _release.sql, compiling and running tests/) was
+# validated locally first against the same DB/APEX image family
+# (container-registry.oracle.com/database/free:23.26.1.0 +
+# Oracle APEX 26.1) before being transcribed here — see CONTRIBUTING.md.
+# The APEX-install step itself (download + apexins.sql) mirrors the
+# already-proven recipe from United-Codes/uc-local-apex-dev's own
+# test-clean-install.yml, including the disk-space workaround below.
+#
+# First real run of this exact workflow happens on GitHub's own runners —
+# if it needs a fix, that fix belongs in a follow-up commit, the same way
+# PR 2's manual verification against a clean schema surfaced fixes for the
+# rest of the release scripts.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  ORACLE_IMAGE: container-registry.oracle.com/database/free:23.26.1.0
+  DB_SERVICE: FREEPDB1
+  # Throwaway passwords for a container that only exists for this one job,
+  # on an isolated Docker network the runner tears down afterward. Not
+  # secrets — there is nothing behind them worth protecting.
+  DB_SYS_PASSWORD: CiErsh_2026Pwd
+  OWNER_SCHEMA: LOGGER_USER
+  OWNER_PASSWORD: CiOwner_2026Pwd
+  UT3_PASSWORD: CiUt3_2026Pwd
+  UTPLSQL_TAG: v.3.2.3
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Oracle Free (~9 GB) + APEX install (~6 GB more once installed) does
+      # not fit in the ~14 GB of free space ubuntu-latest ships with by
+      # default. Same workaround United-Codes/uc-local-apex-dev uses for the
+      # identical image.
+      - name: Free up disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          swap-storage: false
+
+      - name: Set up Java 17 (required by SQLcl)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install SQLcl
+        run: |
+          set -euo pipefail
+          curl -fL -o /tmp/sqlcl.zip https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
+          unzip -q /tmp/sqlcl.zip -d "$HOME"
+          echo "$HOME/sqlcl/bin" >> "$GITHUB_PATH"
+
+      - name: Start Oracle Database Free
+        run: |
+          set -euo pipefail
+          docker run -d --name ersh-db -p 1521:1521 \
+            -e ORACLE_PASSWORD="$DB_SYS_PASSWORD" \
+            "$ORACLE_IMAGE"
+
+      - name: Wait for the database to be ready
+        run: |
+          set -euo pipefail
+          deadline=$((SECONDS + 900))
+          until docker logs ersh-db 2>&1 | grep -q "DATABASE IS READY TO USE!"; do
+            if (( SECONDS > deadline )); then
+              echo "::error::database did not become ready within 15 minutes"
+              docker logs ersh-db | tail -200
+              exit 1
+            fi
+            sleep 10
+          done
+
+      # Real APEX runtime install (apexins.sql), not a mock — see the header
+      # comment above for why this is unavoidable. Same invocation validated
+      # locally and used by uc-local-apex-dev's own proven CI.
+      - name: Install Oracle APEX 26.1
+        run: |
+          set -euo pipefail
+          curl -fL -o /tmp/apex.zip https://download.oracle.com/otn_software/apex/apex-latest.zip
+          unzip -q /tmp/apex.zip -d /tmp
+          cd /tmp/apex
+          sql -S sys/"$DB_SYS_PASSWORD"@localhost:1521/"$DB_SERVICE" as sysdba <<'SQL'
+          whenever sqlerror exit failure
+          create bigfile tablespace tbs_apex datafile 'tbs_apex.dbf' size 20m autoextend on next 20m maxsize 3g;
+          @apexins.sql TBS_APEX TBS_APEX TEMP /i/
+          exit
+          SQL
+
+      - name: Install utPLSQL
+        run: |
+          set -euo pipefail
+          git clone --branch "$UTPLSQL_TAG" --depth 1 https://github.com/utPLSQL/utPLSQL.git /tmp/utplsql
+          cd /tmp/utplsql/source
+          sql -S sys/"$DB_SYS_PASSWORD"@localhost:1521/"$DB_SERVICE" as sysdba \
+            @install_headless.sql UT3 "$UT3_PASSWORD" users
+
+      - name: Create the owner schema
+        run: |
+          set -euo pipefail
+          printf '%s\n%s\n%s\n%s\n' "$OWNER_SCHEMA" USERS TEMP "$OWNER_PASSWORD" | \
+            sql -S sys/"$DB_SYS_PASSWORD"@localhost:1521/"$DB_SERVICE" as sysdba \
+            @scripts/admin/create_user.sql
+
+      # _uninstall.sql on a brand-new schema is a safe no-op (every drop is
+      # guarded); running it first mirrors the project's own documented
+      # reset flow instead of assuming a truly empty schema.
+      - name: Install ErrorShield
+        run: |
+          set -euo pipefail
+          cd release
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" @_uninstall.sql
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" @_release.sql
+
+      - name: Compile utPLSQL test packages
+        run: |
+          set -euo pipefail
+          cd tests
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" <<'SQL'
+          whenever sqlerror continue
+          @ut_ersh_dedup_occurrences.pks
+          @ut_ersh_dedup_occurrences.pkb
+          @ut_ersh_decision_tree.pks
+          @ut_ersh_decision_tree.pkb
+          @ut_ersh_masking.pks
+          @ut_ersh_masking.pkb
+          @ut_ersh_core_bugs.pks
+          @ut_ersh_core_bugs.pkb
+          @ut_ersh_observability.pks
+          @ut_ersh_observability.pkb
+          exit
+          SQL
+
+      - name: Run the utPLSQL suite (console)
+        run: |
+          set -euo pipefail
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" <<'SQL'
+          set serveroutput on
+          exec ut.run(user);
+          exit
+          SQL
+
+      - name: Run the utPLSQL suite (JUnit XML)
+        run: |
+          set -euo pipefail
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" <<'SQL'
+          set feedback off heading off pagesize 0 long 1000000 trimspool on
+          spool tests/test-results.xml
+          select column_value from table(ut.run(user, ut_junit_reporter()));
+          spool off
+          exit
+          SQL
+
+      - name: Fail the job if any test failed or errored
+        run: |
+          set -euo pipefail
+          failures=$(grep -o 'failures="[0-9]*"' tests/test-results.xml | head -1 | grep -o '[0-9]*')
+          errors=$(grep -o 'errors="[0-9]*"' tests/test-results.xml | head -1 | grep -o '[0-9]*')
+          echo "utPLSQL suite: failures=$failures errors=$errors"
+          if [ "$failures" != "0" ] || [ "$errors" != "0" ]; then
+            echo "::error::utPLSQL suite reported $failures failure(s) and $errors error(s) — see tests/test-results.xml"
+            exit 1
+          fi
+
+      - name: Upload JUnit results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: utplsql-results
+          path: tests/test-results.xml
+          if-no-files-found: warn
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          mkdir -p artifacts
+          docker logs ersh-db > artifacts/db.log 2>&1 || true
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs
+          path: artifacts/
+          if-no-files-found: ignore

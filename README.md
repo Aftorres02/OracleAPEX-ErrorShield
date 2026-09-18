@@ -92,7 +92,8 @@ MIT text is in
 - `scripts/admin/` — DBA scripts run as SYS (schema creation)
 - `scripts/consumer/` — scripts run as the app schema that consumes ErrorShield (synonyms)
 - `demos/` — runnable examples, including the seed data for the ErrorShield Demo app
-- `docs/` — [`INSTALL.md`](docs/INSTALL.md), [`UPGRADE.md`](docs/UPGRADE.md)
+- `docs/` — [`INSTALL.md`](docs/INSTALL.md), [`UPGRADE.md`](docs/UPGRADE.md), [`OBSERVABILITY.md`](docs/OBSERVABILITY.md)
+- `tests/` — utPLSQL suite; see [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it
 
 ## Standards
 

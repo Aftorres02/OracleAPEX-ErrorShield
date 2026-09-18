@@ -159,6 +159,61 @@ create or replace package body ersh_error_handler_api as
   end log_and_mask_error;
 
 
+  /**
+   * Runs an error message through an optional site-provided scrubbing
+   * function before it lands in ersh_shield_incidents.error_summary. Inert
+   * by default: an empty SCRUB_FUNCTION preference returns p_error_message
+   * unchanged. No fixed patterns for emails/cards/documents are applied
+   * here on purpose — this package cannot know what counts as sensitive in
+   * someone else's data, and a wrong guess would just destroy diagnostic
+   * information without any real security benefit.
+   *
+   * The configured function must accept a single varchar2 parameter and
+   * return varchar2. dbms_assert validates the name is a simple identifier
+   * before it is ever concatenated into dynamic PL/SQL. Any failure calling
+   * it (function does not exist, wrong signature, raises internally) falls
+   * back to the original, unscrubbed text — a scrubbing failure must never
+   * block incident recording.
+   *
+   * @issue ERSH-032
+   *
+   * @param p_error_message Raw message to scrub.
+   * @return                 Scrubbed message, or p_error_message unchanged
+   *                          if SCRUB_FUNCTION is empty or the call fails.
+   */
+  function scrub_error_message(
+    p_error_message                         in varchar2
+  ) return varchar2
+  is
+    l_scrub_function logger_prefs.pref_value%type;
+    l_validated_name varchar2(128 char);
+    l_scrubbed       varchar2(4000 char);
+  begin
+    if p_error_message is null then
+      return null;
+    end if;
+
+    l_scrub_function := logger.get_pref('SCRUB_FUNCTION', gc_pref_type);
+
+    if l_scrub_function is null then
+      return p_error_message;
+    end if;
+
+    begin
+      l_validated_name := dbms_assert.simple_sql_name(l_scrub_function);
+
+      execute immediate
+        'begin :1 := ' || l_validated_name || '(:2); end;'
+        using out l_scrubbed, in p_error_message;
+
+      return l_scrubbed;
+    exception
+      when others then
+        return p_error_message;
+    end;
+  end scrub_error_message;
+
+
   -- ==========================================================================
   -- Public methods
   -- ==========================================================================
@@ -742,6 +797,8 @@ create or replace package body ersh_error_handler_api as
    * @issue ERSH-013 Added p_workspace_id, folded into the fingerprint. APEX
    *   application IDs are only unique within a workspace, so two workspaces
    *   running the same application_id used to collide into one incident.
+   * @issue ERSH-032 error_summary now goes through the optional
+   *   SCRUB_FUNCTION hook (scrub_error_message) before being stored.
    *
    * @author Angel Flores (Consultant)
    * @created April 11, 2026
@@ -777,6 +834,10 @@ create or replace package body ersh_error_handler_api as
     l_scope         logger_logs.scope%type := gc_scope_prefix || 'record_internal_incident';
     l_fingerprint   ersh_shield_incidents.error_fingerprint%type;
     l_time_bucket   ersh_shield_incidents.time_bucket%type;
+    -- @issue ERSH-032: only what gets stored in error_summary is scrubbed.
+    -- The fingerprint below is computed from the raw p_error_message — it
+    -- must never change dedup identity.
+    l_error_summary ersh_shield_incidents.error_summary%type := scrub_error_message(p_error_message);
   begin
     -- ---------------------------------------------------------------------
     -- Step 1: Build the error fingerprint.
@@ -884,7 +945,7 @@ create or replace package body ersh_error_handler_api as
       , p_component_type
       , p_component_name
       , p_ora_sqlcode
-      , substr(p_error_message, 1, 4000)
+      , substr(l_error_summary, 1, 4000)
       , l_fingerprint
       , l_time_bucket
       );
@@ -968,6 +1029,11 @@ create or replace package body ersh_error_handler_api as
    *   );
    *
    * @issue ERSH-001
+   * @issue ERSH-044 The "incident not found" raise_application_error was
+   *   inside the same block as the when others handler below, so it got
+   *   mislabeled as an Unhandled Exception in Logger. Moved the update
+   *   into its own nested block; the intentional raise now sits outside
+   *   any handler (same ERSH-022/023 lesson, applied here too).
    *
    * @author Angel Flores (Consultant)
    * @created April 11, 2026
@@ -980,24 +1046,39 @@ create or replace package body ersh_error_handler_api as
   , p_resolution_notes                      in ersh_shield_incidents.resolution_notes%type default null
   )
   is
-    l_scope   logger_logs.scope%type := gc_scope_prefix || 'resolve_incident';
-    l_params  logger.tab_param;
+    l_scope    logger_logs.scope%type := gc_scope_prefix || 'resolve_incident';
+    l_params   logger.tab_param;
+    l_rowcount pls_integer;
   begin
     logger.append_param(l_params, 'p_incident_id: ', p_incident_id);
     logger.log('START', l_scope, null, l_params);
 
-    update ersh_shield_incidents
-       set resolved_yn       = 'Y'
-         , resolved_by       = coalesce(
-                                 sys_context('APEX$SESSION', 'app_user')
-                               , regexp_substr(sys_context('userenv', 'client_identifier'), '^[^:]*')
-                               , sys_context('userenv', 'session_user')
-                               )
-         , resolved_on       = localtimestamp
-         , resolution_notes  = p_resolution_notes
-     where shield_incident_id = p_incident_id;
+    -- The update itself is the only risky part — isolated in its own
+    -- block so its handler never sees the intentional "not found" raise
+    -- below (ERSH-022/023 lesson: a when others must never catch the
+    -- raise_application_error its own block just raised).
+    begin
+      update ersh_shield_incidents
+         set resolved_yn       = 'Y'
+           , resolved_by       = coalesce(
+                                   sys_context('APEX$SESSION', 'app_user')
+                                 , regexp_substr(sys_context('userenv', 'client_identifier'), '^[^:]*')
+                                 , sys_context('userenv', 'session_user')
+                                 )
+           , resolved_on       = localtimestamp
+           , resolution_notes  = p_resolution_notes
+       where shield_incident_id = p_incident_id;
 
-    if sql%rowcount = 0 then
+      l_rowcount := sql%rowcount;
+    exception
+      when others then
+        logger.log_error('Unhandled Exception', l_scope, null, l_params);
+        raise;
+    end;
+
+    -- Deliberately outside the exception-handled block above: an unknown
+    -- incident id is an intentional business error, not an unhandled one.
+    if l_rowcount = 0 then
       raise_application_error(
         -20001
       , 'Incident ' || to_char(p_incident_id) || ' not found in ersh_shield_incidents.'
@@ -1005,12 +1086,69 @@ create or replace package body ersh_error_handler_api as
     end if;
 
     logger.log('END', l_scope, null, l_params);
+  end resolve_incident;
+
+
+  -- ==========================================================================
+  -- PROCEDURE: purge_incidents
+  -- ==========================================================================
+  /**
+   * Deletes ersh_shield_incidents older than the retention window (and their
+   * ersh_incident_occurrences children). Not scheduled during install — see
+   * jobs/ersh_purge_job.sql and docs/OBSERVABILITY.md.
+   *
+   * The default window (ERSH_PURGE_AFTER_DAYS, seeded to 90) must stay
+   * greater than Logger's own PURGE_AFTER_DAYS (7): if logger_logs is
+   * already gone by the time a user reports a reference code, the incident
+   * it points to still has to be there for the DEV main to find it.
+   *
+   * @example
+   *   ersh_error_handler_api.purge_incidents(p_purge_after_days => 90);
+   *
+   * @issue ERSH-026
+   *
+   * @author Angel Flores (Consultant)
+   * @created September 18, 2026
+   *
+   * @param p_purge_after_days Overrides the ERSH_PURGE_AFTER_DAYS preference
+   *                            for this call. Null uses the preference.
+   */
+  procedure purge_incidents(
+    p_purge_after_days                      in number default null
+  )
+  is
+    pragma autonomous_transaction;
+
+    l_scope            logger_logs.scope%type := gc_scope_prefix || 'purge_incidents';
+    l_params           logger.tab_param;
+    l_purge_after_days number := nvl(p_purge_after_days, to_number(logger.get_pref('ERSH_PURGE_AFTER_DAYS', gc_pref_type)));
+  begin
+    logger.append_param(l_params, 'p_purge_after_days: ', p_purge_after_days);
+    logger.append_param(l_params, 'l_purge_after_days: ', l_purge_after_days);
+    logger.log('START', l_scope, null, l_params);
+
+    delete
+      from ersh_incident_occurrences
+     where shield_incident_id in (
+             select shield_incident_id
+               from ersh_shield_incidents
+              where created_on < systimestamp - numtodsinterval(l_purge_after_days, 'day')
+           );
+
+    delete
+      from ersh_shield_incidents
+     where created_on < systimestamp - numtodsinterval(l_purge_after_days, 'day');
+
+    commit;
+
+    logger.log('END', l_scope, null, l_params);
 
   exception
     when others then
+      rollback;
       logger.log_error('Unhandled Exception', l_scope, null, l_params);
       raise;
-  end resolve_incident;
+  end purge_incidents;
 
 
 
