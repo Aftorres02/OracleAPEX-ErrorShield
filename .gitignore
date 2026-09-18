@@ -6,7 +6,7 @@
 ._*
 
 # Custom folder icons
-Icon
+Icon
 
 # Volume root files
 .DocumentRevisions-V100
@@ -19,3 +19,6 @@ Icon
 AGENTS.md
 release/release_log_*
 release/&logname.lst
+# _release.sql's spool lands here if it's ever run from the repo root
+# instead of release/ (its documented cwd).
+/release_log_*

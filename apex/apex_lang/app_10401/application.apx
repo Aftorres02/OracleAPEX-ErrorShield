@@ -1,0 +1,66 @@
+app ERROR-SHIELD-DEMO (
+    name: ErrorShield Demo
+    logo {
+        type: text
+        text: ErrorShield Demo
+    }
+    navigation {
+        homeUrl: {
+            page: 1
+        }
+        loginUrl: {
+            page: LOGIN
+        }
+    }
+    navigationBar {
+        list: @navigation-bar
+        listTemplate: @/navigation-bar
+        templateOptions: #DEFAULT#
+    }
+    userInterface {
+        currentTheme: @universal-theme
+        globalPage: 0
+        addBuiltWithApexToFooter: false
+    }
+    appFormatMasks {
+        date: DS
+        timestamp: DS
+        timestampTimeZone: DS
+    }
+    authentication {
+        scheme: @application-express-accounts
+    }
+    security {
+        runtimeApiUsage: modifyThisApp
+    }
+    sessionStateProtection {
+        checksumSalt: 05E7A6F1B9C2D4E8A0F3B6C9D2E5A8F1B4C7D0E3A6F9C2B5D8E1A4F7C0B3E6D9A2
+    }
+    sessionManagement {
+        sessionStateCommits: immediate
+    }
+    globalization {
+        documentDirection: leftToRight
+    }
+    rowSearch {
+        tokenize: false
+    }
+    reportPrinting {
+        type: useInstanceSettings
+    }
+    errorHandling {
+        errorHandlingFunctionName: ersh_error_handler_api.apex_error_handling
+    }
+    runtime {
+        allowFeedback: true
+        accessibleReadOnlyItems: false
+    }
+
+    substitution APP_NAME (
+        value {
+            staticValue: ErrorShield Demo
+        }
+    )
+
+)
+

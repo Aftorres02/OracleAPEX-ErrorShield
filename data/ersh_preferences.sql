@@ -20,7 +20,11 @@ prompt *** Loading ERSH preferences (insert-if-missing) ***
 merge into logger_prefs p
 using (
   select 'ERSH' as pref_type, 'ERSH_VERSION'                 as pref_name, '1.0.0'                 as pref_value from dual union all
-  select 'ERSH'              , 'SUPPORT_EMAIL'                             , 'aftorres02@gmail.com'              from dual union all
+  -- support@example.com: example.com is reserved by RFC 2606, so nobody can
+  -- register it. Left on the default, a message bounces instead of landing
+  -- on someone else's real domain (ERSH-018). post_install_configuration.sql
+  -- warns if this is still the default after install.
+  select 'ERSH'              , 'SUPPORT_EMAIL'                             , 'support@example.com'               from dual union all
   select 'ERSH'              , 'REFERENCE_DISPLAY_MIN_DIGITS'              , '10'                                from dual union all
   -- ENVIRONMENT is just the label of the current database.
   -- Admins are free to use any name they want (DEV, TEST, QA, STAGE, PROD,

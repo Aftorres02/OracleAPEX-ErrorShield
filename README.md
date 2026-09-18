@@ -4,6 +4,68 @@ Enterprise error handling for Oracle APEX: maps constraints and custom errors to
 friendly messages, optional masking of internal errors, and instrumentation via
 the **OraOpenSource Logger** stack (`logger` package and `logger_*` objects).
 
+## What problem this solves
+
+A user hits an error and sees a generic, safe message with a reference code
+instead of a raw ORA stack trace. That code is the whole point: a developer
+supporting that user (the "DEV main") pastes it into the admin app and lands
+directly on the incident that produced it — application, page, the full
+internal error detail, and every other user who hit the same root cause.
+
+The cycle is **user → code → DEV main → root cause**: the user reports a code
+instead of a screenshot of a stack trace, the DEV main resolves that code to
+one incident instead of grepping logs, and the incident already groups every
+occurrence of the same underlying bug so fixing it closes all of them at once.
+
+## Support matrix
+
+- Oracle APEX 26.1+
+- Oracle Database 19c (19.18+) or Oracle AI Database 26ai
+
+---
+
+## Quickstart
+
+1. **Install the owner schema** — creates Logger + ErrorShield objects and
+   the admin app (10400). See [`docs/INSTALL.md`](docs/INSTALL.md) for
+   prerequisites, privileges, and the full walkthrough.
+2. **Onboard a consumer app's schema** — grants + synonyms so that schema can
+   call `ersh_error_handler_api` without owning any of its objects. Covered
+   in [`docs/INSTALL.md`](docs/INSTALL.md#onboarding-a-consumer-schema).
+3. **Point the consumer app's Error Handling Function** at
+   `ersh_error_handler_api.apex_error_handling` (Shared Components → Security
+   → Error Handling). See
+   [`docs/INSTALL.md`](docs/INSTALL.md#configuring-the-error-handling-function).
+4. **Try it without installing anything of your own**: the ErrorShield Demo
+   app (10401, `apex/apex_lang/app_10401/`) is a standalone app with one page
+   and four buttons, each deliberately triggering one branch of the decision
+   tree — internal APEX error, constraint violation, business error, and an
+   unexpected ORA error. Seed it with
+   [`demos/demo_errorshield_app_seed.sql`](demos/demo_errorshield_app_seed.sql),
+   then import it with `scripts/apex_install_demo.sql`. It never touches the
+   real admin app.
+
+---
+
+## Known limitations
+
+These are consequences of decisions already made, not open bugs.
+
+> **No isolation between apps.** Every consumer schema gets `select` on
+> `ersh_shield_incidents`, so any code in schema A can read schema B's
+> incidents — `error_summary` included. Grants alone can't fix this; it would
+> need a VPD policy (`ERSH-042`, not yet built).
+
+> **Every authenticated user of the admin app is an administrator.** The
+> `administration-rights` authorization scheme is a placeholder (`return
+> true;`) until a real role model exists (`ERSH-043`).
+
+> **No per-application configuration override.** `SUPPORT_EMAIL` and every
+> other ERSH preference are global to the owner schema — a consumer app
+> can't set its own support address.
+
+---
+
 ## License
 
 This project is released under the [MIT License](LICENSE).
@@ -29,6 +91,8 @@ MIT text is in
 - `scripts/` — owner-schema scripts (grants, prereqs, post-install, APEX helpers)
 - `scripts/admin/` — DBA scripts run as SYS (schema creation)
 - `scripts/consumer/` — scripts run as the app schema that consumes ErrorShield (synonyms)
+- `demos/` — runnable examples, including the seed data for the ErrorShield Demo app
+- `docs/` — [`INSTALL.md`](docs/INSTALL.md), [`UPGRADE.md`](docs/UPGRADE.md)
 
 ## Standards
 

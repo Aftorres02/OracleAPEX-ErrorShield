@@ -1,0 +1,252 @@
+page 1 (
+    name: ErrorShield Demo
+    alias: DEMO
+    title: ErrorShield Demo
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+
+    region actionsSR (
+        name: Actions
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region brokenCR (
+        name: Broken Region
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select 1 as demo_col
+                  from errorshield_demo_this_table_does_not_exist
+                ```
+            pageItemsToSubmit: P1_SHOW_INTERNAL_ERROR
+        }
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P1_SHOW_INTERNAL_ERROR = 'Y'
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+
+        column DEMO_COL (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Demo Col
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+    )
+
+    region introSR (
+        name: Intro
+        type: staticContent
+        source {
+            htmlCode: Each button below deliberately triggers one branch of ErrorShield's decision tree. What you see after clicking is exactly what an end user would see &mdash; masked or not, depending on the ENVIRONMENT and MASK_IN_ENVIRONMENTS preferences.
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/content-block
+            templateOptions: [
+                #DEFAULT#
+                t-ContentBlock--padded
+            ]
+        }
+    )
+
+    pageItem P1_SHOW_INTERNAL_ERROR (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @actionsSR
+            slot: regionBody
+        }
+    )
+
+    button demo-business (
+        buttonName: DEMO_BUSINESS
+        label: c) Business Error (raise_custom_error)
+        layout {
+            sequence: 30
+            region: @actionsSR
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button demo-constraint (
+        buttonName: DEMO_CONSTRAINT
+        label: b) Constraint Violation
+        layout {
+            sequence: 20
+            region: @actionsSR
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button demo-internal (
+        buttonName: DEMO_INTERNAL
+        label: a) Internal APEX Error
+        layout {
+            sequence: 10
+            region: @actionsSR
+            slot: regionBody
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button demo-unexpected (
+        buttonName: DEMO_UNEXPECTED
+        label: d) Unexpected ORA Error
+        layout {
+            sequence: 40
+            region: @actionsSR
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    process set-internal-flag (
+        name: Set Internal Error Flag
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                begin
+                  :P1_SHOW_INTERNAL_ERROR := 'Y';
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 18439041107941633
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'DEMO_INTERNAL'
+        }
+    )
+
+    process trigger-business (
+        name: Trigger Business Error
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                begin
+                  ersh_error_handler_api.raise_custom_error(p_error_code => 'DEMO_BUSINESS_ERROR');
+                end;
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        advanced {
+            executionMappingIdentifier: 18439257630941634
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'DEMO_BUSINESS'
+        }
+    )
+
+    process trigger-constraint (
+        name: Trigger Constraint Violation
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                begin
+                  insert into errorshield_demo_orders (order_id, quantity)
+                  values (1, -1);
+                end;
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        advanced {
+            executionMappingIdentifier: 18439135874941633
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'DEMO_CONSTRAINT'
+        }
+    )
+
+    process trigger-unexpected (
+        name: Trigger Unexpected ORA Error
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                  l_result number;
+                begin
+                  l_result := 1 / 0;
+                end;
+                ```
+        }
+        execution {
+            sequence: 40
+        }
+        advanced {
+            executionMappingIdentifier: 18439321859941634
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'DEMO_UNEXPECTED'
+        }
+    )
+
+)
+
