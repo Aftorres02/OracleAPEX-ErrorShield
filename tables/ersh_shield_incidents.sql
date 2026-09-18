@@ -28,6 +28,12 @@ begin
         -- Link to full error detail in logger_logs
         , logger_log_id       number
         -- APEX correlation: where and who triggered the error
+        -- workspace_id: apex_application.get_security_group_id. application_id
+        -- is only unique WITHIN a workspace, so two workspaces with the same
+        -- application_id would otherwise collide into the same incident.
+        -- Nullable since record_internal_incident can be called outside an
+        -- APEX session (no workspace to report).
+        , workspace_id        number
         , application_id      number
         , page_id             number
         , app_user            varchar2(255 char)
@@ -38,7 +44,7 @@ begin
         , ora_sqlcode         number
         , error_summary       varchar2(4000 char)
         -- Deduplication columns
-        -- error_fingerprint: SHA-256 hex hash of (application_id|page_id|ora_sqlcode|first 200 chars of message)
+        -- error_fingerprint: SHA-256 hex hash of (workspace_id|application_id|page_id|ora_sqlcode|first 200 chars of message)
         , error_fingerprint   varchar2(64 char)  not null
         -- time_bucket: floor(unix epoch seconds / 30) — groups errors in 30-second windows
         , time_bucket         number             not null
@@ -139,6 +145,7 @@ begin
   execute immediate 'comment on table ersh_shield_incidents is ''Groups internal/unexpected APEX errors by fingerprint and 30-second time bucket for admin investigation and resolution tracking.''';
   execute immediate 'comment on column ersh_shield_incidents.shield_incident_id is ''Unique identifier for the incident group (Primary Key).''';
   execute immediate 'comment on column ersh_shield_incidents.logger_log_id is ''ID of the first matching row in logger_logs containing the full error detail.''';
+  execute immediate 'comment on column ersh_shield_incidents.workspace_id is ''APEX workspace (apex_application.get_security_group_id) where the error occurred. Part of the dedup fingerprint since application_id is only unique within a workspace. Null when recorded outside an APEX session.''';
   execute immediate 'comment on column ersh_shield_incidents.application_id is ''APEX application ID where the error occurred.''';
   execute immediate 'comment on column ersh_shield_incidents.page_id is ''APEX page ID where the error occurred.''';
   execute immediate 'comment on column ersh_shield_incidents.app_user is ''APEX application user at the time of the error.''';
@@ -147,7 +154,7 @@ begin
   execute immediate 'comment on column ersh_shield_incidents.component_name is ''APEX component name that triggered the error (from apex_error.t_error).''';
   execute immediate 'comment on column ersh_shield_incidents.ora_sqlcode is ''ORA error code from the original error, if applicable.''';
   execute immediate 'comment on column ersh_shield_incidents.error_summary is ''First 4000 chars of the internal error message. Never exposed to end users.''';
-  execute immediate 'comment on column ersh_shield_incidents.error_fingerprint is ''SHA-256 hex hash of application_id|page_id|ora_sqlcode|first 200 chars of message. Used as dedup key.''';
+  execute immediate 'comment on column ersh_shield_incidents.error_fingerprint is ''SHA-256 hex hash of workspace_id|application_id|page_id|ora_sqlcode|first 200 chars of message. Used as dedup key.''';
   execute immediate 'comment on column ersh_shield_incidents.time_bucket is ''30-second time bucket: floor(unix epoch seconds / 30). Paired with fingerprint as dedup unique key.''';
   execute immediate 'comment on column ersh_shield_incidents.occurrence_count is ''Number of times the same error pattern was hit within this 30-second window.''';
   execute immediate 'comment on column ersh_shield_incidents.resolved_yn is ''Y = admin has reviewed and resolved this incident. N = pending review.''';

@@ -12,7 +12,13 @@
 -- @created September 16, 2026
 -- @ticket ERSH-010
 -- =============================================================================
-create or replace view ersh_incident_occurrences_vw
+-- FORCE: this view calls logger.get_pref, which does not exist yet at this
+-- point in a fresh release (views are created before packages). Without
+-- FORCE, "create view" fails outright and the view never exists at all;
+-- with FORCE it's created invalid and the release's final recompile step
+-- fixes it once the logger package exists. Same pattern as the vendored
+-- views/logger_logs_5_min.sql etc.
+create or replace force view ersh_incident_occurrences_vw
 as
 with w_base as (
   select io.occurrence_id                                             as occurrence_id
