@@ -81,16 +81,28 @@ repeatedly against the same schema is safe.
 
 ## How CI works
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) installs Oracle
-Database Free + Oracle APEX 26.1 + utPLSQL from scratch on every PR, then
-installs ErrorShield and runs the same `tests/` suite, gated on a GitHub
-check. Expect it to take a while (~30-40 minutes) — most of that is the
-Oracle + APEX install, not the tests themselves, which run in well under a
-second.
+Two workflows, split by how often each needs to run:
 
-**Planned follow-up, not yet done:** baking a custom Docker image with
-Oracle + APEX + utPLSQL pre-installed, published to `ghcr.io`, so future CI
-runs pull a ready image instead of reinstalling everything every time
-(~1-2 minutes instead of ~30-40). Deferred out of this PR to ship the
-straightforward, already-proven-elsewhere version first — see
-`data/plan/EXECUTION-PLAN.md` PR 7 for the reasoning.
+- [`.github/workflows/build-ci-image.yml`](.github/workflows/build-ci-image.yml)
+  — manual (`workflow_dispatch`) only. Installs Oracle Database Free + real
+  Oracle APEX 26.1 + utPLSQL from scratch, then commits the stopped
+  container and pushes it to `ghcr.io/<owner>/oracle-apex-utplsql`. Slow
+  (~30-40 minutes) — run it once, and again whenever the pinned
+  Oracle/APEX/utPLSQL versions change. Deliberately generic: no ErrorShield
+  objects are baked in, so the same image is reusable by any other Oracle
+  APEX project's CI, not just this repo.
+- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — runs on every
+  PR. Pulls that pre-built image (DB + APEX + utPLSQL already installed,
+  starts in seconds instead of being created from scratch), then installs
+  ErrorShield fresh (`release/_uninstall.sql` + `_release.sql`) and runs the
+  `tests/` suite, gated on a GitHub check.
+
+**Before `ci.yml` can pass for the first time**, `build-ci-image.yml` has
+to run once manually to publish the base image. See
+`data/plan/CI-ROLLOUT.md` for the exact activation steps and what's been
+validated locally vs. not yet run for real on GitHub.
+
+**To reuse `ghcr.io/<owner>/oracle-apex-utplsql` from another repo**, its
+package visibility needs to be set to public (one-time, in that package's
+GitHub settings) — `ci.yml` itself doesn't need this, since `GITHUB_TOKEN`
+can always pull a package this same repo published.
