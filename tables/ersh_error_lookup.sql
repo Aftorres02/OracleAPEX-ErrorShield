@@ -25,8 +25,32 @@ begin
         , last_updated_on       timestamp with local time zone
         , active_yn             varchar2(1 char) default 'Y' not null
         , constraint ck_ersh_error_lookup_active_yn check (active_yn in ('Y', 'N'))
+        , constraint ck_ersh_error_lookup_ora_sqlcode check (ora_sqlcode between -20999 and -20000)
       )
     !';
+  end if;
+end;
+/
+
+
+-- -----------------------------------------------------------------------------
+-- Constraints (added after the initial release; idempotent for installs that
+-- already had this table before ERSH-025 introduced the check).
+-- -----------------------------------------------------------------------------
+declare
+  l_count pls_integer;
+begin
+  select count(1)
+    into l_count
+    from user_constraints
+   where constraint_name = 'CK_ERSH_ERROR_LOOKUP_ORA_SQLCODE'
+     and table_name      = 'ERSH_ERROR_LOOKUP';
+
+  if l_count = 0 then
+    execute immediate '
+      alter table ersh_error_lookup
+        add constraint ck_ersh_error_lookup_ora_sqlcode check (ora_sqlcode between -20999 and -20000)
+    ';
   end if;
 end;
 /
@@ -82,7 +106,7 @@ end ersh_error_lookup_compound_trg;
 begin
   execute immediate 'comment on column ersh_error_lookup.ersh_error_lookup_id is ''Unique identifier (Primary Key).''';
   execute immediate 'comment on column ersh_error_lookup.error_code is ''Optional: constraint name or custom code (e.g. FK_ersh_CLIENT_DEFAULT_CURRENCY). Null for generic ORA messages.''';
-  execute immediate 'comment on column ersh_error_lookup.ora_sqlcode is ''ORA/SQLCODE number (e.g. -20001, -2291).''';
+  execute immediate 'comment on column ersh_error_lookup.ora_sqlcode is ''Code passed to raise_application_error via raise_custom_error. Must be between -20999 and -20000 (see ck_ersh_error_lookup_ora_sqlcode), e.g. -20001.''';
   execute immediate 'comment on column ersh_error_lookup.message is ''User-friendly error message.''';
   execute immediate 'comment on column ersh_error_lookup.active_yn is ''Active flag (Y/N).''';
   execute immediate 'comment on column ersh_error_lookup.created_by is ''User who created the record.''';

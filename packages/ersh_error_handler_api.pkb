@@ -39,6 +39,10 @@ create or replace package body ersh_error_handler_api as
    * their own begin/exception blocks so a failure in either never propagates
    * to the caller or the end user.
    *
+   * @issue ERSH-016 Passes p_error.component.type/name through to
+   *   record_internal_incident, which already accepted and stored them but
+   *   never received a value.
+   *
    * @param p_log_title       Prefix line written to logger to identify error origin.
    * @param p_error           Original APEX error record (apex_error.t_error).
    * @param o_message         Message to show the user (masked in PROD, raw elsewhere).
@@ -82,6 +86,8 @@ create or replace package body ersh_error_handler_api as
       , p_page_id         => apex_application.g_flow_step_id
       , p_app_user        => apex_application.g_user
       , p_request         => apex_application.g_request
+      , p_component_type  => p_error.component.type
+      , p_component_name  => p_error.component.name
       , p_ora_sqlcode     => p_error.ora_sqlcode
       , p_error_message   => p_error.message
       , p_logger_log_id   => l_reference_id
@@ -288,12 +294,16 @@ create or replace package body ersh_error_handler_api as
    *
    * @issue ERSH-002
    * @issue ERSH-003 Consolidated add_custom_error and update_custom_error.
+   * @issue ERSH-025 Validates p_ora_sqlcode is in the -20999..-20000 range
+   *   up front, with a readable message, instead of letting the MERGE fail
+   *   on the table's check constraint with a raw ORA-02290.
    *
    * @author Angel Flores (Consultant)
    * @created April 23, 2026
    *
    * @param p_error_code  Unique error code (required).
    * @param p_ora_sqlcode ORA / application error code for raise_application_error.
+   *                      Must be between -20999 and -20000.
    * @param p_message     User-facing message stored in the lookup.
    * @param p_active_yn   Active flag Y or N (default Y).
    */
@@ -317,6 +327,13 @@ create or replace package body ersh_error_handler_api as
       raise_application_error(
         -20001
       , 'error_code is required for merge_ersh_error_lookup.'
+      );
+    end if;
+
+    if p_ora_sqlcode not between -20999 and -20000 then
+      raise_application_error(
+        -20001
+      , 'p_ora_sqlcode must be between -20999 and -20000.'
       );
     end if;
 
@@ -535,6 +552,22 @@ create or replace package body ersh_error_handler_api as
   /**
    * Raises a custom error code defined in ersh_error_lookup.
    *
+   * A code that does not exist, and one that exists but is deactivated
+   * (active_yn = 'N'), are indistinguishable to the caller: both raise the
+   * same generic "not implemented" error. A disabled code must behave as
+   * if it were never defined, not leak the fact that it was deliberately
+   * turned off.
+   *
+   * @issue ERSH-022 Filters by active_yn = 'Y' so a deactivated code is
+   *   treated the same as a missing one, instead of still being raised.
+   * @issue ERSH-023 The final raise_application_error (the intentional,
+   *   successful result of this procedure) sits outside any exception
+   *   handler, so it is never logged as a false "Unhandled Exception".
+   *   Only the lookup itself is guarded, and only against genuinely
+   *   unexpected failures.
+   * @issue ERSH-030 Single select ... into with a no_data_found handler,
+   *   replacing the earlier select count(1) followed by a second select.
+   *
    * @author Angel Flores (Consultant)
    * @created Monday, March 09, 2026
    *
@@ -549,9 +582,8 @@ create or replace package body ersh_error_handler_api as
   is
     l_scope        logger_logs.scope%type := gc_scope_prefix || 'raise_custom_error';
     l_params       logger.tab_param;
-    l_exists       number := 0;
-    l_ora_sqlcode  number;
-    l_message      varchar2(4000 char);
+    l_ora_sqlcode  ersh_error_lookup.ora_sqlcode%type;
+    l_message      ersh_error_lookup.message%type;
   begin
 
     $if $$VERBOSE_OUTPUT $then
@@ -559,36 +591,89 @@ create or replace package body ersh_error_handler_api as
       logger.log('START', l_scope, null, l_params);
     $end
 
-    select count(1)
-      into l_exists
-      from ersh_error_lookup
-     where error_code = p_error_code;
-
-    if l_exists = 0 then
-      raise_application_error(
-        -20001
-        , p_error_code || ' code, was not implemented in the ersh_error_lookup table'
-      );
-    end if;
-
-    select ora_sqlcode
-         , message
-      into l_ora_sqlcode
-         , l_message
-      from ersh_error_lookup
-     where error_code = p_error_code;
-
-    raise_application_error(l_ora_sqlcode, l_message);
+    begin
+      select ora_sqlcode
+           , message
+        into l_ora_sqlcode
+           , l_message
+        from ersh_error_lookup
+       where error_code = p_error_code
+         and active_yn  = 'Y';
+    exception
+      when no_data_found then
+        raise_application_error(
+          -20001
+          , p_error_code || ' code, was not implemented in the ersh_error_lookup table'
+        );
+      when others then
+        logger.log_error('Unhandled Exception', l_scope, null, l_params);
+        raise;
+    end;
 
     $if $$VERBOSE_OUTPUT $then
       logger.log('END', l_scope, null, l_params);
     $end
 
+    -- Deliberately outside the exception-handled block above: this raise is
+    -- the successful result of calling this procedure, not a failure, so it
+    -- must not be caught and logged as an "Unhandled Exception" (ERSH-023).
+    raise_application_error(l_ora_sqlcode, l_message);
+
+  end raise_custom_error;
+
+
+  -- ==========================================================================
+  -- FUNCTION: get_message
+  -- ==========================================================================
+  /**
+   * Reads the message for a custom error code without raising it. Meant for
+   * callers that build their own apex_error.add_error call instead of using
+   * raise_custom_error.
+   *
+   * @issue ERSH-024
+   *
+   * @author Angel Flores (Consultant)
+   * @created September 17, 2026
+   *
+   * @example
+   *   apex_error.add_error(
+   *       p_message => ersh_error_handler_api.get_message(p_error_code => 'CURRENCY_FETCH_FAILED')
+   *     , p_display_location => apex_error.c_inline_in_notification
+   *   );
+   *
+   * @param p_error_code Business key to look up.
+   * @return             The stored message, or null if the code does not
+   *                      exist or is deactivated.
+   */
+  function get_message(
+    p_error_code                            in ersh_error_lookup.error_code%type
+  ) return ersh_error_lookup.message%type
+  is
+    l_scope    logger_logs.scope%type := gc_scope_prefix || 'get_message';
+    l_params   logger.tab_param;
+    l_message  ersh_error_lookup.message%type;
+  begin
+    logger.append_param(l_params, 'p_error_code: ', p_error_code);
+    logger.log('START', l_scope, null, l_params);
+
+    select message
+      into l_message
+      from ersh_error_lookup
+     where error_code = p_error_code
+       and active_yn  = 'Y';
+
+    logger.log('END', l_scope, null, l_params);
+
+    return l_message;
+
   exception
+    when no_data_found then
+      logger.log('END', l_scope, null, l_params);
+      return null;
     when others then
       logger.log_error('Unhandled Exception', l_scope, null, l_params);
       raise;
-  end raise_custom_error;
+  end get_message;
 
 
   -- ==========================================================================
