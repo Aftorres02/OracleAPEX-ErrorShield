@@ -32,4 +32,15 @@ MIT text is in
 
 ## Standards
 
-Project coding standards are defined in [`AGENTS.md`](AGENTS.md).
+Coding standards are consumed as a git submodule at `.claude/`, from
+[OracleApex-Code-Standards](https://github.com/Aftorres02/OracleApex-Code-Standards).
+After cloning this repo, run:
+
+```bash
+git submodule update --init --recursive
+```
+
+[`CLAUDE.md`](CLAUDE.md) is the index that loads the standards under
+`.claude/rules/` into context for Claude Code. If your tooling reads
+`AGENTS.md` by convention instead, copy `.claude/AGENTS.md.template` to
+`./AGENTS.md` (gitignored — machine-local, not committed).
