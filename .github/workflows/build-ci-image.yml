@@ -152,8 +152,11 @@ jobs:
       - name: Commit and push the image
         run: |
           set -euo pipefail
-          IMAGE_REF_TAGGED="ghcr.io/${{ github.repository_owner }}/${IMAGE_NAME}:${IMAGE_TAG}"
-          IMAGE_REF_LATEST="ghcr.io/${{ github.repository_owner }}/${IMAGE_NAME}:latest"
+          # ghcr.io image refs must be lowercase; github.repository_owner
+          # is not guaranteed to be (e.g. "Aftorres02").
+          owner_lower=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_REF_TAGGED="ghcr.io/${owner_lower}/${IMAGE_NAME}:${IMAGE_TAG}"
+          IMAGE_REF_LATEST="ghcr.io/${owner_lower}/${IMAGE_NAME}:latest"
           docker commit ersh-db-builder "$IMAGE_REF_TAGGED"
           docker tag "$IMAGE_REF_TAGGED" "$IMAGE_REF_LATEST"
           docker push "$IMAGE_REF_TAGGED"
