@@ -11,6 +11,7 @@ declare
   c_username constant varchar2(30) := user;
 
   l_apex_app_ids apex_t_varchar2;
+  l_exists_count pls_integer;
 begin
   if c_app_ids is null or upper(c_app_ids) = 'NONE' then
     dbms_output.put_line('No APEX app IDs configured (env_apex_app_ids = NONE). Skipping.');
@@ -21,10 +22,23 @@ begin
 
   -- Note if getting error "ORA_20987 to catch the error: ORA-20987: APEX - An API call has been prohibited."
   -- Change your Application Security Settings
-  -- Shared Components > Security Attributes > Runtime API Usage: 
+  -- Shared Components > Security Attributes > Runtime API Usage:
   --  - Check "Modify This Application"
 
   for i in l_apex_app_ids.first .. l_apex_app_ids.last loop
+
+    -- First-ever install has nothing to disable yet — all_apex.sql (later
+    -- in _release.sql) does the initial import. Without this guard a brand
+    -- new environment fails here with ORA-20987 before it ever gets there.
+    select count(1)
+      into l_exists_count
+      from apex_applications
+     where application_id = l_apex_app_ids(i);
+
+    if l_exists_count = 0 then
+      dbms_output.put_line('APEX application ' || l_apex_app_ids(i) || ' does not exist yet — skipping disable (first install).');
+      continue;
+    end if;
 
     apex_session.create_session (
       p_app_id => l_apex_app_ids(i) ,

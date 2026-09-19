@@ -168,6 +168,25 @@ create or replace package ersh_error_handler_api is
   );
 
 
+  -- ==========================================================================
+  -- Retention
+  -- ==========================================================================
+
+  /**
+   * Deletes ersh_shield_incidents (and their ersh_incident_occurrences)
+   * older than the retention window. Not scheduled by the release — see
+   * jobs/ersh_purge_job.sql and docs/OBSERVABILITY.md to activate it.
+   *
+   * @issue ERSH-026
+   *
+   * @param p_purge_after_days Overrides the ERSH_PURGE_AFTER_DAYS preference
+   *                            for this call. Null uses the preference.
+   */
+  procedure purge_incidents(
+    p_purge_after_days                      in number default null
+  );
+
+
 
 end ersh_error_handler_api;
 /

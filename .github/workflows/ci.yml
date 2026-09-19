@@ -1,0 +1,193 @@
+name: CI
+
+# Pulls the pre-built ghcr.io/<owner>/oracle-apex-utplsql image (Oracle
+# Database Free + real Oracle APEX 26.1 + utPLSQL already installed — see
+# build-ci-image.yml) instead of installing all of that from scratch on
+# every run. Only ErrorShield itself (release/_uninstall.sql + _release.sql)
+# and the utPLSQL suite in tests/ run fresh here.
+#
+# ersh_error_handler_api.pks references apex_error.t_error in its own
+# signature, so the package cannot even compile — let alone be tested —
+# without real Oracle APEX installed. There is no lighter "DB only" option,
+# which is exactly why the base image exists: get that real-APEX cost paid
+# once, not on every PR.
+#
+# If ghcr.io/<owner>/oracle-apex-utplsql doesn't exist yet, or needs
+# rebuilding after an Oracle/APEX/utPLSQL version bump, run
+# build-ci-image.yml manually first.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  BASE_IMAGE_NAME: oracle-apex-utplsql
+  BASE_IMAGE_TAG: 26.1-utplsql3.2.3
+  DB_SERVICE: FREEPDB1
+  # Must match DB_SYS_PASSWORD baked into the base image by
+  # build-ci-image.yml — not a secret, just has to match what's already on
+  # the image's datafiles.
+  DB_SYS_PASSWORD: CiErsh_2026Pwd
+  OWNER_SCHEMA: LOGGER_USER
+  OWNER_PASSWORD: CiOwner_2026Pwd
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The base image is still a full Oracle + APEX install (~15+ GB) —
+      # pulling it needs the same disk-space headroom as building it did.
+      - name: Free up disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          swap-storage: false
+
+      - name: Set up Java 17 (required by SQLcl)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install SQLcl
+        run: |
+          set -euo pipefail
+          curl -fL -o /tmp/sqlcl.zip https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
+          unzip -q /tmp/sqlcl.zip -d "$HOME"
+          echo "$HOME/sqlcl/bin" >> "$GITHUB_PATH"
+
+      # GITHUB_TOKEN can always pull a package this same repo published,
+      # private or public, but still needs an explicit login first.
+      - name: Log in to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Pull and start the pre-built base image
+        run: |
+          set -euo pipefail
+          # ghcr.io image refs must be lowercase; github.repository_owner
+          # is not guaranteed to be (e.g. "Aftorres02").
+          owner_lower=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          base_image="ghcr.io/${owner_lower}/${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}"
+          docker pull "$base_image"
+          # No env vars: the SYS password and the whole DB are already baked
+          # into the image, so this is opening an existing instance, not
+          # creating one — validated locally to take seconds, not minutes.
+          docker run -d --name ersh-db -p 1521:1521 "$base_image"
+
+      - name: Wait for the database to be ready
+        run: |
+          set -euo pipefail
+          deadline=$((SECONDS + 300))
+          until docker logs ersh-db 2>&1 | grep -q "DATABASE IS READY TO USE!"; do
+            if (( SECONDS > deadline )); then
+              echo "::error::database did not become ready within 5 minutes"
+              docker logs ersh-db | tail -200
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Create the owner schema
+        run: |
+          set -euo pipefail
+          printf '%s\n%s\n%s\n%s\n' "$OWNER_SCHEMA" USERS TEMP "$OWNER_PASSWORD" | \
+            sql -S sys/"$DB_SYS_PASSWORD"@localhost:1521/"$DB_SERVICE" as sysdba \
+            @scripts/admin/create_user.sql
+
+      # _uninstall.sql on a brand-new schema is a safe no-op (every drop is
+      # guarded); running it first mirrors the project's own documented
+      # reset flow instead of assuming a truly empty schema.
+      - name: Install ErrorShield
+        run: |
+          set -euo pipefail
+          cd release
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" @_uninstall.sql
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" @_release.sql
+
+      - name: Compile utPLSQL test packages
+        run: |
+          set -euo pipefail
+          cd tests
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" <<'SQL'
+          whenever sqlerror continue
+          @ut_ersh_dedup_occurrences.pks
+          @ut_ersh_dedup_occurrences.pkb
+          @ut_ersh_decision_tree.pks
+          @ut_ersh_decision_tree.pkb
+          @ut_ersh_masking.pks
+          @ut_ersh_masking.pkb
+          @ut_ersh_core_bugs.pks
+          @ut_ersh_core_bugs.pkb
+          @ut_ersh_observability.pks
+          @ut_ersh_observability.pkb
+          exit
+          SQL
+
+      - name: Run the utPLSQL suite (console)
+        run: |
+          set -euo pipefail
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" <<'SQL'
+          set serveroutput on
+          exec ut.run(user);
+          exit
+          SQL
+
+      - name: Run the utPLSQL suite (JUnit XML)
+        run: |
+          set -euo pipefail
+          sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" <<'SQL'
+          set feedback off heading off pagesize 0 long 1000000 trimspool on
+          spool tests/test-results.xml
+          select column_value from table(ut.run(user, ut_junit_reporter()));
+          spool off
+          exit
+          SQL
+
+      - name: Fail the job if any test failed or errored
+        run: |
+          set -euo pipefail
+          failures=$(grep -o 'failures="[0-9]*"' tests/test-results.xml | head -1 | grep -o '[0-9]*')
+          errors=$(grep -o 'errors="[0-9]*"' tests/test-results.xml | head -1 | grep -o '[0-9]*')
+          echo "utPLSQL suite: failures=$failures errors=$errors"
+          if [ "$failures" != "0" ] || [ "$errors" != "0" ]; then
+            echo "::error::utPLSQL suite reported $failures failure(s) and $errors error(s) — see tests/test-results.xml"
+            exit 1
+          fi
+
+      - name: Upload JUnit results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: utplsql-results
+          path: tests/test-results.xml
+          if-no-files-found: warn
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          mkdir -p artifacts
+          docker logs ersh-db > artifacts/db.log 2>&1 || true
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs
+          path: artifacts/
+          if-no-files-found: ignore
