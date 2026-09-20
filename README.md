@@ -44,6 +44,10 @@ occurrence of the same underlying bug so fixing it closes all of them at once.
    [`demos/demo_errorshield_app_seed.sql`](demos/demo_errorshield_app_seed.sql),
    then import it with `scripts/apex_install_demo.sql`. It never touches the
    real admin app.
+5. **Presenting to a live audience?** The admin app's own reports and
+   dashboards are empty on a fresh install — see
+   [`docs/DEMO.md`](docs/DEMO.md) to bulk-generate realistic, clearly-fake
+   data on a throwaway schema instead.
 
 ---
 
@@ -91,8 +95,8 @@ MIT text is in
 - `scripts/` — owner-schema scripts (grants, prereqs, post-install, APEX helpers)
 - `scripts/admin/` — DBA scripts run as SYS (schema creation)
 - `scripts/consumer/` — scripts run as the app schema that consumes ErrorShield (synonyms)
-- `demos/` — runnable examples, including the seed data for the ErrorShield Demo app
-- `docs/` — [`INSTALL.md`](docs/INSTALL.md), [`UPGRADE.md`](docs/UPGRADE.md), [`OBSERVABILITY.md`](docs/OBSERVABILITY.md)
+- `demos/` — runnable examples, including the seed data for the ErrorShield Demo app and the bulk demo-data generator (`ersh_demo_data_api`, see [`docs/DEMO.md`](docs/DEMO.md))
+- `docs/` — [`INSTALL.md`](docs/INSTALL.md), [`UPGRADE.md`](docs/UPGRADE.md), [`OBSERVABILITY.md`](docs/OBSERVABILITY.md), [`DEMO.md`](docs/DEMO.md)
 - `tests/` — utPLSQL suite; see [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it
 
 ## Standards
