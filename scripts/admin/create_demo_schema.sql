@@ -17,18 +17,36 @@
 -- SEQUENCE, CREATE PROCEDURE, CREATE TRIGGER, CREATE ANY CONTEXT,
 -- CREATE JOB (plus DROP ANY CONTEXT, needed by the Logger install itself).
 --
+-- Also provisions a dedicated APEX workspace for this schema (matching how
+-- the real LOGGER_USER install has its own workspace, never shared with a
+-- consumer app's workspace) via apex_instance_admin.add_workspace, run as
+-- part of this same admin pass. NOTE: this call is not verified against a
+-- live database in this repo (no DB connectivity here) -- it is the
+-- standard, documented way to script APEX workspace creation, but confirm
+-- it behaves as expected on your Autonomous Database before relying on it.
+--
 -- After this script: connect AS the new schema (a new SQL Developer
 -- connection, using DEMO_SCHEMA_PASSWORD below) and run, in order:
 --   1. release/_release.sql               -- installs ErrorShield + Logger
---   2. demos/demo_data_generator_run.sql  -- installs and runs the generator
+--   2. scripts/apex_install.sql           -- imports app 10400 into the new
+--                                             workspace (edit env_schema_name
+--                                             / env_apex_workspace in
+--                                             release/load_env_vars.sql
+--                                             first, or redefine them in the
+--                                             same session right before this)
+--   3. demos/demo_data_generator_run.sql  -- installs and runs the generator
 --
 -- No synonym/grant-to-consumer script is needed here. This schema is a full
 -- owner install (it has its own copy of every table) -- synonyms
 -- (scripts/consumer/create_ersh_synonyms.sql etc.) are only for a separate
--- application schema that wants to call ersh_error_handler_api without
--- owning any of its objects. ersh_demo_data_api does direct INSERT/DELETE
--- on the core tables, which a consumer schema's select-only grants (see
--- scripts/grant_ersh_to_user.sql) would not permit.
+-- application schema (like an invoices_sch) that wants to call
+-- ersh_error_handler_api without owning any of its objects. Any error
+-- raised through that real path still lands in the OWNER schema's tables
+-- (definer's rights) -- never in the consumer schema -- so a consumer can
+-- never be a substitute for this owner install. ersh_demo_data_api also
+-- does direct INSERT/DELETE on the core tables, which a consumer schema's
+-- select-only grants (see scripts/grant_ersh_to_user.sql) would not permit
+-- even if that were the goal.
 --
 -- @ticket ERSH-046
 -- =============================================================================
@@ -43,6 +61,7 @@ define demo_schema_name     = ERSH_DEMO_USER
 define demo_schema_password = CHANGE_ME_STRONG_PASSWORD
 define demo_tablespace      = DATA
 define demo_temp_tablespace = TEMP
+define demo_workspace_name  = ERSH_DEMO_WS
 
 set define '&'
 set verify off
@@ -70,9 +89,22 @@ grant connect
    to &demo_schema_name
 /
 
+prompt *** Creating APEX workspace &demo_workspace_name. for &demo_schema_name. ***
+
+begin
+  apex_instance_admin.add_workspace(
+      p_workspace      => '&demo_workspace_name.'
+    , p_primary_schema => '&demo_schema_name.'
+  );
+  commit;
+end;
+/
+
 prompt
-prompt *** &demo_schema_name. created. ***
-prompt *** Next: connect AS &demo_schema_name. and run: ***
+prompt *** &demo_schema_name. and workspace &demo_workspace_name. created. ***
+prompt *** Next: connect AS &demo_schema_name. and run, in order: ***
 prompt ***   1. release/_release.sql ***
-prompt ***   2. demos/demo_data_generator_run.sql ***
+prompt ***   2. scripts/apex_install.sql (env_schema_name / env_apex_workspace ***
+prompt ***      must point at &demo_schema_name. / &demo_workspace_name. first) ***
+prompt ***   3. demos/demo_data_generator_run.sql ***
 prompt
