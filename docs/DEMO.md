@@ -11,13 +11,25 @@ incidents or logs in it.
 ## Step 1 — Create a dedicated schema
 
 Don't reuse a real install. Create a new, disposable schema exactly for
-this — see [`INSTALL.md`](INSTALL.md#installing-the-owner-schema) for the
-prerequisites, then:
+this — this is a full owner install (its own copy of every table), never a
+consumer schema pointing at a real install via synonyms: the generator does
+direct `insert`/`delete` on the core tables, which a consumer's select-only
+grants (see [`INSTALL.md`](INSTALL.md#onboarding-a-consumer-schema)) don't
+allow.
+
+Edit the `define` values at the top of
+[`scripts/admin/create_demo_schema.sql`](../scripts/admin/create_demo_schema.sql)
+(schema name, password, tablespace — Autonomous Database usually uses
+`DATA`/`TEMP`, not `USERS`/`TEMP`), then run the whole script in one pass,
+connected as an admin user:
 
 ```bash
-sql -S sys/<sys_password>@<host>:<port>/<service> as sysdba \
-  @scripts/admin/create_user.sql
+sql -S admin/<admin_password>@<host>:<port>/<service> \
+  @scripts/admin/create_demo_schema.sql
 ```
+
+See [`INSTALL.md`](INSTALL.md#prerequisites-and-privileges) for exactly
+which privileges this grants and why.
 
 ## Step 2 — Install ErrorShield
 
