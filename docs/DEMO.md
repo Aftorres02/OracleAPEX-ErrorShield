@@ -8,16 +8,42 @@ incidents or logs in it.
 
 ---
 
-## Step 1 — Create a dedicated schema
+## Step 1 — Create a dedicated schema and workspace
 
 Don't reuse a real install. Create a new, disposable schema exactly for
-this — see [`INSTALL.md`](INSTALL.md#installing-the-owner-schema) for the
-prerequisites, then:
+this — this is a full owner install (its own copy of every table, in its
+own APEX workspace), never a consumer schema pointing at a real install via
+synonyms: the generator does direct `insert`/`delete` on the core tables,
+which a consumer's select-only grants (see
+[`INSTALL.md`](INSTALL.md#onboarding-a-consumer-schema)) don't allow — and
+even a real error raised the normal way from a consumer app still lands in
+the *owner's* tables (definer's rights), never the consumer's, so a
+consumer schema could never substitute for this regardless.
+
+Edit the `define` values at the top of
+[`scripts/admin/create_demo_schema.sql`](../scripts/admin/create_demo_schema.sql)
+(schema name, password, tablespace — Autonomous Database usually uses
+`DATA`/`TEMP`, not `USERS`/`TEMP` — and the new workspace name), then run
+the whole script in one pass, connected as an admin user:
 
 ```bash
-sql -S sys/<sys_password>@<host>:<port>/<service> as sysdba \
-  @scripts/admin/create_user.sql
+sql -S admin/<admin_password>@<host>:<port>/<service> \
+  @scripts/admin/create_demo_schema.sql
 ```
+
+This creates the schema (see
+[`INSTALL.md`](INSTALL.md#prerequisites-and-privileges) for exactly which
+privileges it grants and why) and a matching APEX workspace via
+`apex_instance_admin.add_workspace`, mirroring how the real `LOGGER_USER`
+install has its own dedicated workspace, never shared with a consumer
+app's workspace.
+
+> **Not verified against a live database.** The schema-creation part is
+> plain, standard SQL. The workspace-creation call
+> (`apex_instance_admin.add_workspace`) is the standard documented way to
+> script this, but wasn't run against a real instance while writing this —
+> confirm it behaves as expected on your Autonomous Database (check
+> `apex_workspaces`) before relying on it for a live demo.
 
 ## Step 2 — Install ErrorShield
 
@@ -28,7 +54,24 @@ cd release
 sql <connection-as-owner-schema> @_release.sql
 ```
 
-## Step 3 — Generate the demo data
+## Step 3 — Import the admin app into the new workspace
+
+`scripts/apex_install.sql` reads `env_schema_name` / `env_apex_workspace`
+from `release/load_env_vars.sql`, which defaults to `LOGGER_USER` for both
+— pointed at the real install, not this demo one. Either edit those two
+values in `load_env_vars.sql` temporarily, or redefine them in the same
+SQLcl session right before running the import:
+
+```sql
+-- from the release/ directory, same connection as Step 2
+define env_schema_name = ERSH_DEMO_USER
+define env_apex_workspace = ERSH_DEMO_WS
+@../scripts/apex_install.sql
+```
+
+(Use whatever schema/workspace names you actually set in Step 1.)
+
+## Step 4 — Generate the demo data
 
 Connected as the same schema:
 
