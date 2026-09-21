@@ -1,27 +1,5 @@
 page 0 (
     name: Global Page
 
-    dynamicAction set-banner (
-        name: Set Banner
-        execution {
-            sequence: 10
-        }
-        when {
-            event: ready
-        }
-
-        action plugin-environment-banner (
-            action: plugin/environmentBanner
-            settings {
-                environmentLabel: G_ENV_LABEL
-                bannerColor: G_ENV_COLOR
-            }
-            execution {
-                sequence: 10
-            }
-        )
-
-    )
-
 )
 
