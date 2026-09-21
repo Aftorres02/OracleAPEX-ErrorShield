@@ -68,6 +68,11 @@ These are consequences of decisions already made, not open bugs.
 > other ERSH preference are global to the owner schema — a consumer app
 > can't set its own support address.
 
+The first two have security implications beyond UX — see
+[`SECURITY.md`](SECURITY.md#known-limitations-with-security-implications)
+for those, plus one more (a silent Logger version downgrade on release)
+that's security-relevant but not otherwise user-visible.
+
 ---
 
 ## License
@@ -98,6 +103,8 @@ MIT text is in
 - `demos/` — runnable examples, including the seed data for the ErrorShield Demo app and the bulk demo-data generator (`ersh_demo_data_api`, see [`docs/DEMO.md`](docs/DEMO.md))
 - `docs/` — [`INSTALL.md`](docs/INSTALL.md), [`UPGRADE.md`](docs/UPGRADE.md), [`OBSERVABILITY.md`](docs/OBSERVABILITY.md), [`DEMO.md`](docs/DEMO.md)
 - `tests/` — utPLSQL suite; see [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it
+- [`CHANGELOG.md`](CHANGELOG.md) — notable changes, grouped per [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+- [`SECURITY.md`](SECURITY.md) — reporting a vulnerability, the security model, and security-relevant known limitations
 
 ## Standards
 
