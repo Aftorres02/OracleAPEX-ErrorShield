@@ -33,7 +33,7 @@ prompt APPLICATION 10400 - Error Shield
 -- Application Export:
 --   Application:     10400
 --   Name:            Error Shield
---   Date and Time:   19:38 Tuesday September 22, 2026
+--   Date and Time:   20:13 Tuesday September 22, 2026
 --   Exported By:     LOGGER_USER
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -118,7 +118,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Error Shield'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
-,p_files_version=>2461306193812
+,p_files_version=>2461306201328
 ,p_print_server_type=>'INSTANCE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -872,7 +872,7 @@ wwv_flow_imp_shared.create_theme(
 ,p_default_required_label=>1610598484065263269
 ,p_default_navbar_list_template=>2849019392706229583
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_theme_file_prefix(42),'#APEX_FILES#themes/theme_42/26.1/')
-,p_files_version=>2461306193812
+,p_files_version=>2461306201328
 ,p_icon_library=>'FONTAPEX'
 ,p_javascript_file_urls=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '#APEX_FILES#libraries/apex/#MIN_DIRECTORY#widget.stickyWidget#MIN#.js?v=#APEX_VERSION#',
@@ -1213,8 +1213,15 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_display_order=>19
 ,p_column_identifier=>'Q'
 ,p_column_label=>'Status'
-,p_column_html_expression=>'{if INCIDENT_STATUS=''REGRESSION''/}<span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>{%elseif INCIDENT_STATUS=''OPEN''/}<span class="t-Badge ersh-badge ersh-badge-open">Open</span>{%else/}<span class="t-Badge ersh-badge ersh-badge-'
-||'resolved">Resolved</span>{endif/}'
+,p_column_html_expression=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'{case INCIDENT_STATUS/}',
+'    {when REGRESSION/}',
+'        <span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>',
+'    {when OPEN/}',
+'        <span class="t-Badge ersh-badge ersh-badge-open">Open</span>',
+'    {otherwise/}',
+'        <span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>',
+'{endcase/}'))
 ,p_column_type=>'STRING'
 ,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
@@ -1360,7 +1367,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(19846161411891462)
+ p_id=>wwv_flow_imp.id(19851869390103127)
 ,p_report_id=>wwv_flow_imp.id(19836682997484688)
 ,p_static_id=>'pending-filter'
 ,p_condition_type=>'FILTER'
@@ -1385,7 +1392,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(19846258911891517)
+ p_id=>wwv_flow_imp.id(19851990543103191)
 ,p_report_id=>wwv_flow_imp.id(19836952520484707)
 ,p_static_id=>'regressions-filter'
 ,p_condition_type=>'FILTER'
@@ -1410,7 +1417,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(19846378527891518)
+ p_id=>wwv_flow_imp.id(19852057586103193)
 ,p_report_id=>wwv_flow_imp.id(19837162877484801)
 ,p_static_id=>'resolved-filter'
 ,p_condition_type=>'FILTER'
@@ -1488,7 +1495,13 @@ wwv_flow_imp_page.create_report_columns(
 ,p_column_alias=>'REGRESSIONS'
 ,p_column_display_sequence=>20
 ,p_column_heading=>'Regressions'
-,p_column_html_expression=>'{if REGRESSIONS>0/}<span class="ersh-summary-value-danger">#REGRESSIONS#</span>{%else/}#REGRESSIONS#{endif/}'
+,p_column_html_expression=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'{if REGRESSIONS/}',
+'    <span class="ersh-summary-value-danger">#REGRESSIONS#</span>',
+'{endif/}',
+'{if !REGRESSIONS/}',
+'    #REGRESSIONS#',
+'{endif/}'))
 ,p_disable_sort_column=>'N'
 ,p_derived_column=>'N'
 ,p_include_in_export=>'Y'
@@ -1520,7 +1533,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_column=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(19846485013891520)
+ p_id=>wwv_flow_imp.id(19852143961103195)
 ,p_branch_name=>'Go to Found Incident'
 ,p_branch_action=>'f?p=&APP_ID.:110:&SESSION.::&DEBUG.::P110_SHIELD_INCIDENT_ID:&P100_FOUND_INCIDENT_ID.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
@@ -1745,8 +1758,15 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_display_sequence=>5
 ,p_plug_item_display_point=>'ABOVE'
 ,p_location=>null
-,p_plug_source=>'{if P110_INCIDENT_STATUS=''REGRESSION''/}<span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>{%elseif P110_INCIDENT_STATUS=''OPEN''/}<span class="t-Badge ersh-badge ersh-badge-open">Open</span>{%else/}<span class="t-Badge ersh-badge e'
-||'rsh-badge-resolved">Resolved</span>{endif/}'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'{case P110_INCIDENT_STATUS/}',
+'    {when REGRESSION/}',
+'        <span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>',
+'    {when OPEN/}',
+'        <span class="t-Badge ersh-badge ersh-badge-open">Open</span>',
+'    {otherwise/}',
+'        <span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>',
+'{endcase/}'))
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
   'expand_shortcuts', 'N',
   'output_as', 'HTML')).to_clob
@@ -3145,7 +3165,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_required_patch=>wwv_flow_imp.id(381905544746018346)
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(19847077236891586)
+ p_id=>wwv_flow_imp.id(19852793684103265)
 ,p_branch_action=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
 ,p_branch_type=>'REDIRECT_URL'
@@ -5926,7 +5946,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_row=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(19848268403891685)
+ p_id=>wwv_flow_imp.id(19853983854103325)
 ,p_branch_name=>'Branch to Admin Page'
 ,p_branch_action=>'f?p=&APP_ID.:10000:&SESSION.::&DEBUG.:RP&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'

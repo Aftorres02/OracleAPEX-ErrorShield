@@ -93,7 +93,12 @@ page 100 (
             columnFormatting {
                 htmlExpression:
                     ```html
-                    {if REGRESSIONS>0/}<span class="ersh-summary-value-danger">#REGRESSIONS#</span>{%else/}#REGRESSIONS#{endif/}
+                    {if REGRESSIONS/}
+                        <span class="ersh-summary-value-danger">#REGRESSIONS#</span>
+                    {endif/}
+                    {if !REGRESSIONS/}
+                        #REGRESSIONS#
+                    {endif/}
                     ```
             }
         )
@@ -382,7 +387,14 @@ page 100 (
             columnFormatting {
                 htmlExpression:
                     ```html
-                    {if INCIDENT_STATUS='REGRESSION'/}<span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>{%elseif INCIDENT_STATUS='OPEN'/}<span class="t-Badge ersh-badge ersh-badge-open">Open</span>{%else/}<span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>{endif/}
+                    {case INCIDENT_STATUS/}
+                        {when REGRESSION/}
+                            <span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>
+                        {when OPEN/}
+                            <span class="t-Badge ersh-badge ersh-badge-open">Open</span>
+                        {otherwise/}
+                            <span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>
+                    {endcase/}
                     ```
             }
             advanced {

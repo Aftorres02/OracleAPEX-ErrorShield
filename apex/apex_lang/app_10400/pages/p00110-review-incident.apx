@@ -25,7 +25,14 @@ page 110 (
         source {
             htmlCode:
                 ```html
-                {if P110_INCIDENT_STATUS='REGRESSION'/}<span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>{%elseif P110_INCIDENT_STATUS='OPEN'/}<span class="t-Badge ersh-badge ersh-badge-open">Open</span>{%else/}<span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>{endif/}
+                {case P110_INCIDENT_STATUS/}
+                    {when REGRESSION/}
+                        <span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>
+                    {when OPEN/}
+                        <span class="t-Badge ersh-badge ersh-badge-open">Open</span>
+                    {otherwise/}
+                        <span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>
+                {endcase/}
                 ```
         }
         layout {
