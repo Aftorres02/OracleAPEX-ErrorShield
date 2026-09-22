@@ -14,8 +14,13 @@
   color: #ffffff;
 }
 
+/* Deliberately not var(--ut-danger-color, ...): the theme's own danger red
+   reads as a destructive/error color, too alarming for a status that just
+   means "look at this" rather than "something broke." A fixed, muted rust
+   still signals priority (contrast 5.95:1 for white-on-background here)
+   without borrowing the theme's error semantics. */
 .ersh-badge.ersh-badge-regression {
-  background-color: var(--ut-danger-color, #c00f0c);
+  background-color: #a8433a;
   color: #ffffff;
 }
 
@@ -24,10 +29,19 @@
   color: #ffffff;
 }
 
+/* Find Incident: the button sits beside an item using the "above" label
+   template (rules/apex-ux.md), so the item's own row is taller (label +
+   field) than the button's. Align the button to the bottom of that row so
+   it lines up with the input, not the label. */
+#FIND_INCIDENT {
+  align-self: flex-end;
+}
+
 /* Summary Badge List (Regressions tile): color only, no background/padding
    — a Badge List value slot expects plain big-number text, so this must
    stay a text-color-only override, never a t-Badge chip (which broke the
-   tile's layout when tried). */
+   tile's layout when tried). Same fixed muted rust as ersh-badge-regression,
+   for the same reason (not the theme's own, more alarming, danger color). */
 .ersh-summary-value-danger {
-  color: var(--ut-danger-color, #c00f0c);
+  color: #a8433a;
 }
