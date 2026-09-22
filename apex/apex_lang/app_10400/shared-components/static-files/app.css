@@ -1,0 +1,56 @@
+/* ERSH-047: incident status badges (page 100 Incidents IR, page 110 header).
+   Prefixed to avoid clashing with Universal Theme's own t- classes; colors
+   fall back to a WCAG-AA-safe hardcoded value when the --ut-* custom
+   property isn't defined by the active theme style. */
+.ersh-badge {
+  font-weight: 600;
+}
+
+/* Compound (both own classes) so this reliably wins over the theme's own
+   .t-Badge background regardless of stylesheet load order, without
+   selecting .t-Badge directly. Soft tint + border + dark text (a "pill"),
+   not a solid fill: verified live that a solid fill reads as more
+   alarming than this status needs, and a light tint sits better next to
+   Universal Theme's own default badge look. */
+.ersh-badge.ersh-badge-open {
+  background-color: #f7ead9;
+  color: #7a3f00;
+  border: 1px solid #e0bd8a;
+}
+
+.ersh-badge.ersh-badge-regression {
+  background-color: #f5e0dd;
+  color: #7a2f27;
+  border: 1px solid #dba69f;
+}
+
+.ersh-badge.ersh-badge-resolved {
+  background-color: #e1eee2;
+  color: #1f5c22;
+  border: 1px solid #a9d1ac;
+}
+
+/* Find Incident: the button sits beside an item using the "above" label
+   template (rules/apex-ux.md), so the item's own grid column is taller
+   (label + field) than the button's. #FIND_INCIDENT never matched — the
+   button's real DOM id is APEX-generated (e.g. B17641222761968059); only
+   its data-otel-label carries the logical FIND_INCIDENT name. Scope
+   through the region's own Static ID instead, targeting the grid column
+   Universal Theme wraps the button in (.col-end, the last column in the
+   row) so it stretches and bottom-aligns its single child — verified
+   against the actual rendered DOM before writing this, not guessed. */
+/* stylelint-disable-next-line selector-class-pattern -- .col-end is
+   Universal Theme's own grid class, not a project-defined one. */
+#findIncidentSR .col-end {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Summary Badge List (Regressions tile): color only, no background/padding
+   — a Badge List value slot expects plain big-number text, so this must
+   stay a text-color-only override, never a t-Badge chip (which broke the
+   tile's layout when tried). Same dark maroon text as ersh-badge-regression,
+   for visual consistency between the two "this is a regression" signals. */
+.ersh-summary-value-danger {
+  color: #7a2f27;
+}
