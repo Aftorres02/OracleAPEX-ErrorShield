@@ -18,6 +18,10 @@ name: CI
 
 on:
   pull_request:
+    paths-ignore:
+      - '**.md'      # Skip on any Markdown-only change (e.g. README)
+      - 'docs/**'     # Skip on changes confined to the docs folder
+      - 'LICENSE'     # Skip on license file changes
   workflow_dispatch:
 
 concurrency:

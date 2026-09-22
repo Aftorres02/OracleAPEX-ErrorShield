@@ -29,7 +29,7 @@ cd "$repo_root"
 rm -rf apex/apex_lang/app_10400
 
 sql -nolog <<'EOF'
-connect -name "AI LOGGER_USER"
+connect -name "AI_LOGGER_USER"
 @apex/apex_export.sql
 @apex/apex_export_single_file.sql
 exit
