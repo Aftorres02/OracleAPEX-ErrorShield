@@ -22,3 +22,7 @@ release/&logname.lst
 # _release.sql's spool lands here if it's ever run from the repo root
 # instead of release/ (its documented cwd).
 /release_log_*
+
+# Private planning workspace (charter, roadmap, backlog) — internal, never
+# meant to ship in the public repo.
+/data/plan/
