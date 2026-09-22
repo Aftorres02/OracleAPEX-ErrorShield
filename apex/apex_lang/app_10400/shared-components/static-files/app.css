@@ -3,20 +3,31 @@
    fall back to a WCAG-AA-safe hardcoded value when the --ut-* custom
    property isn't defined by the active theme style. */
 .ersh-badge {
-    font-weight: 600;
+  font-weight: 600;
 }
 
-.ersh-badge--open {
-    background-color: var(--ut-warning-color, #9c5200);
-    color: #ffffff;
+/* Compound (both own classes) so this reliably wins over the theme's own
+   .t-Badge background regardless of stylesheet load order, without
+   selecting .t-Badge directly. */
+.ersh-badge.ersh-badge-open {
+  background-color: var(--ut-warning-color, #9c5200);
+  color: #ffffff;
 }
 
-.ersh-badge--regression {
-    background-color: var(--ut-danger-color, #c00f0c);
-    color: #ffffff;
+.ersh-badge.ersh-badge-regression {
+  background-color: var(--ut-danger-color, #c00f0c);
+  color: #ffffff;
 }
 
-.ersh-badge--resolved {
-    background-color: var(--ut-success-color, #2a7d2e);
-    color: #ffffff;
+.ersh-badge.ersh-badge-resolved {
+  background-color: var(--ut-success-color, #2a7d2e);
+  color: #ffffff;
+}
+
+/* Summary Badge List (Regressions tile): color only, no background/padding
+   — a Badge List value slot expects plain big-number text, so this must
+   stay a text-color-only override, never a t-Badge chip (which broke the
+   tile's layout when tried). */
+.ersh-summary-value-danger {
+  color: var(--ut-danger-color, #c00f0c);
 }

@@ -33,7 +33,7 @@ prompt APPLICATION 10400 - Error Shield
 -- Application Export:
 --   Application:     10400
 --   Name:            Error Shield
---   Date and Time:   18:41 Tuesday September 22, 2026
+--   Date and Time:   19:38 Tuesday September 22, 2026
 --   Exported By:     LOGGER_USER
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -118,7 +118,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Error Shield'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
-,p_files_version=>2461306184103
+,p_files_version=>2461306193812
 ,p_print_server_type=>'INSTANCE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -524,11 +524,16 @@ begin
 wwv_flow_imp.g_varchar2_table := wwv_flow_imp.empty_varchar2_table;
 wwv_flow_imp.g_varchar2_table(1) := '2F2A20455253482D3034373A20696E636964656E7420737461747573206261646765732028706167652031303020496E636964656E74732049522C20706167652031313020686561646572292E0A202020507265666978656420746F2061766F69642063';
 wwv_flow_imp.g_varchar2_table(2) := '6C617368696E67207769746820556E6976657273616C205468656D652773206F776E20742D20636C61737365733B20636F6C6F72730A20202066616C6C206261636B20746F206120574341472D41412D736166652068617264636F6465642076616C7565';
-wwv_flow_imp.g_varchar2_table(3) := '207768656E20746865202D2D75742D2A20637573746F6D0A20202070726F70657274792069736E277420646566696E65642062792074686520616374697665207468656D65207374796C652E202A2F0A2E657273682D6261646765207B0A20202020666F';
-wwv_flow_imp.g_varchar2_table(4) := '6E742D7765696768743A203630303B0A7D0A0A2E657273682D62616467652D2D6F70656E207B0A202020206261636B67726F756E642D636F6C6F723A20766172282D2D75742D7761726E696E672D636F6C6F722C2023396335323030293B0A2020202063';
-wwv_flow_imp.g_varchar2_table(5) := '6F6C6F723A20236666666666663B0A7D0A0A2E657273682D62616467652D2D72656772657373696F6E207B0A202020206261636B67726F756E642D636F6C6F723A20766172282D2D75742D64616E6765722D636F6C6F722C2023633030663063293B0A20';
-wwv_flow_imp.g_varchar2_table(6) := '202020636F6C6F723A20236666666666663B0A7D0A0A2E657273682D62616467652D2D7265736F6C766564207B0A202020206261636B67726F756E642D636F6C6F723A20766172282D2D75742D737563636573732D636F6C6F722C202332613764326529';
-wwv_flow_imp.g_varchar2_table(7) := '3B0A20202020636F6C6F723A20236666666666663B0A7D0A';
+wwv_flow_imp.g_varchar2_table(3) := '207768656E20746865202D2D75742D2A20637573746F6D0A20202070726F70657274792069736E277420646566696E65642062792074686520616374697665207468656D65207374796C652E202A2F0A2E657273682D6261646765207B0A2020666F6E74';
+wwv_flow_imp.g_varchar2_table(4) := '2D7765696768743A203630303B0A7D0A0A2F2A20436F6D706F756E642028626F7468206F776E20636C61737365732920736F20746869732072656C6961626C792077696E73206F76657220746865207468656D652773206F776E0A2020202E742D426164';
+wwv_flow_imp.g_varchar2_table(5) := '6765206261636B67726F756E64207265676172646C657373206F66207374796C657368656574206C6F6164206F726465722C20776974686F75740A20202073656C656374696E67202E742D4261646765206469726563746C792E202A2F0A2E657273682D';
+wwv_flow_imp.g_varchar2_table(6) := '62616467652E657273682D62616467652D6F70656E207B0A20206261636B67726F756E642D636F6C6F723A20766172282D2D75742D7761726E696E672D636F6C6F722C2023396335323030293B0A2020636F6C6F723A20236666666666663B0A7D0A0A2E';
+wwv_flow_imp.g_varchar2_table(7) := '657273682D62616467652E657273682D62616467652D72656772657373696F6E207B0A20206261636B67726F756E642D636F6C6F723A20766172282D2D75742D64616E6765722D636F6C6F722C2023633030663063293B0A2020636F6C6F723A20236666';
+wwv_flow_imp.g_varchar2_table(8) := '666666663B0A7D0A0A2E657273682D62616467652E657273682D62616467652D7265736F6C766564207B0A20206261636B67726F756E642D636F6C6F723A20766172282D2D75742D737563636573732D636F6C6F722C2023326137643265293B0A202063';
+wwv_flow_imp.g_varchar2_table(9) := '6F6C6F723A20236666666666663B0A7D0A0A2F2A2053756D6D617279204261646765204C697374202852656772657373696F6E732074696C65293A20636F6C6F72206F6E6C792C206E6F206261636B67726F756E642F70616464696E670A202020E28094';
+wwv_flow_imp.g_varchar2_table(10) := '2061204261646765204C6973742076616C756520736C6F74206578706563747320706C61696E206269672D6E756D62657220746578742C20736F2074686973206D7573740A20202073746179206120746578742D636F6C6F722D6F6E6C79206F76657272';
+wwv_flow_imp.g_varchar2_table(11) := '6964652C206E65766572206120742D42616467652063686970202877686963682062726F6B65207468650A20202074696C652773206C61796F7574207768656E207472696564292E202A2F0A2E657273682D73756D6D6172792D76616C75652D64616E67';
+wwv_flow_imp.g_varchar2_table(12) := '6572207B0A2020636F6C6F723A20766172282D2D75742D64616E6765722D636F6C6F722C2023633030663063293B0A7D0A';
 wwv_flow_imp_shared.create_app_static_file(
  p_id=>wwv_flow_imp.id(19834658910484661)
 ,p_file_name=>'app.css'
@@ -867,7 +872,7 @@ wwv_flow_imp_shared.create_theme(
 ,p_default_required_label=>1610598484065263269
 ,p_default_navbar_list_template=>2849019392706229583
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_theme_file_prefix(42),'#APEX_FILES#themes/theme_42/26.1/')
-,p_files_version=>2461306184103
+,p_files_version=>2461306193812
 ,p_icon_library=>'FONTAPEX'
 ,p_javascript_file_urls=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '#APEX_FILES#libraries/apex/#MIN_DIRECTORY#widget.stickyWidget#MIN#.js?v=#APEX_VERSION#',
@@ -1208,8 +1213,8 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_display_order=>19
 ,p_column_identifier=>'Q'
 ,p_column_label=>'Status'
-,p_column_html_expression=>'{if INCIDENT_STATUS=''REGRESSION''/}<span class="t-Badge ersh-badge ersh-badge--regression">Regression</span>{%elseif INCIDENT_STATUS=''OPEN''/}<span class="t-Badge ersh-badge ersh-badge--open">Open</span>{%else/}<span class="t-Badge ersh-badge ersh-badg'
-||'e--resolved">Resolved</span>{endif/}'
+,p_column_html_expression=>'{if INCIDENT_STATUS=''REGRESSION''/}<span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>{%elseif INCIDENT_STATUS=''OPEN''/}<span class="t-Badge ersh-badge ersh-badge-open">Open</span>{%else/}<span class="t-Badge ersh-badge ersh-badge-'
+||'resolved">Resolved</span>{endif/}'
 ,p_column_type=>'STRING'
 ,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
@@ -1355,7 +1360,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(19841683533548548)
+ p_id=>wwv_flow_imp.id(19846161411891462)
 ,p_report_id=>wwv_flow_imp.id(19836682997484688)
 ,p_static_id=>'pending-filter'
 ,p_condition_type=>'FILTER'
@@ -1380,7 +1385,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(19841700505548600)
+ p_id=>wwv_flow_imp.id(19846258911891517)
 ,p_report_id=>wwv_flow_imp.id(19836952520484707)
 ,p_static_id=>'regressions-filter'
 ,p_condition_type=>'FILTER'
@@ -1405,7 +1410,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(19841816887548601)
+ p_id=>wwv_flow_imp.id(19846378527891518)
 ,p_report_id=>wwv_flow_imp.id(19837162877484801)
 ,p_static_id=>'resolved-filter'
 ,p_condition_type=>'FILTER'
@@ -1483,7 +1488,7 @@ wwv_flow_imp_page.create_report_columns(
 ,p_column_alias=>'REGRESSIONS'
 ,p_column_display_sequence=>20
 ,p_column_heading=>'Regressions'
-,p_column_html_expression=>'{if REGRESSIONS>0/}<span class="t-Badge ersh-badge ersh-badge--regression">#REGRESSIONS#</span>{%else/}#REGRESSIONS#{endif/}'
+,p_column_html_expression=>'{if REGRESSIONS>0/}<span class="ersh-summary-value-danger">#REGRESSIONS#</span>{%else/}#REGRESSIONS#{endif/}'
 ,p_disable_sort_column=>'N'
 ,p_derived_column=>'N'
 ,p_include_in_export=>'Y'
@@ -1515,7 +1520,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_column=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(19841949132548603)
+ p_id=>wwv_flow_imp.id(19846485013891520)
 ,p_branch_name=>'Go to Found Incident'
 ,p_branch_action=>'f?p=&APP_ID.:110:&SESSION.::&DEBUG.::P110_SHIELD_INCIDENT_ID:&P100_FOUND_INCIDENT_ID.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
@@ -1740,8 +1745,8 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_display_sequence=>5
 ,p_plug_item_display_point=>'ABOVE'
 ,p_location=>null
-,p_plug_source=>'{if P110_INCIDENT_STATUS=''REGRESSION''/}<span class="t-Badge ersh-badge ersh-badge--regression">Regression</span>{%elseif P110_INCIDENT_STATUS=''OPEN''/}<span class="t-Badge ersh-badge ersh-badge--open">Open</span>{%else/}<span class="t-Badge ersh-badge'
-||' ersh-badge--resolved">Resolved</span>{endif/}'
+,p_plug_source=>'{if P110_INCIDENT_STATUS=''REGRESSION''/}<span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>{%elseif P110_INCIDENT_STATUS=''OPEN''/}<span class="t-Badge ersh-badge ersh-badge-open">Open</span>{%else/}<span class="t-Badge ersh-badge e'
+||'rsh-badge-resolved">Resolved</span>{endif/}'
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
   'expand_shortcuts', 'N',
   'output_as', 'HTML')).to_clob
@@ -3140,7 +3145,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_required_patch=>wwv_flow_imp.id(381905544746018346)
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(19842573698548642)
+ p_id=>wwv_flow_imp.id(19847077236891586)
 ,p_branch_action=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
 ,p_branch_type=>'REDIRECT_URL'
@@ -5921,7 +5926,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_row=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(19843751515548699)
+ p_id=>wwv_flow_imp.id(19848268403891685)
 ,p_branch_name=>'Branch to Admin Page'
 ,p_branch_action=>'f?p=&APP_ID.:10000:&SESSION.::&DEBUG.:RP&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'

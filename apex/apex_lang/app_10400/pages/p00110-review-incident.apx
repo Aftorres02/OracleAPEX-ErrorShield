@@ -25,7 +25,7 @@ page 110 (
         source {
             htmlCode:
                 ```html
-                {if P110_INCIDENT_STATUS='REGRESSION'/}<span class="t-Badge ersh-badge ersh-badge--regression">Regression</span>{%elseif P110_INCIDENT_STATUS='OPEN'/}<span class="t-Badge ersh-badge ersh-badge--open">Open</span>{%else/}<span class="t-Badge ersh-badge ersh-badge--resolved">Resolved</span>{endif/}
+                {if P110_INCIDENT_STATUS='REGRESSION'/}<span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>{%elseif P110_INCIDENT_STATUS='OPEN'/}<span class="t-Badge ersh-badge ersh-badge-open">Open</span>{%else/}<span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>{endif/}
                 ```
         }
         layout {
