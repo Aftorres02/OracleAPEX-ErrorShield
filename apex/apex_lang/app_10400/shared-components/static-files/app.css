@@ -1,0 +1,22 @@
+/* ERSH-047: incident status badges (page 100 Incidents IR, page 110 header).
+   Prefixed to avoid clashing with Universal Theme's own t- classes; colors
+   fall back to a WCAG-AA-safe hardcoded value when the --ut-* custom
+   property isn't defined by the active theme style. */
+.ersh-badge {
+    font-weight: 600;
+}
+
+.ersh-badge--open {
+    background-color: var(--ut-warning-color, #9c5200);
+    color: #ffffff;
+}
+
+.ersh-badge--regression {
+    background-color: var(--ut-danger-color, #c00f0c);
+    color: #ffffff;
+}
+
+.ersh-badge--resolved {
+    background-color: var(--ut-success-color, #2a7d2e);
+    color: #ffffff;
+}

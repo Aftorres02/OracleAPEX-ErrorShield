@@ -19,6 +19,28 @@ page 110 (
         formAutoComplete: false
     }
 
+    region status (
+        name: Status
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                {if P110_INCIDENT_STATUS='REGRESSION'/}<span class="t-Badge ersh-badge ersh-badge--regression">Regression</span>{%elseif P110_INCIDENT_STATUS='OPEN'/}<span class="t-Badge ersh-badge ersh-badge--open">Open</span>{%else/}<span class="t-Badge ersh-badge ersh-badge--resolved">Resolved</span>{endif/}
+                ```
+        }
+        layout {
+            sequence: 5
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: statusSR
+        }
+    )
+
     region audit (
         name: Audit
         type: staticContent
@@ -410,6 +432,15 @@ page 110 (
         }
     )
 
+    pageItem P110_INCIDENT_STATUS (
+        type: hidden
+        layout {
+            sequence: 4
+            region: @status
+            slot: regionBody
+        }
+    )
+
     pageItem P110_LOGGER_LOG_ID (
         type: hidden
         layout {
@@ -692,6 +723,28 @@ page 110 (
         }
         behavior {
             warnOnUnsavedChanges: doNotCheck
+        }
+    )
+
+    process load-incident-status (
+        name: Load Incident Status
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                select incident_status
+                  into :P110_INCIDENT_STATUS
+                  from ersh_shield_incidents_vw
+                 where shield_incident_id = :P110_SHIELD_INCIDENT_ID;
+                ```
+        }
+        execution {
+            sequence: 5
+            point: beforeHeader
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P110_SHIELD_INCIDENT_ID
         }
     )
 
