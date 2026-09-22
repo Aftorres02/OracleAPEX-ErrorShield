@@ -60,7 +60,6 @@ page 100 (
             template: @/badge-list
             templateOptions: [
                 #DEFAULT#
-                u-colors
                 t-BadgeList--medium
                 t-BadgeList--dash
                 t-BadgeList--fixed

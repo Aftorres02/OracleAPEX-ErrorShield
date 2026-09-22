@@ -25,14 +25,7 @@ page 110 (
         source {
             htmlCode:
                 ```html
-                {case P110_INCIDENT_STATUS/}
-                    {when REGRESSION/}
-                        <span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>
-                    {when OPEN/}
-                        <span class="t-Badge ersh-badge ersh-badge-open">Open</span>
-                    {otherwise/}
-                        <span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>
-                {endcase/}
+                &P110_STATUS_BADGE_HTML!RAW.
                 ```
         }
         layout {
@@ -448,6 +441,15 @@ page 110 (
         }
     )
 
+    pageItem P110_STATUS_BADGE_HTML (
+        type: hidden
+        layout {
+            sequence: 6
+            region: @status
+            slot: regionBody
+        }
+    )
+
     pageItem P110_LOGGER_LOG_ID (
         type: hidden
         layout {
@@ -739,8 +741,21 @@ page 110 (
         source {
             plsqlCode:
                 ```plsql
+                -- Template Directives ({case}/{when}/{endcase}) don't evaluate inside
+                -- a Static Content region's htmlCode the way they do in an Interactive
+                -- Report column's HTML Expression (confirmed live: the raw directive
+                -- text rendered unparsed on page 110's status region). Build the same
+                -- three-way badge markup here instead and let the static region do a
+                -- plain &ITEM. substitution (unescaped by design in htmlCode), same
+                -- badge classes as page 100's Interactive Report column.
                 select incident_status
+                     , case incident_status
+                         when 'REGRESSION' then '<span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>'
+                         when 'OPEN'       then '<span class="t-Badge ersh-badge ersh-badge-open">Open</span>'
+                         else                   '<span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>'
+                       end
                   into :P110_INCIDENT_STATUS
+                     , :P110_STATUS_BADGE_HTML
                   from ersh_shield_incidents_vw
                  where shield_incident_id = :P110_SHIELD_INCIDENT_ID;
                 ```
