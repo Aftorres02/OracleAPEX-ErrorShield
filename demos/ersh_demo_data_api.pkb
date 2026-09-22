@@ -211,12 +211,19 @@ create or replace package body ersh_demo_data_api as
     , p_ora_sqlcode                                    in number
   ) return ersh_shield_incidents.error_fingerprint%type
   is
+    -- standard_hash is a SQL-only function -- PL/SQL rejects it outside a
+    -- SQL statement (PLS-00201), so it must be resolved via select..from dual.
+    l_fingerprint ersh_shield_incidents.error_fingerprint%type;
   begin
-    return lower(standard_hash(
-        p_workspace_id || '|' || p_application_id || '|' || p_page_id || '|' || p_ora_sqlcode
-        || '|' || dbms_random.string('x', 32)
-      , 'SHA256'
-    ));
+    select lower(standard_hash(
+               p_workspace_id || '|' || p_application_id || '|' || p_page_id || '|' || p_ora_sqlcode
+               || '|' || dbms_random.string('x', 32)
+             , 'SHA256'
+           ))
+      into l_fingerprint
+      from dual;
+
+    return l_fingerprint;
   end build_fingerprint;
 
 
@@ -328,14 +335,25 @@ create or replace package body ersh_demo_data_api as
     l_scope  logger_logs.scope%type := gc_scope_prefix || 'generate_background_logs';
     l_params logger.tab_param;
 
-    l_module varchar2(100 char);
+    l_module    varchar2(100 char);
+    l_app_user  logger_logs.user_name%type;
+    l_log_level logger_logs.logger_level%type;
+    l_message   logger_logs.text%type;
+    l_action    logger_logs.action%type;
   begin
     logger.append_param(l_params, 'p_log_count', p_log_count);
     logger.append_param(l_params, 'p_days_back', p_days_back);
     logger.log('START', l_scope, null, l_params);
 
     for i in 1 .. p_log_count loop
-      l_module := get_random_module;
+      -- dbms_random-backed helper functions can't be called directly from SQL
+      -- here (PLS-00231) -- resolve each one to a local variable first, then
+      -- bind it below.
+      l_module    := get_random_module;
+      l_app_user  := get_random_app_user;
+      l_log_level := get_random_log_level;
+      l_message   := get_random_background_message;
+      l_action    := get_random_action;
 
       insert
         into logger_logs (
@@ -351,13 +369,13 @@ create or replace package body ersh_demo_data_api as
       )
       values (
              logger_logs_seq.nextval
-           , get_random_log_level
-           , get_random_background_message
+           , l_log_level
+           , l_message
            , localtimestamp - numtodsinterval(dbms_random.value(0, p_days_back), 'day')
            , lower(l_module) || '.background'
            , l_module
-           , get_random_action
-           , get_random_app_user
+           , l_action
+           , l_app_user
            , gc_demo_client_id
       );
 
@@ -427,6 +445,17 @@ create or replace package body ersh_demo_data_api as
     l_first_log_id     logger_logs.id%type;
     l_incident_id      ersh_shield_incidents.shield_incident_id%type;
     l_occurrence_log_id logger_logs.id%type;
+    -- dbms_random-backed helper functions can't be called directly from SQL
+    -- (PLS-00231) -- resolved to local variables below, then bound in.
+    l_app_user         ersh_shield_incidents.app_user%type;
+    l_resolved_by      ersh_shield_incidents.resolved_by%type;
+    l_fingerprint      ersh_shield_incidents.error_fingerprint%type;
+    l_module           varchar2(100 char);
+    l_action           logger_logs.action%type;
+    l_time_bucket      ersh_shield_incidents.time_bucket%type;
+    l_occ_app_user     ersh_incident_occurrences.app_user%type;
+    l_occ_module       varchar2(100 char);
+    l_occ_action       logger_logs.action%type;
   begin
     logger.append_param(l_params, 'p_incident_count', p_incident_count);
     logger.append_param(l_params, 'p_days_back', p_days_back);
@@ -442,6 +471,12 @@ create or replace package body ersh_demo_data_api as
       l_created_on       := localtimestamp - numtodsinterval(dbms_random.value(0, p_days_back), 'day');
       l_resolved_yn      := case when dbms_random.value(0, 1) < 0.35 then 'Y' else 'N' end;
       l_occurrence_count := trunc(dbms_random.value(1, p_max_occurrences + 1));
+      l_app_user         := get_random_app_user;
+      l_resolved_by      := case when l_resolved_yn = 'Y' then get_random_app_user end;
+      l_fingerprint      := build_fingerprint(l_workspace_id, l_application_id, l_page_id, l_ora_sqlcode);
+      l_module           := get_random_module;
+      l_action           := get_random_action;
+      l_time_bucket      := compute_time_bucket(l_created_on);
 
       -- =======================================================================
       -- First hit: one logger_logs row, becomes both the incident's own
@@ -466,9 +501,9 @@ create or replace package body ersh_demo_data_api as
            , l_message
            , l_created_on
            , 'consumer_app.apex_error_handling'
-           , get_random_module
-           , get_random_action
-           , get_random_app_user
+           , l_module
+           , l_action
+           , l_app_user
            , gc_demo_client_id
       )
       returning id into l_first_log_id;
@@ -500,17 +535,17 @@ create or replace package body ersh_demo_data_api as
            , l_workspace_id
            , l_application_id
            , l_page_id
-           , get_random_app_user
+           , l_app_user
            , case trunc(dbms_random.value(1, 4)) when 1 then 'SAVE' when 2 then 'DELETE' else 'CREATE' end
            , 'APEX_APPLICATION_PAGE_REGIONS'
-           , get_random_module || ' Region'
+           , l_module || ' Region'
            , l_ora_sqlcode
            , l_message
-           , build_fingerprint(l_workspace_id, l_application_id, l_page_id, l_ora_sqlcode)
-           , compute_time_bucket(l_created_on)
+           , l_fingerprint
+           , l_time_bucket
            , l_occurrence_count
            , l_resolved_yn
-           , case when l_resolved_yn = 'Y' then get_random_app_user end
+           , l_resolved_by
            , case when l_resolved_yn = 'Y' then l_created_on + numtodsinterval(dbms_random.value(1, 48), 'hour') end
            , case when l_resolved_yn = 'Y' then 'Root cause identified and fixed in a later release.' end
            , l_created_on
@@ -527,7 +562,7 @@ create or replace package body ersh_demo_data_api as
       values (
              l_incident_id
            , l_first_log_id
-           , get_random_app_user
+           , l_app_user
            , l_created_on
       );
 
@@ -535,6 +570,10 @@ create or replace package body ersh_demo_data_api as
       -- Remaining occurrences: fresh logger_logs row each, later timestamps.
       -- =======================================================================
       for j in 2 .. l_occurrence_count loop
+        l_occ_app_user := get_random_app_user;
+        l_occ_module   := get_random_module;
+        l_occ_action   := get_random_action;
+
         insert
           into logger_logs (
                id
@@ -553,9 +592,9 @@ create or replace package body ersh_demo_data_api as
              , l_message
              , l_created_on + numtodsinterval(dbms_random.value(1, 72), 'hour')
              , 'consumer_app.apex_error_handling'
-             , get_random_module
-             , get_random_action
-             , get_random_app_user
+             , l_occ_module
+             , l_occ_action
+             , l_occ_app_user
              , gc_demo_client_id
         )
         returning id into l_occurrence_log_id;
@@ -570,7 +609,7 @@ create or replace package body ersh_demo_data_api as
         values (
                l_incident_id
              , l_occurrence_log_id
-             , get_random_app_user
+             , l_occ_app_user
              , l_created_on + numtodsinterval(dbms_random.value(1, 72), 'hour')
         );
       end loop;
