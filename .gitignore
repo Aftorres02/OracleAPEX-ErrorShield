@@ -26,3 +26,4 @@ release/&logname.lst
 # Private planning workspace (charter, roadmap, backlog) — internal, never
 # meant to ship in the public repo.
 /data/plan/
+.claude
