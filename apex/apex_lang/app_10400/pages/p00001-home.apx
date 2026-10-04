@@ -14,17 +14,571 @@ page 1 (
         formAutoComplete: false
     }
 
-    region error-shield (
-        name: Error Shield
-        type: staticContent
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
         layout {
             sequence: 10
             slot: breadcrumbBar
         }
         appearance {
-            template: @/hero
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
             templateOptions: #DEFAULT#
-            icon: app-icon
+        }
+    )
+
+    region jobs-health-mini (
+        name: Jobs Health
+        type: classicReport
+        source {
+            location: localDatabase
+            tableName: ERSH_JOBS_STATUS_VW
+        }
+        layout {
+            sequence: 30
+            slot: body
+            startNewRow: false
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            regionDisplaySelector: true
+        }
+        reportLayout {
+            numberOfRows: 1
+        }
+        componentAppearance {
+            template: @/badge-list
+            templateOptions: [
+                #DEFAULT#
+                u-colors
+                t-BadgeList--medium
+                t-BadgeList--dash
+                t-BadgeList--fixed
+                t-Report--hideNoPagination
+            ]
+        }
+
+        column BROKEN_OR_FAILED (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Broken Or Failed
+                alignment: center
+            }
+            layout {
+                sequence: 20
+            }
+        )
+
+        column ENABLED (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Enabled
+                alignment: center
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        column FAILED_RUNS_24H (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Failed Runs 24h
+                alignment: center
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+    )
+
+    region kpi-strip (
+        name: KPI Strip
+        type: classicReport
+        source {
+            location: localDatabase
+            tableName: ERSH_HOME_KPIS_VW
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
+                t-Region--scrollBody
+            ]
+        }
+        advanced {
+            regionDisplaySelector: true
+        }
+        reportLayout {
+            numberOfRows: 1
+        }
+        componentAppearance {
+            template: @/badge-list
+            templateOptions: [
+                #DEFAULT#
+                u-colors
+                t-BadgeList--medium
+                t-BadgeList--dash
+                t-BadgeList--fixed
+                t-Report--hideNoPagination
+            ]
+        }
+
+        column JOBS_FAILING_CNT (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Jobs Failing
+                alignment: center
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column LOGGER_ERRORS_24H_CNT (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Logger Errors (24h)
+                alignment: center
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+        column OCCURRENCES_24H_CNT (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Occurrences (24h)
+                alignment: center
+            }
+            layout {
+                sequence: 20
+            }
+        )
+
+        column OPEN_INCIDENTS_CNT (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Open Incidents
+                alignment: center
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column REGRESSION_INCIDENTS_CNT (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Regressions
+                alignment: center
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+    )
+
+    region needs-attention (
+        name: Needs Attention
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select i.incident_status                                        as incident_status
+                     , i.component_label                                        as component_label
+                     , i.component_name                                         as component_name
+                     , i.occurrence_count                                       as occurrence_count
+                     , i.affected_users                                         as affected_users
+                     , i.last_occurred_on                                       as last_occurred_on
+                     , i.shield_incident_id                                     as shield_incident_id
+                  from ersh_shield_incidents_vw i
+                 where i.incident_status in ('OPEN', 'REGRESSION')
+                 order by decode(i.incident_status, 'REGRESSION', 0, 1)
+                        , i.last_occurred_on desc nulls last
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        advanced {
+            regionDisplaySelector: true
+        }
+        reportLayout {
+            numberOfRows: 8
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+        messages {
+            whenNoDataFound: Nothing needs attention right now.
+        }
+
+        column AFFECTED_USERS (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Users
+                alignment: center
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column COMPONENT_LABEL (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Component
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column COMPONENT_NAME (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Component Name
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column INCIDENT_STATUS (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 10
+            }
+            columnFormatting {
+                htmlExpression:
+                    ```html
+                    {case INCIDENT_STATUS/}
+                        {when REGRESSION/}
+                            <span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>
+                        {when OPEN/}
+                            <span class="t-Badge ersh-badge ersh-badge-open">Open</span>
+                        {otherwise/}
+                            <span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>
+                    {endcase/}
+                    ```
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column LAST_OCCURRED_ON (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Last Seen
+                alignment: center
+            }
+            layout {
+                sequence: 60
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column OCCURRENCE_COUNT (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Hits
+                alignment: center
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column SHIELD_INCIDENT_ID (
+            reportColumnQueryId: 7
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Action
+                alignment: center
+            }
+            layout {
+                sequence: 70
+            }
+            link {
+                target: {
+                    page: 110
+                    items: {
+                        P110_SHIELD_INCIDENT_ID: #SHIELD_INCIDENT_ID#
+                    }
+                }
+                linkText: Resolve
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    region quick-actions (
+        name: Quick Actions
+        type: staticContent
+        layout {
+            sequence: 40
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region recent-logger-errors (
+        name: Recent Logger Errors
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                -- 2 = logger.g_error (a package constant, unreadable from
+                -- plain SQL -- see views/ersh_home_kpis_vw.sql).
+                select l.scope                                                  as scope
+                     , l.text                                                   as text
+                     , l.time_stamp                                             as time_stamp
+                  from logger_logs l
+                 where l.logger_level = 2
+                 order by l.time_stamp desc
+                ```
+        }
+        layout {
+            sequence: 50
+            slot: body
+            startNewRow: false
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        advanced {
+            regionDisplaySelector: true
+        }
+        reportLayout {
+            numberOfRows: 5
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+        messages {
+            whenNoDataFound: No logger errors recorded.
+        }
+
+        column SCOPE (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Scope
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column TEXT (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Message
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column TIME_STAMP (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: When
+                alignment: center
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    button quick-incidents (
+        buttonName: QUICK_INCIDENTS
+        label: Incidents
+        layout {
+            sequence: 10
+            region: @quick-actions
+            slot: regionBody
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 100
+            }
+        }
+    )
+
+    button quick-jobs-dashboard (
+        buttonName: QUICK_JOBS_DASHBOARD
+        label: Jobs Dashboard
+        layout {
+            sequence: 20
+            region: @quick-actions
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 1000
+            }
+        }
+    )
+
+    button quick-logger-logs (
+        buttonName: QUICK_LOGGER_LOGS
+        label: Logger Logs
+        layout {
+            sequence: 30
+            region: @quick-actions
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 400
+            }
+        }
+    )
+
+    button quick-preferences (
+        buttonName: QUICK_PREFERENCES
+        label: Preferences
+        layout {
+            sequence: 40
+            region: @quick-actions
+            slot: regionBody
+            startNewRow: false
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 200
+            }
         }
     )
 

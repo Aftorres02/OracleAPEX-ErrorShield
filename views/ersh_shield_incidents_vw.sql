@@ -3,9 +3,11 @@
 -- Purpose: Joins ersh_shield_incidents with logger_logs to surface the full
 --          error detail alongside the incident summary. Pre-formats the
 --          user-facing reference number so APEX reports do not repeat that
---          logic. Adds the derived, UI-facing incident state (open /
---          regression / resolved) so page 100 never has to re-derive it
---          from resolved_yn. Used by the ErrorShield admin application.
+--          logic. Also derives the display-friendly component_label,
+--          app_page_display, incident_status (OPEN / REGRESSION / RESOLVED)
+--          and per-incident hit stats (last_occurred_on, affected_users) so
+--          no page ever re-derives them from resolved_yn directly. Used by
+--          the ErrorShield admin application.
 --
 -- @author Angel Flores (Consultant)
 -- @created April 11, 2026

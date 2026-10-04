@@ -14,129 +14,15 @@ page 100 (
         formAutoComplete: false
     }
 
-    region summary (
-        name: Summary
-        type: classicReport
-        source {
-            location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                with w_status as (
-                  select count(case when incident_status = 'OPEN' then 1 end)       as open_cnt
-                       , count(case when incident_status = 'REGRESSION' then 1 end) as regression_cnt
-                    from ersh_shield_incidents_vw
-                ), w_recent as (
-                  select count(1)                 as hits_24h
-                       , count(distinct app_user)  as users_24h
-                    from ersh_incident_occurrences
-                   where active_yn = 'Y'
-                     and occurred_on > systimestamp - 1
-                )
-                select s.open_cnt        as open
-                     , s.regression_cnt  as regressions
-                     , r.hits_24h        as hits_24h
-                     , r.users_24h       as users_24h
-                  from w_status  s
-                  cross join w_recent r
-                ```
-        }
-        layout {
-            sequence: 3
-            slot: body
-            columnSpan: "8"
-        }
-        appearance {
-            template: @/standard
-            templateOptions: #DEFAULT#
-        }
-        advanced {
-            htmlDomId: summaryCR
-        }
-        reportLayout {
-            numberOfRows: 1
-        }
-        componentAppearance {
-            template: @/badge-list
-            templateOptions: [
-                #DEFAULT#
-                t-BadgeList--medium
-                t-BadgeList--dash
-                t-BadgeList--fixed
-                t-Report--hideNoPagination
-            ]
-        }
-
-        column OPEN (
-            reportColumnQueryId: 1
-            derivedColumn: N
-            heading {
-                heading: Open
-                alignment: center
-            }
-            layout {
-                sequence: 10
-            }
-        )
-
-        column REGRESSIONS (
-            reportColumnQueryId: 2
-            derivedColumn: N
-            heading {
-                heading: Regressions
-                alignment: center
-            }
-            layout {
-                sequence: 20
-            }
-            columnFormatting {
-                htmlExpression:
-                    ```html
-                    {if REGRESSIONS/}
-                        <span class="ersh-summary-value-danger">#REGRESSIONS#</span>
-                    {endif/}
-                    {if !REGRESSIONS/}
-                        #REGRESSIONS#
-                    {endif/}
-                    ```
-            }
-        )
-
-        column HITS_24H (
-            reportColumnQueryId: 3
-            derivedColumn: N
-            heading {
-                heading: Hits 24h
-                alignment: center
-            }
-            layout {
-                sequence: 30
-            }
-        )
-
-        column USERS_24H (
-            reportColumnQueryId: 4
-            derivedColumn: N
-            heading {
-                heading: Users 24h
-                alignment: center
-            }
-            layout {
-                sequence: 40
-            }
-        )
-
-    )
-
     region find-incident (
         name: Find Incident
         type: staticContent
         layout {
             sequence: 5
             slot: body
-            column: "9"
-            columnSpan: "4"
             startNewRow: false
+            column: 9
+            columnSpan: 4
         }
         appearance {
             template: @/blank-with-attributes
@@ -161,6 +47,9 @@ page 100 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: INCIDENTS_IR
         }
         link {
             linkColumn: customTarget
@@ -188,38 +77,39 @@ page 100 (
         }
         advanced {
             savedReportMappingIdentifier: 382121529995033210
-            htmlDomId: INCIDENTS_IR
         }
 
-        column SHIELD_INCIDENT_ID (
-            type: hidden
-            heading {
-                heading: Shield Incident Id
-            }
-            layout {
-                sequence: 1
-            }
-            source {
-                dataType: NUMBER
-            }
-            advanced {
-                endUserAlias: A
-            }
-        )
-
-        column FIRST_REFERENCE_DISPLAY (
+        column ACTIVE_YN (
             type: plainText
             heading {
-                heading: First ref
+                heading: Active Yn
             }
             layout {
-                sequence: 2
+                sequence: 24
             }
             source {
                 dataType: STRING
             }
             advanced {
-                endUserAlias: B
+                endUserAlias: V
+            }
+        )
+
+        column AFFECTED_USERS (
+            type: plainText
+            heading {
+                heading: Users
+                alignment: end
+            }
+            layout {
+                sequence: 21
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: S
             }
         )
 
@@ -271,221 +161,6 @@ page 100 (
             }
         )
 
-        column ORA_SQLCODE (
-            type: plainText
-            heading {
-                heading: Ora Sqlcode
-                alignment: end
-            }
-            layout {
-                sequence: 12
-                columnAlignment: end
-            }
-            source {
-                dataType: NUMBER
-            }
-            advanced {
-                endUserAlias: J
-            }
-        )
-
-        column ERROR_SUMMARY (
-            type: plainText
-            heading {
-                heading: Error Summary
-            }
-            layout {
-                sequence: 13
-            }
-            source {
-                dataType: STRING
-            }
-            advanced {
-                endUserAlias: K
-            }
-        )
-
-        column OCCURRENCE_COUNT (
-            type: plainText
-            heading {
-                heading: Hits
-                alignment: end
-            }
-            layout {
-                sequence: 14
-                columnAlignment: end
-            }
-            source {
-                dataType: NUMBER
-            }
-            advanced {
-                endUserAlias: L
-            }
-        )
-
-        column RESOLVED_BY (
-            type: plainText
-            heading {
-                heading: Resolved By
-            }
-            layout {
-                sequence: 16
-            }
-            source {
-                dataType: STRING
-            }
-            advanced {
-                endUserAlias: N
-            }
-        )
-
-        column RESOLVED_ON (
-            type: plainText
-            heading {
-                heading: Resolved On
-            }
-            layout {
-                sequence: 17
-            }
-            source {
-                dataType: DATE
-                timezoneAware: Y
-            }
-            advanced {
-                endUserAlias: O
-            }
-        )
-
-        column RESOLUTION_NOTES (
-            type: plainText
-            heading {
-                heading: Resolution Notes
-            }
-            layout {
-                sequence: 18
-            }
-            source {
-                dataType: STRING
-            }
-            advanced {
-                endUserAlias: P
-            }
-        )
-
-        column INCIDENT_STATUS (
-            type: plainText
-            heading {
-                heading: Status
-            }
-            layout {
-                sequence: 19
-            }
-            source {
-                dataType: STRING
-            }
-            columnFormatting {
-                htmlExpression:
-                    ```html
-                    {case INCIDENT_STATUS/}
-                        {when REGRESSION/}
-                            <span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>
-                        {when OPEN/}
-                            <span class="t-Badge ersh-badge ersh-badge-open">Open</span>
-                        {otherwise/}
-                            <span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>
-                    {endcase/}
-                    ```
-            }
-            advanced {
-                endUserAlias: Q
-            }
-        )
-
-        column LAST_OCCURRED_ON (
-            type: plainText
-            heading {
-                heading: Last hit
-            }
-            layout {
-                sequence: 20
-            }
-            source {
-                dataType: DATE
-                timezoneAware: Y
-            }
-            advanced {
-                endUserAlias: R
-            }
-        )
-
-        column AFFECTED_USERS (
-            type: plainText
-            heading {
-                heading: Users
-                alignment: end
-            }
-            layout {
-                sequence: 21
-                columnAlignment: end
-            }
-            source {
-                dataType: NUMBER
-            }
-            advanced {
-                endUserAlias: S
-            }
-        )
-
-        column ERROR_FINGERPRINT (
-            type: plainText
-            heading {
-                heading: Error Fingerprint
-            }
-            layout {
-                sequence: 22
-            }
-            source {
-                dataType: STRING
-            }
-            advanced {
-                endUserAlias: T
-            }
-        )
-
-        column WORKSPACE_ID (
-            type: plainText
-            heading {
-                heading: Workspace Id
-                alignment: end
-            }
-            layout {
-                sequence: 23
-                columnAlignment: end
-            }
-            source {
-                dataType: NUMBER
-            }
-            advanced {
-                endUserAlias: U
-            }
-        )
-
-        column ACTIVE_YN (
-            type: plainText
-            heading {
-                heading: Active Yn
-            }
-            layout {
-                sequence: 24
-            }
-            source {
-                dataType: STRING
-            }
-            advanced {
-                endUserAlias: V
-            }
-        )
-
         column CREATED_BY (
             type: plainText
             heading {
@@ -516,6 +191,100 @@ page 100 (
             }
             advanced {
                 endUserAlias: X
+            }
+        )
+
+        column ERROR_FINGERPRINT (
+            type: plainText
+            heading {
+                heading: Error Fingerprint
+            }
+            layout {
+                sequence: 22
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: T
+            }
+        )
+
+        column ERROR_SUMMARY (
+            type: plainText
+            heading {
+                heading: Error Summary
+            }
+            layout {
+                sequence: 13
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: K
+            }
+        )
+
+        column FIRST_REFERENCE_DISPLAY (
+            type: plainText
+            heading {
+                heading: First ref
+            }
+            layout {
+                sequence: 2
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column INCIDENT_STATUS (
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 19
+            }
+            columnFormatting {
+                htmlExpression:
+                    ```html
+                    {case INCIDENT_STATUS/}
+                        {when REGRESSION/}
+                            <span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>
+                        {when OPEN/}
+                            <span class="t-Badge ersh-badge ersh-badge-open">Open</span>
+                        {otherwise/}
+                            <span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>
+                    {endcase/}
+                    ```
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: Q
+            }
+        )
+
+        column LAST_OCCURRED_ON (
+            type: plainText
+            heading {
+                heading: Last hit
+            }
+            layout {
+                sequence: 20
+            }
+            source {
+                dataType: DATE
+                timezoneAware: Y
+            }
+            advanced {
+                endUserAlias: R
             }
         )
 
@@ -552,6 +321,125 @@ page 100 (
             }
         )
 
+        column OCCURRENCE_COUNT (
+            type: plainText
+            heading {
+                heading: Hits
+                alignment: end
+            }
+            layout {
+                sequence: 14
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: L
+            }
+        )
+
+        column ORA_SQLCODE (
+            type: plainText
+            heading {
+                heading: Ora Sqlcode
+                alignment: end
+            }
+            layout {
+                sequence: 12
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: J
+            }
+        )
+
+        column RESOLUTION_NOTES (
+            type: plainText
+            heading {
+                heading: Resolution Notes
+            }
+            layout {
+                sequence: 18
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: P
+            }
+        )
+
+        column RESOLVED_BY (
+            type: plainText
+            heading {
+                heading: Resolved By
+            }
+            layout {
+                sequence: 16
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: N
+            }
+        )
+
+        column RESOLVED_ON (
+            type: plainText
+            heading {
+                heading: Resolved On
+            }
+            layout {
+                sequence: 17
+            }
+            source {
+                dataType: DATE
+                timezoneAware: Y
+            }
+            advanced {
+                endUserAlias: O
+            }
+        )
+
+        column SHIELD_INCIDENT_ID (
+            type: hidden
+            heading {
+                heading: Shield Incident Id
+            }
+            layout {
+                sequence: 1
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column WORKSPACE_ID (
+            type: plainText
+            heading {
+                heading: Workspace Id
+                alignment: end
+            }
+            layout {
+                sequence: 23
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: U
+            }
+        )
+
         page {
             borderWidth: 0.5
             borderColor: #666666
@@ -560,29 +448,19 @@ page 100 (
             pageHeaderText: Incidents
         }
 
-        savedReport pending (
-            visibility: primaryDefault
+        savedReport all (
+            visibility: alternativeDefault
+            name: All
             view {
                 rowsPerPage: 50
             }
 
-            filter pending-filter (
-                type: column
-                column: INCIDENT_STATUS
-                operator: !=
-                value: RESOLVED
-            )
-
-            displayColumn INCIDENT_STATUS (
-                sequence: 1
+            displayColumn AFFECTED_USERS (
+                sequence: 8
             )
 
             displayColumn APP_PAGE_DISPLAY (
                 sequence: 2
-            )
-
-            displayColumn ERROR_SUMMARY (
-                sequence: 3
             )
 
             displayColumn COMPONENT_LABEL (
@@ -593,24 +471,28 @@ page 100 (
                 sequence: 5
             )
 
-            displayColumn ORA_SQLCODE (
-                sequence: 6
+            displayColumn ERROR_SUMMARY (
+                sequence: 3
             )
 
-            displayColumn OCCURRENCE_COUNT (
-                sequence: 7
+            displayColumn FIRST_REFERENCE_DISPLAY (
+                sequence: 10
             )
 
-            displayColumn AFFECTED_USERS (
-                sequence: 8
+            displayColumn INCIDENT_STATUS (
+                sequence: 1
             )
 
             displayColumn LAST_OCCURRED_ON (
                 sequence: 9
             )
 
-            displayColumn FIRST_REFERENCE_DISPLAY (
-                sequence: 10
+            displayColumn OCCURRENCE_COUNT (
+                sequence: 7
+            )
+
+            displayColumn ORA_SQLCODE (
+                sequence: 6
             )
 
             sort (
@@ -619,6 +501,68 @@ page 100 (
                     direction: desc
                     sequence: 1
                 }
+            )
+
+        )
+
+        savedReport pending (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn AFFECTED_USERS (
+                sequence: 8
+            )
+
+            displayColumn APP_PAGE_DISPLAY (
+                sequence: 2
+            )
+
+            displayColumn COMPONENT_LABEL (
+                sequence: 4
+            )
+
+            displayColumn COMPONENT_NAME (
+                sequence: 5
+            )
+
+            displayColumn ERROR_SUMMARY (
+                sequence: 3
+            )
+
+            displayColumn FIRST_REFERENCE_DISPLAY (
+                sequence: 10
+            )
+
+            displayColumn INCIDENT_STATUS (
+                sequence: 1
+            )
+
+            displayColumn LAST_OCCURRED_ON (
+                sequence: 9
+            )
+
+            displayColumn OCCURRENCE_COUNT (
+                sequence: 7
+            )
+
+            displayColumn ORA_SQLCODE (
+                sequence: 6
+            )
+
+            sort (
+                column: LAST_OCCURRED_ON
+                sort {
+                    direction: desc
+                    sequence: 1
+                }
+            )
+
+            filter pending-filter (
+                column: INCIDENT_STATUS
+                operator: !=
+                value: RESOLVED
             )
 
         )
@@ -630,23 +574,12 @@ page 100 (
                 rowsPerPage: 50
             }
 
-            filter regressions-filter (
-                type: column
-                column: INCIDENT_STATUS
-                operator: =
-                value: REGRESSION
-            )
-
-            displayColumn INCIDENT_STATUS (
-                sequence: 1
+            displayColumn AFFECTED_USERS (
+                sequence: 8
             )
 
             displayColumn APP_PAGE_DISPLAY (
                 sequence: 2
-            )
-
-            displayColumn ERROR_SUMMARY (
-                sequence: 3
             )
 
             displayColumn COMPONENT_LABEL (
@@ -657,24 +590,28 @@ page 100 (
                 sequence: 5
             )
 
-            displayColumn ORA_SQLCODE (
-                sequence: 6
+            displayColumn ERROR_SUMMARY (
+                sequence: 3
             )
 
-            displayColumn OCCURRENCE_COUNT (
-                sequence: 7
+            displayColumn FIRST_REFERENCE_DISPLAY (
+                sequence: 10
             )
 
-            displayColumn AFFECTED_USERS (
-                sequence: 8
+            displayColumn INCIDENT_STATUS (
+                sequence: 1
             )
 
             displayColumn LAST_OCCURRED_ON (
                 sequence: 9
             )
 
-            displayColumn FIRST_REFERENCE_DISPLAY (
-                sequence: 10
+            displayColumn OCCURRENCE_COUNT (
+                sequence: 7
+            )
+
+            displayColumn ORA_SQLCODE (
+                sequence: 6
             )
 
             sort (
@@ -683,6 +620,11 @@ page 100 (
                     direction: desc
                     sequence: 1
                 }
+            )
+
+            filter regressions-filter (
+                column: INCIDENT_STATUS
+                value: REGRESSION
             )
 
         )
@@ -694,23 +636,12 @@ page 100 (
                 rowsPerPage: 50
             }
 
-            filter resolved-filter (
-                type: column
-                column: INCIDENT_STATUS
-                operator: =
-                value: RESOLVED
-            )
-
-            displayColumn INCIDENT_STATUS (
-                sequence: 1
+            displayColumn AFFECTED_USERS (
+                sequence: 8
             )
 
             displayColumn APP_PAGE_DISPLAY (
                 sequence: 2
-            )
-
-            displayColumn ERROR_SUMMARY (
-                sequence: 3
             )
 
             displayColumn COMPONENT_LABEL (
@@ -721,24 +652,28 @@ page 100 (
                 sequence: 5
             )
 
-            displayColumn ORA_SQLCODE (
-                sequence: 6
+            displayColumn ERROR_SUMMARY (
+                sequence: 3
             )
 
-            displayColumn OCCURRENCE_COUNT (
-                sequence: 7
+            displayColumn FIRST_REFERENCE_DISPLAY (
+                sequence: 10
             )
 
-            displayColumn AFFECTED_USERS (
-                sequence: 8
+            displayColumn INCIDENT_STATUS (
+                sequence: 1
             )
 
             displayColumn LAST_OCCURRED_ON (
                 sequence: 9
             )
 
-            displayColumn FIRST_REFERENCE_DISPLAY (
-                sequence: 10
+            displayColumn OCCURRENCE_COUNT (
+                sequence: 7
+            )
+
+            displayColumn ORA_SQLCODE (
+                sequence: 6
             )
 
             displayColumn RESOLVED_BY (
@@ -757,63 +692,125 @@ page 100 (
                 }
             )
 
+            filter resolved-filter (
+                column: INCIDENT_STATUS
+                value: RESOLVED
+            )
+
         )
 
-        savedReport all (
-            visibility: alternativeDefault
-            name: All
-            view {
-                rowsPerPage: 50
+    )
+
+    region summary (
+        name: Summary
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                with w_status as (
+                  select count(case when incident_status = 'OPEN' then 1 end)       as open_cnt
+                       , count(case when incident_status = 'REGRESSION' then 1 end) as regression_cnt
+                    from ersh_shield_incidents_vw
+                ), w_recent as (
+                  select count(1)                 as hits_24h
+                       , count(distinct app_user)  as users_24h
+                    from ersh_incident_occurrences
+                   where active_yn = 'Y'
+                     and occurred_on > systimestamp - 1
+                )
+                select s.open_cnt        as open
+                     , s.regression_cnt  as regressions
+                     , r.hits_24h        as hits_24h
+                     , r.users_24h       as users_24h
+                  from w_status  s
+                  cross join w_recent r
+                ```
+        }
+        layout {
+            sequence: 3
+            slot: body
+            columnSpan: 8
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: summaryCR
+        }
+        reportLayout {
+            numberOfRows: 1
+        }
+        componentAppearance {
+            template: @/badge-list
+            templateOptions: [
+                #DEFAULT#
+                t-BadgeList--medium
+                t-BadgeList--dash
+                t-BadgeList--fixed
+                t-Report--hideNoPagination
+            ]
+        }
+
+        column HITS_24H (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Hits 24h
+                alignment: center
             }
+            layout {
+                sequence: 30
+            }
+        )
 
-            displayColumn INCIDENT_STATUS (
-                sequence: 1
-            )
-
-            displayColumn APP_PAGE_DISPLAY (
-                sequence: 2
-            )
-
-            displayColumn ERROR_SUMMARY (
-                sequence: 3
-            )
-
-            displayColumn COMPONENT_LABEL (
-                sequence: 4
-            )
-
-            displayColumn COMPONENT_NAME (
-                sequence: 5
-            )
-
-            displayColumn ORA_SQLCODE (
-                sequence: 6
-            )
-
-            displayColumn OCCURRENCE_COUNT (
-                sequence: 7
-            )
-
-            displayColumn AFFECTED_USERS (
-                sequence: 8
-            )
-
-            displayColumn LAST_OCCURRED_ON (
-                sequence: 9
-            )
-
-            displayColumn FIRST_REFERENCE_DISPLAY (
+        column OPEN (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Open
+                alignment: center
+            }
+            layout {
                 sequence: 10
-            )
+            }
+        )
 
-            sort (
-                column: LAST_OCCURRED_ON
-                sort {
-                    direction: desc
-                    sequence: 1
-                }
-            )
+        column REGRESSIONS (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Regressions
+                alignment: center
+            }
+            layout {
+                sequence: 20
+            }
+            columnFormatting {
+                htmlExpression:
+                    ```html
+                    {if REGRESSIONS/}
+                        <span class="ersh-summary-value-danger">#REGRESSIONS#</span>
+                    {endif/}
+                    {if !REGRESSIONS/}
+                        #REGRESSIONS#
+                    {endif/}
+                    ```
+            }
+        )
 
+        column USERS_24H (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Users 24h
+                alignment: center
+            }
+            layout {
+                sequence: 40
+            }
         )
 
     )
@@ -839,7 +836,7 @@ page 100 (
             slot: regionBody
             alignment: left
             startNewRow: false
-            columnSpan: "3"
+            columnSpan: 3
         }
         appearance {
             template: @/optional-above
@@ -879,14 +876,14 @@ page 100 (
                 begin
                   :P100_FOUND_INCIDENT_ID := null;
                   l_code := trim(:P100_SEARCH_CODE);
-
+                
                   begin
                     l_logger_log_id := to_number(l_code);
                   exception
                     when others then
                       l_logger_log_id := null;
                   end;
-
+                
                   if l_logger_log_id is null then
                     apex_error.add_error(
                         p_message          => 'Enter a valid reference code (digits only).'
@@ -895,7 +892,7 @@ page 100 (
                     );
                     return;
                   end if;
-
+                
                   begin
                     select shield_incident_id
                       into :P100_FOUND_INCIDENT_ID
@@ -944,3 +941,4 @@ page 100 (
     )
 
 )
+

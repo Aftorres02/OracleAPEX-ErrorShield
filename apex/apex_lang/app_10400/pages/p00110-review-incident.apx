@@ -19,28 +19,6 @@ page 110 (
         formAutoComplete: false
     }
 
-    region status (
-        name: Status
-        type: staticContent
-        source {
-            htmlCode:
-                ```html
-                &P110_STATUS_BADGE_HTML!RAW.
-                ```
-        }
-        layout {
-            sequence: 5
-            slot: contentBody
-        }
-        appearance {
-            template: @/blank-with-attributes
-            templateOptions: #DEFAULT#
-        }
-        advanced {
-            htmlDomId: statusSR
-        }
-    )
-
     region audit (
         name: Audit
         type: staticContent
@@ -171,6 +149,25 @@ page 110 (
         }
         advanced {
             regionDisplaySelector: true
+        }
+    )
+
+    region status (
+        name: Status
+        type: staticContent
+        source {
+            htmlCode: &P110_STATUS_BADGE_HTML!RAW.
+        }
+        layout {
+            sequence: 5
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: statusSR
         }
     )
 
@@ -385,6 +382,15 @@ page 110 (
         }
     )
 
+    pageItem P110_INCIDENT_STATUS (
+        type: hidden
+        layout {
+            sequence: 4
+            region: @status
+            slot: regionBody
+        }
+    )
+
     pageItem P110_LAST_UPDATED_BY (
         type: displayOnly
         label {
@@ -429,24 +435,6 @@ page 110 (
             formRegion: @review-incident
             column: LAST_UPDATED_ON
             dataType: timestampWithLocalTimeZone
-        }
-    )
-
-    pageItem P110_INCIDENT_STATUS (
-        type: hidden
-        layout {
-            sequence: 4
-            region: @status
-            slot: regionBody
-        }
-    )
-
-    pageItem P110_STATUS_BADGE_HTML (
-        type: hidden
-        layout {
-            sequence: 6
-            region: @status
-            slot: regionBody
         }
     )
 
@@ -677,6 +665,15 @@ page 110 (
         }
     )
 
+    pageItem P110_STATUS_BADGE_HTML (
+        type: hidden
+        layout {
+            sequence: 6
+            region: @status
+            slot: regionBody
+        }
+    )
+
     pageItem P110_TIME_BUCKET (
         type: displayOnly
         label {
@@ -735,6 +732,19 @@ page 110 (
         }
     )
 
+    process initialize-form-review-incident (
+        name: Initialize form Review Incident
+        type: formInitialization
+        formRegion: @review-incident
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 377201756385175310
+        }
+    )
+
     process load-incident-status (
         name: Load Incident Status
         type: executeCode
@@ -764,22 +774,12 @@ page 110 (
             sequence: 5
             point: beforeHeader
         }
+        advanced {
+            executionMappingIdentifier: 19837890911484817
+        }
         serverSideCondition {
             type: itemIsNotNull
             item: P110_SHIELD_INCIDENT_ID
-        }
-    )
-
-    process initialize-form-review-incident (
-        name: Initialize form Review Incident
-        type: formInitialization
-        formRegion: @review-incident
-        execution {
-            sequence: 10
-            point: beforeHeader
-        }
-        advanced {
-            executionMappingIdentifier: 377201756385175310
         }
     )
 
