@@ -47,3 +47,6 @@ prompt @../views/ersh_apex_automation_executions_vw.sql
 
 prompt @../views/ersh_apex_automation_messages_vw.sql
 @@../views/ersh_apex_automation_messages_vw.sql
+
+prompt @../views/ersh_home_kpis_vw.sql
+@@../views/ersh_home_kpis_vw.sql

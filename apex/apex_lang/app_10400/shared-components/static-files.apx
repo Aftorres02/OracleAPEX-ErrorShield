@@ -3,13 +3,13 @@ file app-icon.css (
     charSet: utf-8
 )
 
-file app.css (
-    mimeType: text/css
+file app-icon.svg (
+    mimeType: image/svg+xml
     charSet: utf-8
 )
 
-file app-icon.svg (
-    mimeType: image/svg+xml
+file app.css (
+    mimeType: text/css
     charSet: utf-8
 )
 

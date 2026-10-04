@@ -33,7 +33,7 @@ prompt APPLICATION 10400 - Error Shield
 -- Application Export:
 --   Application:     10400
 --   Name:            Error Shield
---   Date and Time:   21:50 Tuesday September 22, 2026
+--   Date and Time:   04:02 Friday September 25, 2026
 --   Exported By:     LOGGER_USER
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -41,8 +41,8 @@ prompt APPLICATION 10400 - Error Shield
 --       Items:                   56
 --       Validations:              1
 --       Processes:               17
---       Regions:                 42
---       Buttons:                 16
+--       Regions:                 47
+--       Buttons:                 20
 --       Dynamic Actions:          1
 --     Shared Components:
 --       Logic:
@@ -118,7 +118,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Error Shield'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
-,p_files_version=>2461306215016
+,p_files_version=>2461309040045
 ,p_print_server_type=>'INSTANCE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -884,7 +884,7 @@ wwv_flow_imp_shared.create_theme(
 ,p_default_required_label=>1610598484065263269
 ,p_default_navbar_list_template=>2849019392706229583
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_theme_file_prefix(42),'#APEX_FILES#themes/theme_42/26.1/')
-,p_files_version=>2461306215016
+,p_files_version=>2461309040045
 ,p_icon_library=>'FONTAPEX'
 ,p_javascript_file_urls=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '#APEX_FILES#libraries/apex/#MIN_DIRECTORY#widget.stickyWidget#MIN#.js?v=#APEX_VERSION#',
@@ -999,19 +999,398 @@ wwv_flow_imp_page.create_page(
 ,p_protection_level=>'C'
 );
 wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(382103927468018535)
-,p_plug_name=>'Error Shield'
-,p_static_id=>'error-shield'
-,p_icon_css_classes=>'app-icon'
-,p_region_template_options=>'#DEFAULT#'
-,p_plug_template=>2675494171183407654
+ p_id=>wwv_flow_imp.id(21034841318186813)
+,p_plug_name=>'Breadcrumb'
+,p_static_id=>'breadcrumb'
+,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>2532939663579242476
 ,p_plug_display_sequence=>10
 ,p_plug_display_point=>'REGION_POSITION_01'
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_menu_id=>wwv_flow_imp.id(381906105739018350)
+,p_plug_source_type=>'NATIVE_BREADCRUMB'
+,p_menu_template_id=>4073839682315169711
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(21036382416186820)
+,p_name=>'Jobs Health'
+,p_static_id=>'jobs-health-mini'
+,p_template=>4073835273271169698
+,p_display_sequence=>30
+,p_include_in_reg_disp_sel_yn=>'Y'
+,p_region_template_options=>'#DEFAULT#'
+,p_component_template_options=>'#DEFAULT#:u-colors:t-BadgeList--medium:t-BadgeList--dash:t-BadgeList--fixed:t-Report--hideNoPagination'
+,p_new_grid_row=>false
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_JOBS_STATUS_VW'
+,p_include_rowid_column=>false
+,p_ajax_enabled=>'Y'
+,p_lazy_loading=>false
+,p_query_row_template=>2106120299521025145
+,p_query_num_rows=>1
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21036414891186820)
+,p_query_column_id=>3
+,p_column_alias=>'BROKEN_OR_FAILED'
+,p_column_display_sequence=>20
+,p_column_heading=>'Broken Or Failed'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21036517621186820)
+,p_query_column_id=>2
+,p_column_alias=>'ENABLED'
+,p_column_display_sequence=>10
+,p_column_heading=>'Enabled'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21036675845186821)
+,p_query_column_id=>5
+,p_column_alias=>'FAILED_RUNS_24H'
+,p_column_display_sequence=>30
+,p_column_heading=>'Failed Runs 24h'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(21034931269186815)
+,p_name=>'KPI Strip'
+,p_static_id=>'kpi-strip'
+,p_template=>4073835273271169698
+,p_display_sequence=>10
+,p_include_in_reg_disp_sel_yn=>'Y'
+,p_region_template_options=>'#DEFAULT#:t-Region--removeHeader js-removeLandmark:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:u-colors:t-BadgeList--medium:t-BadgeList--dash:t-BadgeList--fixed:t-Report--hideNoPagination'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'TABLE'
+,p_query_table=>'ERSH_HOME_KPIS_VW'
+,p_include_rowid_column=>false
+,p_ajax_enabled=>'Y'
+,p_lazy_loading=>false
+,p_query_row_template=>2106120299521025145
+,p_query_num_rows=>1
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21035056602186816)
+,p_query_column_id=>4
+,p_column_alias=>'JOBS_FAILING_CNT'
+,p_column_display_sequence=>30
+,p_column_heading=>'Jobs Failing'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21035139634186817)
+,p_query_column_id=>5
+,p_column_alias=>'LOGGER_ERRORS_24H_CNT'
+,p_column_display_sequence=>40
+,p_column_heading=>'Logger Errors (24h)'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21035279202186817)
+,p_query_column_id=>3
+,p_column_alias=>'OCCURRENCES_24H_CNT'
+,p_column_display_sequence=>20
+,p_column_heading=>'Occurrences (24h)'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21035392492186817)
+,p_query_column_id=>1
+,p_column_alias=>'OPEN_INCIDENTS_CNT'
+,p_column_display_sequence=>5
+,p_column_heading=>'Open Incidents'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21035492829186817)
+,p_query_column_id=>2
+,p_column_alias=>'REGRESSION_INCIDENTS_CNT'
+,p_column_display_sequence=>10
+,p_column_heading=>'Regressions'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(21035500172186818)
+,p_name=>'Needs Attention'
+,p_static_id=>'needs-attention'
+,p_template=>4073835273271169698
+,p_display_sequence=>20
+,p_include_in_reg_disp_sel_yn=>'Y'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select i.incident_status                                        as incident_status',
+'     , i.component_label                                        as component_label',
+'     , i.component_name                                         as component_name',
+'     , i.occurrence_count                                       as occurrence_count',
+'     , i.affected_users                                         as affected_users',
+'     , i.last_occurred_on                                       as last_occurred_on',
+'     , i.shield_incident_id                                     as shield_incident_id',
+'  from ersh_shield_incidents_vw i',
+' where i.incident_status in (''OPEN'', ''REGRESSION'')',
+' order by decode(i.incident_status, ''REGRESSION'', 0, 1)',
+'        , i.last_occurred_on desc nulls last'))
+,p_ajax_enabled=>'Y'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>8
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'Nothing needs attention right now.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21035613294186819)
+,p_query_column_id=>5
+,p_column_alias=>'AFFECTED_USERS'
+,p_column_display_sequence=>50
+,p_column_heading=>'Users'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21035796022186819)
+,p_query_column_id=>2
+,p_column_alias=>'COMPONENT_LABEL'
+,p_column_display_sequence=>20
+,p_column_heading=>'Component'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21035860526186819)
+,p_query_column_id=>3
+,p_column_alias=>'COMPONENT_NAME'
+,p_column_display_sequence=>30
+,p_column_heading=>'Component Name'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21035957009186819)
+,p_query_column_id=>1
+,p_column_alias=>'INCIDENT_STATUS'
+,p_column_display_sequence=>10
+,p_column_heading=>'Status'
+,p_column_html_expression=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'{case INCIDENT_STATUS/}',
+'    {when REGRESSION/}',
+'        <span class="t-Badge ersh-badge ersh-badge-regression">Regression</span>',
+'    {when OPEN/}',
+'        <span class="t-Badge ersh-badge ersh-badge-open">Open</span>',
+'    {otherwise/}',
+'        <span class="t-Badge ersh-badge ersh-badge-resolved">Resolved</span>',
+'{endcase/}'))
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21036085363186819)
+,p_query_column_id=>6
+,p_column_alias=>'LAST_OCCURRED_ON'
+,p_column_display_sequence=>60
+,p_column_heading=>'Last Seen'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21036130053186820)
+,p_query_column_id=>4
+,p_column_alias=>'OCCURRENCE_COUNT'
+,p_column_display_sequence=>40
+,p_column_heading=>'Hits'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21036226853186820)
+,p_query_column_id=>7
+,p_column_alias=>'SHIELD_INCIDENT_ID'
+,p_column_display_sequence=>70
+,p_column_heading=>'Action'
+,p_column_link=>'f?p=&APP_ID.:110:&SESSION.::&DEBUG.::P110_SHIELD_INCIDENT_ID:#SHIELD_INCIDENT_ID#'
+,p_column_linktext=>'Resolve'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(21036771989186821)
+,p_plug_name=>'Quick Actions'
+,p_static_id=>'quick-actions'
+,p_region_template_options=>'#DEFAULT#'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>40
 ,p_plug_item_display_point=>'ABOVE'
 ,p_location=>null
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
   'expand_shortcuts', 'N',
   'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(21036845384186821)
+,p_name=>'Recent Logger Errors'
+,p_static_id=>'recent-logger-errors'
+,p_template=>4073835273271169698
+,p_display_sequence=>50
+,p_include_in_reg_disp_sel_yn=>'Y'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_new_grid_row=>false
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'-- 2 = logger.g_error (a package constant, unreadable from',
+'-- plain SQL -- see views/ersh_home_kpis_vw.sql).',
+'select l.scope                                                  as scope',
+'     , l.text                                                   as text',
+'     , l.time_stamp                                             as time_stamp',
+'  from logger_logs l',
+' where l.logger_level = 2',
+' order by l.time_stamp desc'))
+,p_ajax_enabled=>'Y'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>5
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No logger errors recorded.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21036991807186821)
+,p_query_column_id=>1
+,p_column_alias=>'SCOPE'
+,p_column_display_sequence=>10
+,p_column_heading=>'Scope'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21037052918186821)
+,p_query_column_id=>2
+,p_column_alias=>'TEXT'
+,p_column_display_sequence=>20
+,p_column_heading=>'Message'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(21037111106186822)
+,p_query_column_id=>3
+,p_column_alias=>'TIME_STAMP'
+,p_column_display_sequence=>30
+,p_column_heading=>'When'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(21037284143186822)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(21036771989186821)
+,p_button_name=>'QUICK_INCIDENTS'
+,p_static_id=>'quick-incidents'
+,p_show_as_disabled=>false
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4073839297780169708
+,p_button_image_alt=>'Incidents'
+,p_button_redirect_url=>'f?p=&APP_ID.:100:&SESSION.::&DEBUG.'
+,p_warn_on_unsaved_changes=>null
+,p_grid_new_row=>'Y'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(21037337188186823)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_imp.id(21036771989186821)
+,p_button_name=>'QUICK_JOBS_DASHBOARD'
+,p_static_id=>'quick-jobs-dashboard'
+,p_show_as_disabled=>false
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4073839297780169708
+,p_button_image_alt=>'Jobs Dashboard'
+,p_button_redirect_url=>'f?p=&APP_ID.:1000:&SESSION.::&DEBUG.'
+,p_warn_on_unsaved_changes=>null
+,p_grid_new_row=>'N'
+,p_grid_new_column=>'Y'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(21037491917186823)
+,p_button_sequence=>30
+,p_button_plug_id=>wwv_flow_imp.id(21036771989186821)
+,p_button_name=>'QUICK_LOGGER_LOGS'
+,p_static_id=>'quick-logger-logs'
+,p_show_as_disabled=>false
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4073839297780169708
+,p_button_image_alt=>'Logger Logs'
+,p_button_redirect_url=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.'
+,p_warn_on_unsaved_changes=>null
+,p_grid_new_row=>'N'
+,p_grid_new_column=>'Y'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(21037581281186823)
+,p_button_sequence=>40
+,p_button_plug_id=>wwv_flow_imp.id(21036771989186821)
+,p_button_name=>'QUICK_PREFERENCES'
+,p_static_id=>'quick-preferences'
+,p_show_as_disabled=>false
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4073839297780169708
+,p_button_image_alt=>'Preferences'
+,p_button_redirect_url=>'f?p=&APP_ID.:200:&SESSION.::&DEBUG.'
+,p_warn_on_unsaved_changes=>null
+,p_grid_new_row=>'N'
+,p_grid_new_column=>'Y'
 );
 end;
 /
@@ -1379,7 +1758,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(19876735228683931)
+ p_id=>wwv_flow_imp.id(21037783704186893)
 ,p_report_id=>wwv_flow_imp.id(19836682997484688)
 ,p_static_id=>'pending-filter'
 ,p_condition_type=>'FILTER'
@@ -1404,7 +1783,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(19876872186683933)
+ p_id=>wwv_flow_imp.id(21037865778186909)
 ,p_report_id=>wwv_flow_imp.id(19836952520484707)
 ,p_static_id=>'regressions-filter'
 ,p_condition_type=>'FILTER'
@@ -1429,7 +1808,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(19876934911683933)
+ p_id=>wwv_flow_imp.id(21037996388186911)
 ,p_report_id=>wwv_flow_imp.id(19837162877484801)
 ,p_static_id=>'resolved-filter'
 ,p_condition_type=>'FILTER'
@@ -1545,7 +1924,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_column=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(19877010670683936)
+ p_id=>wwv_flow_imp.id(21038052161186917)
 ,p_branch_name=>'Go to Found Incident'
 ,p_branch_action=>'f?p=&APP_ID.:110:&SESSION.::&DEBUG.::P110_SHIELD_INCIDENT_ID:&P100_FOUND_INCIDENT_ID.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
@@ -3192,7 +3571,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_required_patch=>wwv_flow_imp.id(381905544746018346)
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(19877609411683974)
+ p_id=>wwv_flow_imp.id(21038601381187009)
 ,p_branch_action=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
 ,p_branch_type=>'REDIRECT_URL'
@@ -5973,7 +6352,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_row=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(19878814423684029)
+ p_id=>wwv_flow_imp.id(21039815417187131)
 ,p_branch_name=>'Branch to Admin Page'
 ,p_branch_action=>'f?p=&APP_ID.:10000:&SESSION.::&DEBUG.:RP&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
