@@ -1,5 +1,7 @@
--- ======================================================================-- ERSH preferences (stored in logger_prefs with pref_type = 'ERSH')
--- ======================================================================-- Re-runnable and NON-DESTRUCTIVE:
+-- =============================================================================
+-- ERSH preferences (stored in logger_prefs with pref_type = 'ERSH')
+-- =============================================================================
+-- Re-runnable and NON-DESTRUCTIVE:
 --   * Fresh install          -> seeds ERSH preferences with their defaults.
 --   * Pref already present   -> existing pref_value is preserved (admins can
 --                               change these after install without the release
@@ -10,7 +12,8 @@
 -- to change the Logger level in an environment, do it manually with
 -- logger.set_level() after the release completes; the release will not
 -- touch the value on future runs.
--- ======================================================================
+-- =============================================================================
+
 prompt *** Loading ERSH preferences (insert-if-missing) ***
 
 merge into logger_prefs p
