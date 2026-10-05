@@ -120,3 +120,48 @@ git submodule update --init --recursive
 `.claude/rules/` into context for Claude Code. If your tooling reads
 `AGENTS.md` by convention instead, copy `.claude/AGENTS.md.template` to
 `./AGENTS.md` (gitignored — machine-local, not committed).
+
+## Configure masked error messages
+
+The `ERSH` preferences in `logger_prefs` control the message displayed when
+the current environment requires technical errors to be masked:
+
+- `MASKED_ERROR_MESSAGE`: base message template.
+- `SUPPORT_EMAIL`: email address substituted for `{SUPPORT_EMAIL}`.
+- `REFERENCE_DISPLAY_MIN_DIGITS`: minimum number of digits in the appended reference.
+
+The `{SUPPORT_EMAIL}` token is case-sensitive. The template supports up to 255 bytes, matching
+the size of `logger_prefs.pref_value`. For example, run the following in the
+ErrorShield owner schema:
+
+```sql
+begin
+  logger.set_pref(
+    p_pref_name  => 'MASKED_ERROR_MESSAGE',
+    p_pref_value => 'Unable to process this action. If the issue persists, please contact {SUPPORT_EMAIL}.',
+    p_pref_type  => 'ERSH'
+  );
+end;
+/
+commit;
+```
+
+When Logger returns a reference ID, the handler appends ` quoting reference <ID>.`
+to the base message. Otherwise, it displays only the base message.
+
+When upgrading from the two-template setup, first run
+`scripts/simplify_masked_error_message.sql` to remove the obsolete preference
+and migrate the previous default base message. Customized messages are preserved;
+remove any legacy `{REFERENCE}` token from customized templates because the
+reference is now appended automatically.
+
+To update an existing installation, run `data/ersh_preferences.sql` and
+recompile `packages/ersh_error_handler_api.pkb` in the owner schema. Before
+replacing the body, verify that the installed package specification matches
+this checkout. If the database has a newer API, apply the template changes to
+the matching package body instead, preserving its public methods. Check
+`USER_ERRORS` and confirm that both the package and package body are `VALID`
+after deployment. Subsequent
+preference changes take effect without recompilation. Installation preserves
+customized values; if a template is missing, the handler falls back to the
+original English message.

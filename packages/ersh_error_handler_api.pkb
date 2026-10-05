@@ -64,6 +64,7 @@ create or replace package body ersh_error_handler_api as
     l_environment   varchar2(30 char);
     l_mask_list     varchar2(255 char);
     l_should_mask   boolean;
+    l_template      logger_prefs.pref_value%type;
   begin
     -- Log full details (autonomous commit inside logger; failure is silent)
     begin
@@ -133,24 +134,19 @@ create or replace package body ersh_error_handler_api as
     l_support_email := logger.get_pref('SUPPORT_EMAIL', gc_pref_type);
     l_min_digits    := to_number(logger.get_pref('REFERENCE_DISPLAY_MIN_DIGITS', gc_pref_type));
 
+    l_template := nvl(
+      logger.get_pref('MASKED_ERROR_MESSAGE', gc_pref_type),
+      'Unable to process this action. If the issue persists, please contact {SUPPORT_EMAIL}.'
+    );
+    o_message := replace(l_template, '{SUPPORT_EMAIL}', l_support_email);
+
     if l_reference_id is not null then
-      o_message :=
-        'Unable to process this action. If the issue persists, please contact '
-        || l_support_email
-        || ' quoting reference '
+      o_message := o_message || ' quoting reference '
         || lpad(
              to_char(l_reference_id),
-             greatest(
-               l_min_digits,
-               length(to_char(l_reference_id))
-             ),
+             greatest(l_min_digits, length(to_char(l_reference_id))),
              '0'
            )
-        || '.';
-    else
-      o_message :=
-        'Unable to process this action. If the issue persists, please contact '
-        || l_support_email
         || '.';
     end if;
 
