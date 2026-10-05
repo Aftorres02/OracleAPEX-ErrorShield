@@ -1,0 +1,92 @@
+lov elab-scenarios (
+    name: ELAB_SCENARIOS
+    source {
+        location: staticValues
+    }
+
+    entry business-error (
+        sequence: 140
+        display: Order over credit limit (ORA-20000, business)
+        return: BUSINESS_ERROR
+    )
+
+    entry check-violation (
+        sequence: 130
+        display: Quantity zero (ORA-02290, friendly)
+        return: CHECK_VIOLATION
+    )
+
+    entry child-found (
+        sequence: 110
+        display: Delete a customer with orders (ORA-02292)
+        return: CHILD_FOUND
+    )
+
+    entry divide-by-zero (
+        sequence: 10
+        display: Division by zero (ORA-01476)
+        return: DIVIDE_BY_ZERO
+    )
+
+    entry invalid-date (
+        sequence: 40
+        display: Invalid date, 31-Feb (ORA-01839)
+        return: INVALID_DATE
+    )
+
+    entry invalid-number (
+        sequence: 30
+        display: Text converted to number (ORA-01722)
+        return: INVALID_NUMBER
+    )
+
+    entry no-data-found (
+        sequence: 50
+        display: No data found (ORA-01403)
+        return: NO_DATA_FOUND
+    )
+
+    entry not-null (
+        sequence: 90
+        display: Required column left empty (ORA-01400)
+        return: NOT_NULL
+    )
+
+    entry numeric-overflow (
+        sequence: 80
+        display: Number too large for column (ORA-01438)
+        return: NUMERIC_OVERFLOW
+    )
+
+    entry parent-not-found (
+        sequence: 100
+        display: Order for a missing customer (ORA-02291)
+        return: PARENT_NOT_FOUND
+    )
+
+    entry too-many-rows (
+        sequence: 60
+        display: Too many rows (ORA-01422)
+        return: TOO_MANY_ROWS
+    )
+
+    entry unique-violation (
+        sequence: 120
+        display: Duplicate customer code (ORA-00001, friendly)
+        return: UNIQUE_VIOLATION
+    )
+
+    entry value-error (
+        sequence: 20
+        display: Value too long for a variable (ORA-06502)
+        return: VALUE_ERROR
+    )
+
+    entry value-too-large (
+        sequence: 70
+        display: Text too long for column (ORA-12899)
+        return: VALUE_TOO_LARGE
+    )
+
+)
+
