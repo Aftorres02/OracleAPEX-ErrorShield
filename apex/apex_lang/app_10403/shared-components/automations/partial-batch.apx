@@ -1,0 +1,62 @@
+automation partial-batch (
+    name: Batch With One Bad Row
+    execution {
+        type: onDemand
+        actionsInitiatedOn: rowsReturned
+    }
+    source {
+        location: localDatabase
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select level                                                  as row_no
+              from dual
+            connect by level <= 5
+            ```
+    }
+    columnMapping {
+        primaryKeyColumn: ROW_NO
+    }
+    actionExecution {
+        commit: eachRow
+        actionErrorHandling: ignore
+    }
+    comments {
+        comments: On demand. Five rows, row 3 fails (ORA-01476) and is skipped: 4 successful rows, 1 error row.
+    }
+
+    action process-row (
+        name: Process Row
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                declare
+                  l_ratio number;
+                begin
+                  l_ratio := 100 / (:ROW_NO - 3);
+
+                  apex_automation.log_info(
+                      p_message => 'Row ' || :ROW_NO || ' processed (ratio ' || round(l_ratio, 2) || ').'
+                  );
+                exception
+                  when others then
+                    ersh_demo_automation_api.report_failure(
+                        p_static_id     => 'partial-batch'
+                      , p_sqlcode       => sqlcode
+                      , p_error_message => sqlerrm
+                    );
+                    raise;
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            stopExecutionOnError: true
+        }
+    )
+)

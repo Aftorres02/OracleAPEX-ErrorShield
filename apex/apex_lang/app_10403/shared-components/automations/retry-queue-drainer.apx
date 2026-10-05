@@ -1,0 +1,46 @@
+automation retry-queue-drainer (
+    name: Retry Queue Drainer (disables itself on error)
+    execution {
+        type: scheduled
+        scheduleExpression: FREQ=HOURLY;INTERVAL=1
+        scheduleStatus: active
+        actionsInitiatedOn: always
+    }
+    actionExecution {
+        actionErrorHandling: disable
+    }
+    comments {
+        comments: Hourly. Fails on purpose (ORA-01722); its error handling is "disable", so the first failure switches it off.
+    }
+
+    action drain-queue (
+        name: Drain Queue
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                declare
+                  l_batch_size number;
+                begin
+                  l_batch_size := to_number('N/A');
+                exception
+                  when others then
+                    ersh_demo_automation_api.report_failure(
+                        p_static_id     => 'retry-queue-drainer'
+                      , p_sqlcode       => sqlcode
+                      , p_error_message => sqlerrm
+                    );
+                    raise;
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            stopExecutionOnError: true
+        }
+    )
+)

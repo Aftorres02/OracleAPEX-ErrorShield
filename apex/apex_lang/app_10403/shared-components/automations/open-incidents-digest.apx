@@ -1,0 +1,56 @@
+automation open-incidents-digest (
+    name: Open Incidents Digest
+    execution {
+        type: scheduled
+        scheduleExpression: FREQ=HOURLY;INTERVAL=1
+        scheduleStatus: active
+        actionsInitiatedOn: rowsReturned
+    }
+    source {
+        location: localDatabase
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select i.shield_incident_id                                   as shield_incident_id
+                 , i.component_label                                      as component_label
+                 , i.occurrence_count                                     as occurrence_count
+              from ersh_shield_incidents_vw i
+             where i.incident_status = 'OPEN'
+             order by i.occurrence_count desc
+             fetch first 10 rows only
+            ```
+    }
+    columnMapping {
+        primaryKeyColumn: SHIELD_INCIDENT_ID
+    }
+    actionExecution {
+        commit: once
+        maxRowsToProcess: 10
+        actionErrorHandling: ignore
+    }
+    comments {
+        comments: Hourly. One info message per open incident, top 10 by hits.
+    }
+
+    action log-open-incident (
+        name: Log Open Incident
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                apex_automation.log_info(
+                    p_message => 'Incident #' || :SHIELD_INCIDENT_ID || ' (' || :COMPONENT_LABEL
+                                 || ') is still open with ' || :OCCURRENCE_COUNT || ' hits.'
+                );
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            stopExecutionOnError: true
+        }
+    )
+)

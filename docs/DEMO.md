@@ -97,11 +97,48 @@ execution history. Takes one to two minutes.
 **Done when:** the Incidents list (page 100), Logger Logs (page 400), and
 Jobs Dashboard (page 1000) all show data instead of empty reports.
 
+## Step 5 — Install the Automation Lab (optional)
+
+The "APEX Automations" page (1600) reads APEX's own dictionary views
+(`apex_appl_automations`, `apex_automation_log`,
+`apex_automation_msg_log`) — there is no table to insert into. The
+Automation Lab is a small demo app (10403) that only owns ten real
+automations. Install it connected as the same owner schema, from the repo
+root, passing the workspace the admin app lives in:
+
+```bash
+sql <connection-as-owner-schema> @demos/automation_lab/install_automation_lab.sql ERSH_DEMO_WS
+```
+
+It installs `ersh_demo_automation_api`, imports app 10403, and runs every
+enabled automation once so the executions and messages reports have rows
+right away. Run more executions at any time with:
+
+```sql
+exec ersh_demo_automation_api.execute_all;
+```
+
+> **Why the owner workspace, never a consumer one:** inside an APEX
+> session those dictionary views only return the workspace the running app
+> belongs to. An automation in a consumer's workspace can never show up on
+> page 1600 of an admin app running in the owner's workspace.
+
+The ten cover every combination the page can show: scheduled and on
+demand, active and disabled, the four "actions initiated on" modes, the
+three error-handling modes, one batch with a single failed row, and three
+that fail on purpose and report themselves to ErrorShield (they also show
+up on the Incidents page, component "Automations").
+
+> **Most of these keep running.** Seven are scheduled and active (every 30
+> minutes, hourly, or daily), and the nightly archive export fails every
+> night on purpose. Remove the whole lab with
+> `@demos/automation_lab/uninstall_automation_lab.sql ERSH_DEMO_WS`.
+
 ---
 
 ## What this does not cover
 
-Three pages in the admin app can't be populated by a script:
+Two pages in the admin app can't be populated by a script:
 
 > **"Running now" (page 1400)** only ever has rows while a job is actually
 > executing. Call this right before you show that specific screen, not as
@@ -113,13 +150,6 @@ Three pages in the admin app can't be populated by a script:
 >
 > It creates (if missing) and kicks off a job that sleeps for 45 seconds in
 > the background — open the page within that window.
-
-> **"APEX Automations" (page 1600)** reads APEX's own automation dictionary
-> views (`apex_appl_automations`, `apex_automation_log`). Populating it
-> means configuring a real Automation in APEX Builder (Shared Components →
-> Automations) on some app — there's no supported way to script that from
-> SQL, so this is a manual, optional step if you want that page populated
-> too.
 
 > **"Timeline" (page 1500)** has no report or region at all in the current
 > app export — it's a placeholder page. There is nothing to feed it.

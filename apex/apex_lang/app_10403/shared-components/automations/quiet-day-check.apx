@@ -1,0 +1,48 @@
+automation quiet-day-check (
+    name: Quiet Day Check
+    execution {
+        type: scheduled
+        scheduleExpression: FREQ=DAILY;BYHOUR=7;BYMINUTE=0
+        scheduleStatus: active
+        actionsInitiatedOn: noRowsReturned
+    }
+    source {
+        location: localDatabase
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select l.id                                                   as logger_log_id
+              from logger_logs l
+             -- 2 = logger.g_error: package constants are not visible to plain SQL
+             where l.logger_level = 2
+               and l.time_stamp  >= systimestamp - interval '1' day
+            ```
+    }
+    actionExecution {
+        actionErrorHandling: terminate
+    }
+    comments {
+        comments: Daily at 07:00. Its action only runs when the query returns NO rows (a day with zero errors).
+    }
+
+    action log-quiet-day (
+        name: Log Quiet Day
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                apex_automation.log_info(
+                    p_message => 'No Logger errors in the last 24 hours.'
+                );
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            stopExecutionOnError: true
+        }
+    )
+)

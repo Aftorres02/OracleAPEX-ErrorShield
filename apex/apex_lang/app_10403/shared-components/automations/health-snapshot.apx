@@ -1,0 +1,83 @@
+automation health-snapshot (
+    name: On-Demand Health Snapshot
+    execution {
+        type: onDemand
+        actionsInitiatedOn: always
+    }
+    actionExecution {
+        actionErrorHandling: ignore
+    }
+    comments {
+        comments: On demand. Two actions: incident counts, then Logger and scheduler counts.
+    }
+
+    action snapshot-incidents (
+        name: Snapshot Incidents
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                declare
+                  l_open        pls_integer;
+                  l_regressions pls_integer;
+                begin
+                  select count(case when i.incident_status = 'OPEN'       then 1 end)
+                       , count(case when i.incident_status = 'REGRESSION' then 1 end)
+                    into l_open
+                       , l_regressions
+                    from ersh_shield_incidents_vw i;
+
+                  apex_automation.log_info(
+                      p_message => 'Incidents: ' || l_open || ' open, ' || l_regressions || ' regressions.'
+                  );
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            stopExecutionOnError: false
+        }
+    )
+
+    action snapshot-logger-and-jobs (
+        name: Snapshot Logger and Jobs
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                declare
+                  l_errors_24h   pls_integer;
+                  l_enabled_jobs pls_integer;
+                begin
+                  select count(1)
+                    into l_errors_24h
+                    from logger_logs l
+                   where l.logger_level = logger.g_error
+                     and l.time_stamp  >= systimestamp - interval '1' day;
+
+                  select count(1)
+                    into l_enabled_jobs
+                    from user_scheduler_jobs j
+                   where j.enabled = 'TRUE';
+
+                  apex_automation.log_info(
+                      p_message => 'Logger: ' || l_errors_24h || ' errors in 24h. Scheduler: '
+                                   || l_enabled_jobs || ' enabled jobs.'
+                  );
+                end;
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        error {
+            stopExecutionOnError: false
+        }
+    )
+)

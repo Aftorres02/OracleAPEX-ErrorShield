@@ -1,0 +1,36 @@
+automation heartbeat (
+    name: Automation Heartbeat
+    execution {
+        type: scheduled
+        scheduleExpression: FREQ=MINUTELY;INTERVAL=30
+        scheduleStatus: active
+        actionsInitiatedOn: always
+    }
+    actionExecution {
+        actionErrorHandling: terminate
+    }
+    comments {
+        comments: Every 30 minutes. Always succeeds, so the executions report always has a healthy row.
+    }
+
+    action log-heartbeat (
+        name: Log Heartbeat
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                apex_automation.log_info(
+                    p_message => 'Heartbeat OK at ' || to_char(systimestamp, 'YYYY-MM-DD HH24:MI:SS')
+                );
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            stopExecutionOnError: true
+        }
+    )
+)
