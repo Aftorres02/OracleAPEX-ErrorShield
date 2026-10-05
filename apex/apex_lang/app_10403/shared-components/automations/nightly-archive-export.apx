@@ -1,0 +1,46 @@
+automation nightly-archive-export (
+    name: Nightly Archive Export (broken)
+    execution {
+        type: scheduled
+        scheduleExpression: FREQ=DAILY;BYHOUR=2;BYMINUTE=0
+        scheduleStatus: active
+        actionsInitiatedOn: always
+    }
+    actionExecution {
+        actionErrorHandling: terminate
+    }
+    comments {
+        comments: Daily at 02:00. Fails on purpose (ORA-00942, the archive table does not exist) and reports itself to ErrorShield.
+    }
+
+    action export-archive (
+        name: Export Archive
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                begin
+                  execute immediate 'insert into ersh_demo_incident_archive (shield_incident_id)'
+                                 || ' select si.shield_incident_id from ersh_shield_incidents si';
+                exception
+                  when others then
+                    ersh_demo_automation_api.report_failure(
+                        p_static_id     => 'nightly-archive-export'
+                      , p_sqlcode       => sqlcode
+                      , p_error_message => sqlerrm
+                    );
+                    raise;
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            errorMessage: Archive export failed.
+            stopExecutionOnError: true
+        }
+    )
+)

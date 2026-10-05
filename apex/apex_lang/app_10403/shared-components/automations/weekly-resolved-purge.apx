@@ -1,0 +1,52 @@
+automation weekly-resolved-purge (
+    name: Weekly Resolved Incident Purge (dry run)
+    execution {
+        type: scheduled
+        scheduleExpression: FREQ=WEEKLY;BYDAY=SUN;BYHOUR=3;BYMINUTE=0
+        scheduleStatus: disabled
+        actionsInitiatedOn: rowsReturned
+    }
+    source {
+        location: localDatabase
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select si.shield_incident_id                                  as shield_incident_id
+              from ersh_shield_incidents si
+             where si.resolved_yn = 'Y'
+               and si.resolved_on < systimestamp - interval '90' day
+            ```
+    }
+    columnMapping {
+        primaryKeyColumn: SHIELD_INCIDENT_ID
+    }
+    actionExecution {
+        commit: once
+        maxRowsToProcess: 500
+        actionErrorHandling: terminate
+    }
+    comments {
+        comments: Disabled on purpose, never runs. Dry run only: it would log, not delete.
+    }
+
+    action log-purge-candidate (
+        name: Log Purge Candidate
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                apex_automation.log_info(
+                    p_message => 'Would purge resolved incident #' || :SHIELD_INCIDENT_ID || '.'
+                );
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            stopExecutionOnError: true
+        }
+    )
+)

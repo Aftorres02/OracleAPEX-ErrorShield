@@ -1,0 +1,37 @@
+page 1 (
+    name: Automation Lab
+    alias: HOME
+    title: Automation Lab
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+
+    region aboutSR (
+        name: About
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <p>This app has no screens of its own. It only exists to own ten demo
+                APEX Automations, so the ErrorShield admin app (10400, page 1600
+                &quot;APEX Automations&quot;) has real automations, executions and
+                messages to show.</p>
+                <p>Run <code>exec ersh_demo_automation_api.execute_all;</code> as the
+                ErrorShield owner schema to add a new execution of each one.</p>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+)

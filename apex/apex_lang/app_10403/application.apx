@@ -1,0 +1,66 @@
+app AUTOMATION-LAB (
+    name: ErrorShield Automation Lab
+    logo {
+        type: text
+        text: ErrorShield Automation Lab
+    }
+    navigation {
+        homeUrl: {
+            page: 1
+        }
+        loginUrl: {
+            page: LOGIN
+        }
+    }
+    navigationBar {
+        list: @navigation-bar
+        listTemplate: @/navigation-bar
+        templateOptions: #DEFAULT#
+    }
+    userInterface {
+        currentTheme: @universal-theme
+        globalPage: 0
+        addBuiltWithApexToFooter: false
+    }
+    appFormatMasks {
+        date: DS
+        timestamp: DS
+        timestampTimeZone: DS
+    }
+    authentication {
+        scheme: @application-express-accounts
+    }
+    security {
+        runtimeApiUsage: modifyThisApp
+    }
+    sessionStateProtection {
+        checksumSalt: A764D2DA94C29B282DC6FB8E9F4706647F7A685B159A76DA480FEE105546170E
+    }
+    sessionManagement {
+        sessionStateCommits: immediate
+    }
+    globalization {
+        documentDirection: leftToRight
+    }
+    rowSearch {
+        tokenize: false
+    }
+    reportPrinting {
+        type: useInstanceSettings
+    }
+    errorHandling {
+        errorHandlingFunctionName: ersh_error_handler_api.apex_error_handling
+    }
+    runtime {
+        allowFeedback: true
+        accessibleReadOnlyItems: false
+    }
+
+    substitution APP_NAME (
+        value {
+            staticValue: ErrorShield Automation Lab
+        }
+    )
+
+)
+

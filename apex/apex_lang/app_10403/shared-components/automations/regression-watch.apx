@@ -1,0 +1,49 @@
+automation regression-watch (
+    name: Regression Watch
+    execution {
+        type: scheduled
+        scheduleExpression: FREQ=MINUTELY;INTERVAL=30
+        scheduleStatus: active
+        actionsInitiatedOn: rowsReturned
+    }
+    source {
+        location: localDatabase
+        type: tableView
+        tableName: ERSH_SHIELD_INCIDENTS_VW
+        includeRowidColumn: false
+        whereClause: incident_status = 'REGRESSION'
+    }
+    columnMapping {
+        primaryKeyColumn: SHIELD_INCIDENT_ID
+    }
+    actionExecution {
+        commit: once
+        maxRowsToProcess: 25
+        actionErrorHandling: ignore
+    }
+    comments {
+        comments: Every 30 minutes. Warns about every resolved incident that came back.
+    }
+
+    action warn-regression (
+        name: Warn Regression
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                apex_automation.log_warn(
+                    p_message => 'Regression: incident #' || :SHIELD_INCIDENT_ID
+                                 || ' was resolved and is failing again.'
+                );
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            stopExecutionOnError: true
+        }
+    )
+)

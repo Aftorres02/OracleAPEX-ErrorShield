@@ -1,0 +1,64 @@
+automation error-spike-check (
+    name: Logger Error Spike Check
+    execution {
+        type: scheduled
+        scheduleExpression: FREQ=MINUTELY;INTERVAL=30
+        scheduleStatus: active
+        actionsInitiatedOn: functionBodyReturningBoolean
+    }
+    source {
+        location: localDatabase
+        language: plsql
+        plsqlFunctionBody:
+            ```plsql
+            declare
+              l_count pls_integer;
+            begin
+              select count(1)
+                into l_count
+                from logger_logs l
+               where l.logger_level = logger.g_error
+                 and l.time_stamp  >= systimestamp - interval '1' hour;
+
+              return l_count >= 5;
+            end;
+            ```
+    }
+    actionExecution {
+        actionErrorHandling: terminate
+    }
+    comments {
+        comments: Every 30 minutes. Fires only when Logger recorded 5+ errors in the last hour.
+    }
+
+    action warn-error-spike (
+        name: Warn Error Spike
+        type: executeCode
+        source {
+            location: localDatabase
+            language: plsql
+            plsqlCode:
+                ```plsql
+                declare
+                  l_count pls_integer;
+                begin
+                  select count(1)
+                    into l_count
+                    from logger_logs l
+                   where l.logger_level = logger.g_error
+                     and l.time_stamp  >= systimestamp - interval '1' hour;
+
+                  apex_automation.log_warn(
+                      p_message => 'Error spike: ' || l_count || ' Logger errors in the last hour.'
+                  );
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        error {
+            stopExecutionOnError: true
+        }
+    )
+)
