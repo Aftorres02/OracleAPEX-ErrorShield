@@ -1,0 +1,443 @@
+page 1 (
+    name: Overview
+    alias: OVERVIEW
+    title: Overview
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+
+    region incidentsCR (
+        name: Recent Incidents (All Lessons)
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select p.page_name                                                  as lesson
+                     , i.component_name                                             as component_name
+                     , i.ora_sqlcode                                                as ora_sqlcode
+                     , i.error_summary                                              as error_summary
+                     , i.occurrence_count                                           as occurrence_count
+                     , to_char(i.created_on, 'DD-MON HH24:MI:SS')                   as first_seen
+                  from ersh_shield_incidents_vw i
+                  left join apex_application_pages p on p.application_id = i.application_id
+                                                    and p.page_id        = i.page_id
+                 where i.application_id = :APP_ID
+                 order by i.created_on desc
+                 fetch first 10 rows only
+                ```
+        }
+        layout {
+            sequence: 60
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            icon: fa-list-alt
+        }
+        advanced {
+            htmlDomId: incidentsCR
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+        messages {
+            whenNoDataFound: No incidents recorded from this app yet. Start with lesson 1.
+        }
+
+        column COMPONENT_NAME (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Component
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ERROR_SUMMARY (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Error Summary (admin only)
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column FIRST_SEEN (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: First Seen
+            }
+            layout {
+                sequence: 60
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column LESSON (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Lesson
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column OCCURRENCE_COUNT (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Hits
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ORA_SQLCODE (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: SQLCODE
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    region introSR (
+        name: ErrorShield Error Lab
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <p>Four short lessons that force real Oracle errors from a consumer application. This app reaches
+                ErrorShield only through synonyms and uses <code>ersh_error_handler_api.apex_error_handling</code> as its
+                Error Handling Function, exactly like a production app would.</p>
+                <p>In each lesson: raise an error, read what the user sees, then find the incident below or in the
+                ErrorShield admin app (10400, Incidents).</p>
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span><span class="ersh-lab-note">unexpected technical error: logged, recorded, masked</span></div>
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-friendly">Friendly message</span><span class="ersh-lab-note">known error: the registered message is shown, nothing recorded</span></div>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/hero
+            templateOptions: #DEFAULT#
+            icon: fa-flask
+        }
+        advanced {
+            htmlDomId: introSR
+        }
+    )
+
+    region lesson1SR (
+        name: Lesson 1 · PL/SQL Runtime Errors
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-neutral">6 errors</span></div>
+                <p>Bugs that only appear when the code runs: math, conversions and lookups.</p>
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+            columnSpan: 3
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: lesson1SR
+        }
+    )
+
+    region lesson2SR (
+        name: Lesson 2 · Table and Column Errors
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-neutral">7 errors</span></div>
+                <p>The table refuses the data. Registered constraints get a friendly message.</p>
+                ```
+        }
+        layout {
+            sequence: 30
+            slot: body
+            startNewRow: false
+            columnSpan: 3
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: lesson2SR
+        }
+    )
+
+    region lesson3SR (
+        name: Lesson 3 · AJAX Errors
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-neutral">3 channels</span></div>
+                <p>The same failures without a page submit, through three background calls.</p>
+                ```
+        }
+        layout {
+            sequence: 40
+            slot: body
+            startNewRow: false
+            columnSpan: 3
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: lesson3SR
+        }
+    )
+
+    region lesson4SR (
+        name: Lesson 4 · Rendering and Business Errors
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-neutral">2 errors</span></div>
+                <p>A region that breaks while the page draws, and a business rule on purpose.</p>
+                ```
+        }
+        layout {
+            sequence: 50
+            slot: body
+            startNewRow: false
+            columnSpan: 3
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: lesson4SR
+        }
+    )
+
+    button REFRESH (
+        buttonName: REFRESH
+        label: Refresh
+        layout {
+            sequence: 10
+            region: @incidentsCR
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--small
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        advanced {
+            htmlDomId: REFRESH
+        }
+    )
+
+    button START_LESSON_1 (
+        buttonName: START_LESSON_1
+        label: Start lesson 1
+        layout {
+            sequence: 10
+            region: @lesson1SR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconRight
+            ]
+            icon: fa-chevron-right
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 100
+            }
+        }
+        advanced {
+            htmlDomId: START_LESSON_1
+        }
+    )
+
+    button START_LESSON_2 (
+        buttonName: START_LESSON_2
+        label: Start lesson 2
+        layout {
+            sequence: 10
+            region: @lesson2SR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconRight
+            ]
+            icon: fa-chevron-right
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 200
+            }
+        }
+        advanced {
+            htmlDomId: START_LESSON_2
+        }
+    )
+
+    button START_LESSON_3 (
+        buttonName: START_LESSON_3
+        label: Start lesson 3
+        layout {
+            sequence: 10
+            region: @lesson3SR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconRight
+            ]
+            icon: fa-chevron-right
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 300
+            }
+        }
+        advanced {
+            htmlDomId: START_LESSON_3
+        }
+    )
+
+    button START_LESSON_4 (
+        buttonName: START_LESSON_4
+        label: Start lesson 4
+        layout {
+            sequence: 10
+            region: @lesson4SR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconRight
+            ]
+            icon: fa-chevron-right
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 400
+            }
+        }
+        advanced {
+            htmlDomId: START_LESSON_4
+        }
+    )
+
+    dynamicAction refresh-click (
+        name: Refresh Incidents
+        execution {
+            sequence: 90
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @REFRESH
+        }
+
+        action refresh-incidents (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @incidentsCR
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+)
+

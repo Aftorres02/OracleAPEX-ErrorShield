@@ -1,0 +1,776 @@
+page 300 (
+    name: AJAX Errors
+    alias: AJAX-ERRORS
+    title: AJAX Errors
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    javaScript {
+        functionAndGlobalVariableDeclaration:
+            ```javascript-browser
+            var elab = elab || {};
+            
+            elab.errorLab = (function(namespace, $, undefined) {
+              'use strict';
+            
+              var MODULE_NAME = 'ErrorLab';
+            
+              var CONFIG = {
+                  AJAX_UNHANDLED: 'FORCE_AJAX_UNHANDLED'
+                , AJAX_HANDLED: 'FORCE_AJAX_HANDLED'
+                , SCENARIO_ITEM: 'P300_SCENARIO'
+                , INCIDENTS_REGION: 'incidentsCR'
+              };
+            
+              var _PREFIX = '[' + MODULE_NAME + ']';
+              var logger = {
+                  log:     function(msg, data) { console.log(_PREFIX, msg, data || ''); }
+                , warning: function(msg, data) { console.warn(_PREFIX, msg, data || ''); }
+                , error:   function(msg, data) { console.error(_PREFIX, msg, data || ''); }
+              };
+            
+              /**
+               * Show one error in the page notification area, replacing any previous one
+               * @param {string} message - Text to show (escaped, never rendered as HTML)
+               */
+              var _showError = function(message) {
+                apex.message.clearErrors();
+                apex.message.showErrors([{
+                    type: 'error'
+                  , location: 'page'
+                  , message: message
+                  , unsafe: false
+                }]);
+              };
+            
+              /**
+               * Read the scenario picked in step 1
+               * @returns {string} - elab_errors_api.force_error scenario code
+               */
+              var _scenario = function() {
+                return apex.item(CONFIG.SCENARIO_ITEM).getValue();
+              };
+            
+              /**
+               * Refresh the incidents report so a new incident shows up at once
+               */
+              var refreshIncidents = function() {
+                apex.region(CONFIG.INCIDENTS_REGION).refresh();
+              };
+            
+              /**
+               * Call an AJAX callback that lets its exception escape. APEX routes it
+               * through the app's Error Handling Function (ErrorShield) on its own and
+               * answers with the translated message as an error response.
+               */
+              var fireUnhandled = function() {
+                apex.server.process(
+                  CONFIG.AJAX_UNHANDLED,
+                  { x01: _scenario() },
+                  {
+                    success: function(pData) {
+                      logger.warning('Callback unexpectedly succeeded', pData);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                      logger.error('AJAX request failed', {status: textStatus, error: errorThrown});
+                      _showError(errorThrown || textStatus);
+                      refreshIncidents();
+                    }
+                  }
+                );
+              };
+            
+              /**
+               * Call an AJAX callback that catches its own exception and answers
+               * success: false plus a sanitized message (apex-ux.md section 2).
+               */
+              var fireHandled = function() {
+                apex.server.process(
+                  CONFIG.AJAX_HANDLED,
+                  { x01: _scenario() },
+                  {
+                    success: function(pData) {
+                      if (pData.success) {
+                        logger.warning('Callback unexpectedly succeeded', pData);
+                      } else {
+                        logger.error('Server returned error', {error: pData.message});
+                        _showError(pData.message);
+                        refreshIncidents();
+                      }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                      logger.error('AJAX request failed', {status: textStatus, error: errorThrown});
+                      _showError(errorThrown || textStatus);
+                    }
+                  }
+                );
+              };
+            
+              return {
+                  fireUnhandled: fireUnhandled
+                , fireHandled: fireHandled
+                , refreshIncidents: refreshIncidents
+              };
+            
+            })(elab, apex.jQuery);
+            ```
+    }
+
+    region channelsSR (
+        name: Step 2 · Send It Through a Channel
+        type: staticContent
+        source {
+            htmlCode: <p>The outcome follows the scenario: friendly and business errors still record nothing.</p>
+        }
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/content-block
+            templateOptions: [
+                #DEFAULT#
+                t-ContentBlock--h3
+            ]
+        }
+        advanced {
+            htmlDomId: channelsSR
+        }
+    )
+
+    region dynamicActionSR (
+        name: Dynamic Action
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">Execute Server-side Code</span></div>
+                <p>The same path through a declarative Dynamic Action. APEX shows the message in the notification area on its own.</p>
+                ```
+        }
+        layout {
+            sequence: 50
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: dynamicActionSR
+        }
+    )
+
+    region handledSR (
+        name: Callback, handled
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">success: false</span></div>
+                <p>The callback catches the exception and answers JSON. It logs and records the incident itself, then returns a sanitized message.</p>
+                ```
+        }
+        layout {
+            sequence: 60
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: handledSR
+        }
+    )
+
+    region incidentsCR (
+        name: Incidents From This Lesson
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select i.component_name                                             as component_name
+                     , i.ora_sqlcode                                                as ora_sqlcode
+                     , i.error_summary                                              as error_summary
+                     , i.occurrence_count                                           as occurrence_count
+                     , to_char(i.created_on, 'DD-MON HH24:MI:SS')                   as first_seen
+                  from ersh_shield_incidents_vw i
+                 where i.application_id = :APP_ID
+                   and i.page_id        = :APP_PAGE_ID
+                 order by i.created_on desc
+                 fetch first 10 rows only
+                ```
+        }
+        layout {
+            sequence: 70
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            icon: fa-list-alt
+        }
+        advanced {
+            htmlDomId: incidentsCR
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+        messages {
+            whenNoDataFound: No incidents from this lesson yet. Raise one of the errors above.
+        }
+
+        column COMPONENT_NAME (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Component
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ERROR_SUMMARY (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Error Summary (admin only)
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column FIRST_SEEN (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: First Seen
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column OCCURRENCE_COUNT (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Hits
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ORA_SQLCODE (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: SQLCODE
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    region introSR (
+        name: Lesson 3 · AJAX Errors
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <p>The same failures, raised without a page submit. Pick a scenario, then send it through each of
+                the three ways an APEX page talks to the server in the background.</p>
+                <p class="ersh-lab-note">Watch for: the third channel catches its own exception, so the Error
+                Handling Function never sees it. The callback has to record the incident itself.</p>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/hero
+            templateOptions: #DEFAULT#
+            icon: fa-exchange
+        }
+        advanced {
+            htmlDomId: introSR
+        }
+    )
+
+    region lessonNavSR (
+        name: Lesson Navigation
+        type: staticContent
+        layout {
+            sequence: 80
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: lessonNavSR
+        }
+    )
+
+    region scenarioSR (
+        name: Step 1 · Pick a Scenario
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            icon: fa-list-ul
+        }
+        advanced {
+            htmlDomId: scenarioSR
+        }
+    )
+
+    region unhandledSR (
+        name: Callback, unhandled
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">apex.server.process</span></div>
+                <p>The callback lets the exception escape. APEX hands it to ErrorShield by itself and sends the translated message back to the browser.</p>
+                ```
+        }
+        layout {
+            sequence: 40
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: unhandledSR
+        }
+    )
+
+    pageItem P300_SCENARIO (
+        type: selectList
+        label {
+            label: Scenario
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @elab-scenarios
+            displayExtraValues: false
+            displayNullValue: false
+        }
+        layout {
+            sequence: 10
+            region: @scenarioSR
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button AJAX_DA (
+        buttonName: AJAX_DA
+        label: Send
+        layout {
+            sequence: 10
+            region: @dynamicActionSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-paper-plane-o
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        advanced {
+            htmlDomId: AJAX_DA
+        }
+    )
+
+    button AJAX_HANDLED (
+        buttonName: AJAX_HANDLED
+        label: Send
+        layout {
+            sequence: 10
+            region: @handledSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-paper-plane-o
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        advanced {
+            htmlDomId: AJAX_HANDLED
+        }
+    )
+
+    button AJAX_UNHANDLED (
+        buttonName: AJAX_UNHANDLED
+        label: Send
+        layout {
+            sequence: 10
+            region: @unhandledSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-paper-plane-o
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        advanced {
+            htmlDomId: AJAX_UNHANDLED
+        }
+    )
+
+    button NEXT_LESSON (
+        buttonName: NEXT_LESSON
+        label: Lesson 4: Rendering and Business Errors
+        layout {
+            sequence: 20
+            region: @lessonNavSR
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconRight
+            ]
+            icon: fa-chevron-right
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 400
+            }
+        }
+        advanced {
+            htmlDomId: NEXT_LESSON
+        }
+    )
+
+    button PREVIOUS_LESSON (
+        buttonName: PREVIOUS_LESSON
+        label: Lesson 2: Table and Column Errors
+        layout {
+            sequence: 10
+            region: @lessonNavSR
+            slot: previous
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-chevron-left
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 200
+            }
+        }
+        advanced {
+            htmlDomId: PREVIOUS_LESSON
+        }
+    )
+
+    button REFRESH (
+        buttonName: REFRESH
+        label: Refresh
+        layout {
+            sequence: 10
+            region: @incidentsCR
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--small
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        advanced {
+            htmlDomId: REFRESH
+        }
+    )
+
+    dynamicAction ajax-da-click (
+        name: AJAX Dynamic Action Error
+        execution {
+            sequence: 20
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @AJAX_DA
+        }
+
+        action force-error-server-side (
+            action: executeServerSideCode
+            settings {
+                plsqlCode:
+                    ```plsql
+                    elab_errors_api.force_error(
+                        p_scenario                       => :P300_SCENARIO
+                    );
+                    ```
+                itemsToSubmit: P300_SCENARIO
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    dynamicAction ajax-handled-click (
+        name: AJAX Handled Error
+        execution {
+            sequence: 30
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @AJAX_HANDLED
+        }
+
+        action fire-handled (
+            action: executeJsCode
+            settings {
+                jsCode: elab.errorLab.fireHandled();
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    dynamicAction ajax-unhandled-click (
+        name: AJAX Unhandled Error
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @AJAX_UNHANDLED
+        }
+
+        action fire-unhandled (
+            action: executeJsCode
+            settings {
+                jsCode: elab.errorLab.fireUnhandled();
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    dynamicAction refresh-click (
+        name: Refresh Incidents
+        execution {
+            sequence: 90
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @REFRESH
+        }
+
+        action refresh-incidents (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @incidentsCR
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    process force-ajax-handled (
+        name: FORCE_AJAX_HANDLED
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                  l_ora_sqlcode   number;
+                  l_error_message varchar2(4000 char);
+                  l_reference_id  number;
+                  l_incident_id   ersh_shield_incidents.shield_incident_id%type;
+                begin
+                  elab_errors_api.force_error(
+                      p_scenario                       => apex_application.g_x01
+                  );
+                
+                  apex_json.open_object;
+                  apex_json.write('success', true);
+                  apex_json.close_object;
+                exception
+                  when others then
+                    l_ora_sqlcode   := sqlcode;
+                    l_error_message := sqlerrm;
+                
+                    if l_ora_sqlcode between -20999 and -20000 then
+                      -- Intentional business error: same treatment as ErrorShield gives it,
+                      -- show the message as written and record nothing.
+                      apex_json.open_object;
+                      apex_json.write('success', false);
+                      apex_json.write('message', regexp_replace(l_error_message, '^ORA-\d{5}: '));
+                      apex_json.close_object;
+                    else
+                      -- The Error Handling Function never sees a caught exception, so this
+                      -- callback logs and records the incident itself. Observability never
+                      -- escalates: a failure here must not hide the JSON answer.
+                      begin
+                        l_reference_id := logger.log_error(
+                            p_text                       => 'Handled AJAX error: ' || l_error_message
+                          , p_scope                      => 'error_lab.force_ajax_handled'
+                        );
+                
+                        ersh_error_handler_api.record_internal_incident(
+                            p_workspace_id               => apex_application.get_security_group_id
+                          , p_application_id             => apex_application.g_flow_id
+                          , p_page_id                    => apex_application.g_flow_step_id
+                          , p_app_user                   => apex_application.g_user
+                          , p_request                    => apex_application.g_request
+                          , p_component_type             => 'APEX_APPLICATION_PAGE_PROCESSES'
+                          , p_component_name             => 'FORCE_AJAX_HANDLED'
+                          , p_ora_sqlcode                => l_ora_sqlcode
+                          , p_error_message              => l_error_message
+                          , p_logger_log_id              => l_reference_id
+                          , o_incident_id                => l_incident_id
+                        );
+                      exception
+                        when others then
+                          null;
+                      end;
+                
+                      apex_json.open_object;
+                      apex_json.write('success', false);
+                      apex_json.write('message', 'Unable to process this request. Reference: ' || nvl(to_char(l_reference_id), 'n/a') || '.');
+                      apex_json.close_object;
+                    end if;
+                end;
+                ```
+        }
+        execution {
+            sequence: 20
+            point: ajaxCallback
+        }
+        advanced {
+            executionMappingIdentifier: 24872507162638817
+        }
+    )
+
+    process force-ajax-unhandled (
+        name: FORCE_AJAX_UNHANDLED
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                elab_errors_api.force_error(
+                    p_scenario                       => apex_application.g_x01
+                );
+                ```
+        }
+        execution {
+            sequence: 10
+            point: ajaxCallback
+        }
+        advanced {
+            executionMappingIdentifier: 24872468227638817
+        }
+    )
+
+)
+

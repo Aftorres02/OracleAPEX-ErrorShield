@@ -1,0 +1,684 @@
+page 100 (
+    name: PL/SQL Runtime Errors
+    alias: PLSQL-RUNTIME-ERRORS
+    title: PL/SQL Runtime Errors
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+
+    region divideByZeroSR (
+        name: Division by zero
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-01476</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>An average over zero rows: <code>100 / count(1)</code> for a customer with no orders.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: divideByZeroSR
+        }
+    )
+
+    region incidentsCR (
+        name: Incidents From This Lesson
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select i.component_name                                             as component_name
+                     , i.ora_sqlcode                                                as ora_sqlcode
+                     , i.error_summary                                              as error_summary
+                     , i.occurrence_count                                           as occurrence_count
+                     , to_char(i.created_on, 'DD-MON HH24:MI:SS')                   as first_seen
+                  from ersh_shield_incidents_vw i
+                 where i.application_id = :APP_ID
+                   and i.page_id        = :APP_PAGE_ID
+                 order by i.created_on desc
+                 fetch first 10 rows only
+                ```
+        }
+        layout {
+            sequence: 80
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            icon: fa-list-alt
+        }
+        advanced {
+            htmlDomId: incidentsCR
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+        messages {
+            whenNoDataFound: No incidents from this lesson yet. Raise one of the errors above.
+        }
+
+        column COMPONENT_NAME (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Component
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ERROR_SUMMARY (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Error Summary (admin only)
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column FIRST_SEEN (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: First Seen
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column OCCURRENCE_COUNT (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Hits
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ORA_SQLCODE (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: SQLCODE
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    region introSR (
+        name: Lesson 1 · PL/SQL Runtime Errors
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <p>Bugs that only show up when the code runs. None of them is something the user can fix, so
+                ErrorShield treats every one as an unexpected technical error: it logs the full detail, records an
+                incident, and shows the user a masked message with a reference number.</p>
+                <p class="ersh-lab-note">Watch for: the reference number on screen matches the incident in the report
+                at the bottom of the page.</p>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/hero
+            templateOptions: #DEFAULT#
+            icon: fa-code
+        }
+        advanced {
+            htmlDomId: introSR
+        }
+    )
+
+    region invalidDateSR (
+        name: Impossible date
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-01839</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p><code>to_date('31/02/2026')</code>: what a free-text date field lets users type.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 50
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: invalidDateSR
+        }
+    )
+
+    region invalidNumberSR (
+        name: Text converted to number
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-01722</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p><code>to_number()</code> on the customer code <code>C-1001</code>: a data type mismatch.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 40
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: invalidNumberSR
+        }
+    )
+
+    region lessonNavSR (
+        name: Lesson Navigation
+        type: staticContent
+        layout {
+            sequence: 90
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: lessonNavSR
+        }
+    )
+
+    region noDataFoundSR (
+        name: No data found
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-01403</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>A <code>select ... into</code> for a customer id that does not exist.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 60
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: noDataFoundSR
+        }
+    )
+
+    region tooManyRowsSR (
+        name: Too many rows
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-01422</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>A <code>select ... into</code> that matches every active customer.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 70
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: tooManyRowsSR
+        }
+    )
+
+    region valueErrorSR (
+        name: Variable too small
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-06502</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>A customer name fetched into a <code>varchar2(3)</code> variable.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 30
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: valueErrorSR
+        }
+    )
+
+    button DIVIDE_BY_ZERO (
+        buttonName: DIVIDE_BY_ZERO
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @divideByZeroSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: DIVIDE_BY_ZERO
+        }
+    )
+
+    button INVALID_DATE (
+        buttonName: INVALID_DATE
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @invalidDateSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: INVALID_DATE
+        }
+    )
+
+    button INVALID_NUMBER (
+        buttonName: INVALID_NUMBER
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @invalidNumberSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: INVALID_NUMBER
+        }
+    )
+
+    button NEXT_LESSON (
+        buttonName: NEXT_LESSON
+        label: Lesson 2: Table and Column Errors
+        layout {
+            sequence: 20
+            region: @lessonNavSR
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconRight
+            ]
+            icon: fa-chevron-right
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 200
+            }
+        }
+        advanced {
+            htmlDomId: NEXT_LESSON
+        }
+    )
+
+    button NO_DATA_FOUND (
+        buttonName: NO_DATA_FOUND
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @noDataFoundSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: NO_DATA_FOUND
+        }
+    )
+
+    button PREVIOUS_LESSON (
+        buttonName: PREVIOUS_LESSON
+        label: Overview
+        layout {
+            sequence: 10
+            region: @lessonNavSR
+            slot: previous
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-chevron-left
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 1
+            }
+        }
+        advanced {
+            htmlDomId: PREVIOUS_LESSON
+        }
+    )
+
+    button REFRESH (
+        buttonName: REFRESH
+        label: Refresh
+        layout {
+            sequence: 10
+            region: @incidentsCR
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--small
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        advanced {
+            htmlDomId: REFRESH
+        }
+    )
+
+    button TOO_MANY_ROWS (
+        buttonName: TOO_MANY_ROWS
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @tooManyRowsSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: TOO_MANY_ROWS
+        }
+    )
+
+    button VALUE_ERROR (
+        buttonName: VALUE_ERROR
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @valueErrorSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: VALUE_ERROR
+        }
+    )
+
+    dynamicAction refresh-click (
+        name: Refresh Incidents
+        execution {
+            sequence: 90
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @REFRESH
+        }
+
+        action refresh-incidents (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @incidentsCR
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    process divide-by-zero (
+        name: Division by zero (ORA-01476)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_division_by_zero;
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 24865229981638747
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'DIVIDE_BY_ZERO'
+        }
+    )
+
+    process invalid-date (
+        name: Impossible date (ORA-01839)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_invalid_date;
+        }
+        execution {
+            sequence: 40
+        }
+        advanced {
+            executionMappingIdentifier: 24865500085638747
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'INVALID_DATE'
+        }
+    )
+
+    process invalid-number (
+        name: Text converted to number (ORA-01722)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_invalid_number;
+        }
+        execution {
+            sequence: 30
+        }
+        advanced {
+            executionMappingIdentifier: 24865418720638747
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'INVALID_NUMBER'
+        }
+    )
+
+    process no-data-found (
+        name: No data found (ORA-01403)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_no_data_found;
+        }
+        execution {
+            sequence: 50
+        }
+        advanced {
+            executionMappingIdentifier: 24865664709638748
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'NO_DATA_FOUND'
+        }
+    )
+
+    process too-many-rows (
+        name: Too many rows (ORA-01422)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_too_many_rows;
+        }
+        execution {
+            sequence: 60
+        }
+        advanced {
+            executionMappingIdentifier: 24865750043638748
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'TOO_MANY_ROWS'
+        }
+    )
+
+    process value-error (
+        name: Variable too small (ORA-06502)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_value_error;
+        }
+        execution {
+            sequence: 20
+        }
+        advanced {
+            executionMappingIdentifier: 24865333365638747
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'VALUE_ERROR'
+        }
+    )
+
+)
+
