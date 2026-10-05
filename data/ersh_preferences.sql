@@ -2,8 +2,7 @@
 -- ERSH preferences (stored in logger_prefs with pref_type = 'ERSH')
 -- =============================================================================
 -- Re-runnable and NON-DESTRUCTIVE:
---   * Fresh install          -> seeds ERSH_VERSION, SUPPORT_EMAIL and
---                               REFERENCE_DISPLAY_MIN_DIGITS with their defaults.
+--   * Fresh install          -> seeds ERSH preferences with their defaults.
 --   * Pref already present   -> existing pref_value is preserved (admins can
 --                               change these after install without the release
 --                               reverting their changes).
@@ -40,6 +39,9 @@ using (
   -- set it to a function(p_message varchar2) return varchar2 you implement:
   --   logger.set_pref('ERSH', 'SCRUB_FUNCTION', 'my_scrub_function');
   -- See docs/OBSERVABILITY.md for the contract and an example.
+  -- Editable base message. {SUPPORT_EMAIL} is replaced at runtime.
+  -- Keep the template within LOGGER_PREFS.PREF_VALUE's 255-byte limit.
+  select 'ERSH'              , 'MASKED_ERROR_MESSAGE'                      , 'Unable to process this action. If the issue persists, please contact {SUPPORT_EMAIL}.' from dual union all
   -- ENVIRONMENT is just the label of the current database.
   -- Admins are free to use any name they want (DEV, TEST, QA, STAGE, PROD,
   -- HOTFIX, ...). It is matched against MASK_IN_ENVIRONMENTS to decide
