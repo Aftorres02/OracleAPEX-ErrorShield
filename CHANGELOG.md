@@ -38,10 +38,10 @@ ahead of the first public release, `0.9.0`.
   per branch of the decision tree, seeded via
   `demos/demo_errorshield_app_seed.sql` (`ERSH-033`).
 - Error Lab demo app (10402), installed in a consumer schema that reaches
-  ErrorShield only through synonyms: one page that forces PL/SQL runtime,
-  data type, column size, constraint, AJAX, rendering and business errors
-  on purpose, each landing in ErrorShield as an incident or a friendly
-  message. Installed via `demos/error_lab/install_error_lab.sql`
+  ErrorShield only through synonyms: four lesson pages (PL/SQL runtime,
+  table and column, AJAX, rendering and business) that force each kind of
+  error on purpose, each landing in ErrorShield as an incident or a
+  friendly message. Installed via `demos/error_lab/install_error_lab.sql`
   (`ERSH-049`).
 - `docs/UPGRADE.md`: the split between idempotent structural DDL and
   numbered data migrations under `release/migrations/`, gated by the

@@ -138,12 +138,18 @@ up on the Incidents page, component "Automations").
 
 Everything above lives in the owner schema. The Error Lab (app 10402) shows
 the other half: a separate application schema that reaches ErrorShield
-only through synonyms, the way a real consumer app does. Every button on
-its single page fails on purpose with one specific Oracle error (division
-by zero, invalid number, value too large for a column, constraint
-violations, AJAX callbacks, a region that fails while rendering, a business
-rule), and each one lands in the owner's Incidents page (100) or is shown
-as a friendly message, depending on how ErrorShield classifies it.
+only through synonyms, the way a real consumer app does. It is organized
+as four short lessons, one page each, reachable from the side menu:
+
+| Page | Lesson | What it forces |
+|---|---|---|
+| 100 | PL/SQL runtime errors | division by zero, value and conversion errors, bad dates, select-into lookups |
+| 200 | Table and column errors | values too large for a column, required columns, registered vs. unregistered constraints |
+| 300 | AJAX errors | any scenario sent through an unhandled callback, a Dynamic Action, or a handled JSON callback |
+| 400 | Rendering and business errors | a region that fails while the page draws, and a business rule via `raise_custom_error` |
+
+Every error lands in the owner's Incidents page (100) or is shown as a
+friendly message, depending on how ErrorShield classifies it.
 
 Onboard the consumer first (see
 [`INSTALL.md`](INSTALL.md#onboarding-a-consumer-schema)), then, connected
@@ -156,8 +162,10 @@ sql <connection-as-consumer-schema> @demos/error_lab/install_error_lab.sql <CONS
 It creates two small tables (`elab_customers`, `elab_orders`), the
 `elab_errors_api` package, seed rows, three ErrorShield registrations (two
 friendly constraint messages and one business error code), and imports app
-10402. The page's legend explains which buttons record an incident (red
-outline) and which only show a friendly message (green outline).
+10402. Each scenario is a card whose badge says what to expect:
+**Incident** (logged, recorded, masked) or **Friendly message** (shown as
+written, nothing recorded). Every lesson page lists the incidents it has
+raised so far, and the Overview page lists them across all lessons.
 
 > **Unlike the Automation Lab, this one belongs in a consumer workspace.**
 > Errors raised there still land in the owner's tables (definer's rights),

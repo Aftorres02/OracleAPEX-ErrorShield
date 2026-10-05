@@ -1,0 +1,798 @@
+page 200 (
+    name: Table and Column Errors
+    alias: TABLE-AND-COLUMN-ERRORS
+    title: Table and Column Errors
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+
+    region checkViolationSR (
+        name: Quantity of zero
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-02290</span><span class="ersh-lab-badge ersh-lab-badge-friendly">Friendly message</span></div>
+                <p><code>ck_elab_orders_quantity</code> has a message in <code>ersh_constraint_lookup</code>.</p>
+                <p class="ersh-lab-note">ErrorShield shows the registered message. Nothing is recorded.</p>
+                ```
+        }
+        layout {
+            sequence: 100
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: checkViolationSR
+        }
+    )
+
+    region childFoundSR (
+        name: Delete a customer with orders
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-02292</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>The same unregistered foreign key, hit from the parent side.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 70
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: childFoundSR
+        }
+    )
+
+    region incidentsCR (
+        name: Incidents From This Lesson
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select i.component_name                                             as component_name
+                     , i.ora_sqlcode                                                as ora_sqlcode
+                     , i.error_summary                                              as error_summary
+                     , i.occurrence_count                                           as occurrence_count
+                     , to_char(i.created_on, 'DD-MON HH24:MI:SS')                   as first_seen
+                  from ersh_shield_incidents_vw i
+                 where i.application_id = :APP_ID
+                   and i.page_id        = :APP_PAGE_ID
+                 order by i.created_on desc
+                 fetch first 10 rows only
+                ```
+        }
+        layout {
+            sequence: 110
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            icon: fa-list-alt
+        }
+        advanced {
+            htmlDomId: incidentsCR
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+        messages {
+            whenNoDataFound: No incidents from this lesson yet. Raise one of the errors above.
+        }
+
+        column COMPONENT_NAME (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Component
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ERROR_SUMMARY (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Error Summary (admin only)
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column FIRST_SEEN (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: First Seen
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column OCCURRENCE_COUNT (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Hits
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ORA_SQLCODE (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: SQLCODE
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    region introSR (
+        name: Lesson 2 · Table and Column Errors
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <p>The table itself refuses the data: sizes, data types, required columns and constraints. Whether
+                the user gets a friendly message depends on one thing: is the constraint registered in
+                <code>ersh_constraint_lookup</code>?</p>
+                <p class="ersh-lab-note">Watch for: the same kind of error (a constraint) ends up masked and recorded,
+                or friendly and unrecorded, only because of that registration.</p>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/hero
+            templateOptions: #DEFAULT#
+            icon: fa-table
+        }
+        advanced {
+            htmlDomId: introSR
+        }
+    )
+
+    region lessonNavSR (
+        name: Lesson Navigation
+        type: staticContent
+        layout {
+            sequence: 120
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: lessonNavSR
+        }
+    )
+
+    region notNullSR (
+        name: Required column left empty
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-01400</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>A customer inserted without its mandatory name.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 50
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: notNullSR
+        }
+    )
+
+    region numericOverflowSR (
+        name: Number too large for the column
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-01438</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>Quantity 1,000,000 into <code>quantity number(5)</code>.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 40
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: numericOverflowSR
+        }
+    )
+
+    region parentNotFoundSR (
+        name: Order for a missing customer
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-02291</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>Foreign key <code>fk_elab_orders_customers</code>, deliberately not registered.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 60
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: parentNotFoundSR
+        }
+    )
+
+    region registeredSR (
+        name: Registered: Friendly Message
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <p>Registered with <code>ersh_error_handler_api.merge_ersh_constraint_lookup</code> by the lab's seed
+                script. The user can fix these, so they are shown, not recorded.</p>
+                ```
+        }
+        layout {
+            sequence: 80
+            slot: body
+        }
+        appearance {
+            template: @/content-block
+            templateOptions: [
+                #DEFAULT#
+                t-ContentBlock--h3
+            ]
+        }
+        advanced {
+            htmlDomId: registeredSR
+        }
+    )
+
+    region uniqueViolationSR (
+        name: Duplicate customer code
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-00001</span><span class="ersh-lab-badge ersh-lab-badge-friendly">Friendly message</span></div>
+                <p><code>uk_elab_customers_code</code> has a message in <code>ersh_constraint_lookup</code>.</p>
+                <p class="ersh-lab-note">ErrorShield shows the registered message. Nothing is recorded.</p>
+                ```
+        }
+        layout {
+            sequence: 90
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: uniqueViolationSR
+        }
+    )
+
+    region unregisteredSR (
+        name: Not Registered: Masked and Recorded
+        type: staticContent
+        source {
+            htmlCode: <p>Nothing tells ErrorShield these are expected, so they take the unexpected-error path.</p>
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/content-block
+            templateOptions: [
+                #DEFAULT#
+                t-ContentBlock--h3
+            ]
+        }
+        advanced {
+            htmlDomId: unregisteredSR
+        }
+    )
+
+    region valueTooLargeSR (
+        name: Text too long for the column
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-12899</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>A 47-character name into <code>customer_name varchar2(30 char)</code>.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 30
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: valueTooLargeSR
+        }
+    )
+
+    button CHECK_VIOLATION (
+        buttonName: CHECK_VIOLATION
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @checkViolationSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--success
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: CHECK_VIOLATION
+        }
+    )
+
+    button CHILD_FOUND (
+        buttonName: CHILD_FOUND
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @childFoundSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: CHILD_FOUND
+        }
+    )
+
+    button NEXT_LESSON (
+        buttonName: NEXT_LESSON
+        label: Lesson 3: AJAX Errors
+        layout {
+            sequence: 20
+            region: @lessonNavSR
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconRight
+            ]
+            icon: fa-chevron-right
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 300
+            }
+        }
+        advanced {
+            htmlDomId: NEXT_LESSON
+        }
+    )
+
+    button NOT_NULL (
+        buttonName: NOT_NULL
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @notNullSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: NOT_NULL
+        }
+    )
+
+    button NUMERIC_OVERFLOW (
+        buttonName: NUMERIC_OVERFLOW
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @numericOverflowSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: NUMERIC_OVERFLOW
+        }
+    )
+
+    button PARENT_NOT_FOUND (
+        buttonName: PARENT_NOT_FOUND
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @parentNotFoundSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: PARENT_NOT_FOUND
+        }
+    )
+
+    button PREVIOUS_LESSON (
+        buttonName: PREVIOUS_LESSON
+        label: Lesson 1: PL/SQL Runtime Errors
+        layout {
+            sequence: 10
+            region: @lessonNavSR
+            slot: previous
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-chevron-left
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 100
+            }
+        }
+        advanced {
+            htmlDomId: PREVIOUS_LESSON
+        }
+    )
+
+    button REFRESH (
+        buttonName: REFRESH
+        label: Refresh
+        layout {
+            sequence: 10
+            region: @incidentsCR
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--small
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        advanced {
+            htmlDomId: REFRESH
+        }
+    )
+
+    button UNIQUE_VIOLATION (
+        buttonName: UNIQUE_VIOLATION
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @uniqueViolationSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--success
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: UNIQUE_VIOLATION
+        }
+    )
+
+    button VALUE_TOO_LARGE (
+        buttonName: VALUE_TOO_LARGE
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @valueTooLargeSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: VALUE_TOO_LARGE
+        }
+    )
+
+    dynamicAction refresh-click (
+        name: Refresh Incidents
+        execution {
+            sequence: 90
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @REFRESH
+        }
+
+        action refresh-incidents (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @incidentsCR
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    process check-violation (
+        name: Quantity of zero (ORA-02290)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_check_violation;
+        }
+        execution {
+            sequence: 70
+        }
+        advanced {
+            executionMappingIdentifier: 24869491421638808
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'CHECK_VIOLATION'
+        }
+    )
+
+    process child-found (
+        name: Delete a customer with orders (ORA-02292)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_child_found;
+        }
+        execution {
+            sequence: 50
+        }
+        advanced {
+            executionMappingIdentifier: 24869210077638807
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'CHILD_FOUND'
+        }
+    )
+
+    process not-null (
+        name: Required column left empty (ORA-01400)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_not_null;
+        }
+        execution {
+            sequence: 30
+        }
+        advanced {
+            executionMappingIdentifier: 24869058473638807
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'NOT_NULL'
+        }
+    )
+
+    process numeric-overflow (
+        name: Number too large for the column (ORA-01438)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_numeric_overflow;
+        }
+        execution {
+            sequence: 20
+        }
+        advanced {
+            executionMappingIdentifier: 24868973556638807
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'NUMERIC_OVERFLOW'
+        }
+    )
+
+    process parent-not-found (
+        name: Order for a missing customer (ORA-02291)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_parent_not_found;
+        }
+        execution {
+            sequence: 40
+        }
+        advanced {
+            executionMappingIdentifier: 24869103377638807
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'PARENT_NOT_FOUND'
+        }
+    )
+
+    process unique-violation (
+        name: Duplicate customer code (ORA-00001)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_unique_violation;
+        }
+        execution {
+            sequence: 60
+        }
+        advanced {
+            executionMappingIdentifier: 24869347851638808
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'UNIQUE_VIOLATION'
+        }
+    )
+
+    process value-too-large (
+        name: Text too long for the column (ORA-12899)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_value_too_large;
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 24868879162638807
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'VALUE_TOO_LARGE'
+        }
+    )
+
+)
+

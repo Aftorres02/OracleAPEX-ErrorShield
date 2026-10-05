@@ -1,0 +1,441 @@
+page 400 (
+    name: Rendering and Business Errors
+    alias: RENDERING-AND-BUSINESS-ERRORS
+    title: Rendering and Business Errors
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+
+    region brokenDC (
+        name: Broken Region
+        type: dynamicContent
+        source {
+            plsqlFunctionBody:
+                ```plsql
+                declare
+                  l_count pls_integer;
+                begin
+                  -- The table name lives in a string so the app compiles; the parse
+                  -- error only happens when APEX renders this region, like a report
+                  -- whose table was dropped after deployment. (A literal query on a
+                  -- missing table makes apex validate/import hang ~16 minutes.)
+                  execute immediate 'select count(1) from elab_this_table_does_not_exist'
+                     into l_count;
+                
+                  return to_char(l_count);
+                end;
+                ```
+        }
+        layout {
+            sequence: 40
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: brokenDC
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'FORCE_INTERNAL'
+        }
+    )
+
+    region businessSR (
+        name: Order over the credit limit
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-20000</span><span class="ersh-lab-badge ersh-lab-badge-friendly">Friendly message</span></div>
+                <p><code>ersh_error_handler_api.raise_custom_error</code> with the registered code <code>ELAB_CREDIT_LIMIT_EXCEEDED</code>.</p>
+                <p class="ersh-lab-note">ErrorShield shows the message as written. Nothing is recorded.</p>
+                ```
+        }
+        layout {
+            sequence: 30
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: businessSR
+        }
+    )
+
+    region incidentsCR (
+        name: Incidents From This Lesson
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select i.component_name                                             as component_name
+                     , i.ora_sqlcode                                                as ora_sqlcode
+                     , i.error_summary                                              as error_summary
+                     , i.occurrence_count                                           as occurrence_count
+                     , to_char(i.created_on, 'DD-MON HH24:MI:SS')                   as first_seen
+                  from ersh_shield_incidents_vw i
+                 where i.application_id = :APP_ID
+                   and i.page_id        = :APP_PAGE_ID
+                 order by i.created_on desc
+                 fetch first 10 rows only
+                ```
+        }
+        layout {
+            sequence: 50
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            icon: fa-list-alt
+        }
+        advanced {
+            htmlDomId: incidentsCR
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+        messages {
+            whenNoDataFound: No incidents from this lesson yet. Raise one of the errors above.
+        }
+
+        column COMPONENT_NAME (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Component
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ERROR_SUMMARY (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Error Summary (admin only)
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column FIRST_SEEN (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: First Seen
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column OCCURRENCE_COUNT (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Hits
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ORA_SQLCODE (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: SQLCODE
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    region introSR (
+        name: Lesson 4 · Rendering and Business Errors
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <p>Errors raised while APEX draws the page, and errors your own code raises on purpose. The first
+                is a bug nobody should see; the second is a business rule the user needs to read.</p>
+                <p class="ersh-lab-note">Watch for: only the first one appears in the incidents report.</p>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/hero
+            templateOptions: #DEFAULT#
+            icon: fa-bug
+        }
+        advanced {
+            htmlDomId: introSR
+        }
+    )
+
+    region lessonNavSR (
+        name: Lesson Navigation
+        type: staticContent
+        layout {
+            sequence: 60
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            htmlDomId: lessonNavSR
+        }
+    )
+
+    region renderingSR (
+        name: Region fails while rendering
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="ersh-lab-badges"><span class="ersh-lab-badge ersh-lab-badge-code">ORA-00942</span><span class="ersh-lab-badge ersh-lab-badge-incident">Incident</span></div>
+                <p>Reloads this page with a region whose query targets a table that no longer exists, like a report after a bad deployment.</p>
+                <p class="ersh-lab-note">ErrorShield logs it, records an incident and masks the message.</p>
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+            cssClasses: ersh-lab-card
+        }
+        advanced {
+            htmlDomId: renderingSR
+        }
+    )
+
+    button BUSINESS_ERROR (
+        buttonName: BUSINESS_ERROR
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @businessSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--success
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        advanced {
+            htmlDomId: BUSINESS_ERROR
+        }
+    )
+
+    button FORCE_INTERNAL (
+        buttonName: FORCE_INTERNAL
+        label: Raise error
+        layout {
+            sequence: 10
+            region: @renderingSR
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--iconLeft
+            ]
+            icon: fa-bolt
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 400
+                request: FORCE_INTERNAL
+            }
+        }
+        advanced {
+            htmlDomId: FORCE_INTERNAL
+        }
+    )
+
+    button NEXT_LESSON (
+        buttonName: NEXT_LESSON
+        label: Back to Overview
+        layout {
+            sequence: 20
+            region: @lessonNavSR
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconRight
+            ]
+            icon: fa-chevron-right
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 1
+            }
+        }
+        advanced {
+            htmlDomId: NEXT_LESSON
+        }
+    )
+
+    button PREVIOUS_LESSON (
+        buttonName: PREVIOUS_LESSON
+        label: Lesson 3: AJAX Errors
+        layout {
+            sequence: 10
+            region: @lessonNavSR
+            slot: previous
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-chevron-left
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 300
+            }
+        }
+        advanced {
+            htmlDomId: PREVIOUS_LESSON
+        }
+    )
+
+    button REFRESH (
+        buttonName: REFRESH
+        label: Refresh
+        layout {
+            sequence: 10
+            region: @incidentsCR
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--small
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        advanced {
+            htmlDomId: REFRESH
+        }
+    )
+
+    dynamicAction refresh-click (
+        name: Refresh Incidents
+        execution {
+            sequence: 90
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @REFRESH
+        }
+
+        action refresh-incidents (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @incidentsCR
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    process business-error (
+        name: Order over the credit limit (ORA-20000)
+        type: executeCode
+        source {
+            plsqlCode: elab_errors_api.force_business_error;
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 24874507567638839
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'BUSINESS_ERROR'
+        }
+    )
+
+)
+
