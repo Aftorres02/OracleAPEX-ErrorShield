@@ -134,6 +134,37 @@ up on the Incidents page, component "Automations").
 > night on purpose. Remove the whole lab with
 > `@demos/automation_lab/uninstall_automation_lab.sql ERSH_DEMO_WS`.
 
+## Step 6 — Install the Error Lab in a consumer schema (optional)
+
+Everything above lives in the owner schema. The Error Lab (app 10402) shows
+the other half: a separate application schema that reaches ErrorShield
+only through synonyms, the way a real consumer app does. Every button on
+its single page fails on purpose with one specific Oracle error (division
+by zero, invalid number, value too large for a column, constraint
+violations, AJAX callbacks, a region that fails while rendering, a business
+rule), and each one lands in the owner's Incidents page (100) or is shown
+as a friendly message, depending on how ErrorShield classifies it.
+
+Onboard the consumer first (see
+[`INSTALL.md`](INSTALL.md#onboarding-a-consumer-schema)), then, connected
+as the consumer schema, pass the consumer's own APEX workspace:
+
+```bash
+sql <connection-as-consumer-schema> @demos/error_lab/install_error_lab.sql <CONSUMER_WORKSPACE>
+```
+
+It creates two small tables (`elab_customers`, `elab_orders`), the
+`elab_errors_api` package, seed rows, three ErrorShield registrations (two
+friendly constraint messages and one business error code), and imports app
+10402. The page's legend explains which buttons record an incident (red
+outline) and which only show a friendly message (green outline).
+
+> **Unlike the Automation Lab, this one belongs in a consumer workspace.**
+> Errors raised there still land in the owner's tables (definer's rights),
+> which is exactly what the lab demonstrates. Remove it with
+> `@demos/error_lab/uninstall_error_lab.sql <CONSUMER_WORKSPACE>`; the
+> incidents it already recorded stay in the owner schema as history.
+
 ---
 
 ## What this does not cover

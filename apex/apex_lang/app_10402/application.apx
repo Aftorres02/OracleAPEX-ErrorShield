@@ -1,0 +1,66 @@
+app ERROR-LAB (
+    name: ErrorShield Error Lab
+    logo {
+        type: text
+        text: ErrorShield Error Lab
+    }
+    navigation {
+        homeUrl: {
+            page: 1
+        }
+        loginUrl: {
+            page: LOGIN
+        }
+    }
+    navigationBar {
+        list: @navigation-bar
+        listTemplate: @/navigation-bar
+        templateOptions: #DEFAULT#
+    }
+    userInterface {
+        currentTheme: @universal-theme
+        globalPage: 0
+        addBuiltWithApexToFooter: false
+    }
+    appFormatMasks {
+        date: DS
+        timestamp: DS
+        timestampTimeZone: DS
+    }
+    authentication {
+        scheme: @application-express-accounts
+    }
+    security {
+        runtimeApiUsage: modifyThisApp
+    }
+    sessionStateProtection {
+        checksumSalt: 640C8BAB356501A21C3727A9CF46E87552BD10912CD590A6A643899D9C227384
+    }
+    sessionManagement {
+        sessionStateCommits: immediate
+    }
+    globalization {
+        documentDirection: leftToRight
+    }
+    rowSearch {
+        tokenize: false
+    }
+    reportPrinting {
+        type: useInstanceSettings
+    }
+    errorHandling {
+        errorHandlingFunctionName: ersh_error_handler_api.apex_error_handling
+    }
+    runtime {
+        allowFeedback: true
+        accessibleReadOnlyItems: false
+    }
+
+    substitution APP_NAME (
+        value {
+            staticValue: ErrorShield Error Lab
+        }
+    )
+
+)
+
