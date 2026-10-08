@@ -28,10 +28,28 @@ page 110 (
             slot: subRegions
         }
         appearance {
-            template: @/standard
+            template: @/collapsible
             templateOptions: [
                 #DEFAULT#
+                js-useLocalStorage
+                is-collapsed
                 t-Region--scrollBody
+            ]
+        }
+    )
+
+    region body (
+        name: "{body}"
+        type: staticContent
+        layout {
+            sequence: 15
+            slot: contentBody
+        }
+        appearance {
+            template: @/tabs-container
+            templateOptions: [
+                #DEFAULT#
+                t-TabsRegion-mod--simple
             ]
         }
     )
@@ -73,13 +91,14 @@ page 110 (
         }
         layout {
             sequence: 20
-            parentRegion: @review-incident
-            slot: subRegions
+            parentRegion: @body
+            slot: tabs
         }
         appearance {
             template: @/standard
             templateOptions: [
                 #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
                 t-Region--scrollBody
             ]
         }
@@ -172,17 +191,16 @@ page 110 (
         }
         layout {
             sequence: 10
-            slot: contentBody
+            parentRegion: @body
+            slot: tabs
         }
         appearance {
             template: @/standard
             templateOptions: [
                 #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
                 t-Region--scrollBody
             ]
-        }
-        advanced {
-            regionDisplaySelector: true
         }
     )
 
@@ -195,6 +213,7 @@ page 110 (
         layout {
             sequence: 5
             slot: contentBody
+            column: 11
         }
         appearance {
             template: @/blank-with-attributes
@@ -283,11 +302,10 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 100
+            sequence: 110
             region: @review-incident
             slot: regionBody
             alignment: left
-            startNewRow: false
         }
         appearance {
             template: @/optional-floating
@@ -307,10 +325,11 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 90
+            sequence: 80
             region: @review-incident
             slot: regionBody
             alignment: left
+            startNewRow: false
         }
         appearance {
             template: @/optional-floating
@@ -371,20 +390,11 @@ page 110 (
     )
 
     pageItem P110_ERROR_FINGERPRINT (
-        type: displayOnly
-        label {
-            label: Error Fingerprint
-            alignment: left
-        }
+        type: hidden
         layout {
-            sequence: 130
+            sequence: 140
             region: @review-incident
             slot: regionBody
-            alignment: left
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
         }
         source {
             formRegion: @review-incident
@@ -400,7 +410,7 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 120
+            sequence: 130
             region: @review-incident
             slot: regionBody
             alignment: left
@@ -493,11 +503,13 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 70
+            sequence: 60
             region: @review-incident
             slot: regionBody
             alignment: left
             startNewRow: false
+            column: 11
+            columnSpan: 2
         }
         appearance {
             template: @/optional-floating
@@ -517,11 +529,13 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 110
+            sequence: 90
             region: @review-incident
             slot: regionBody
             alignment: left
             startNewRow: false
+            column: 11
+            columnSpan: 2
         }
         appearance {
             template: @/optional-floating
@@ -565,7 +579,7 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 80
+            sequence: 100
             region: @review-incident
             slot: regionBody
             alignment: left
@@ -715,7 +729,7 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 60
+            sequence: 70
             region: @review-incident
             slot: regionBody
             alignment: left
