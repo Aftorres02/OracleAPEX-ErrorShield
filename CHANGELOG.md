@@ -43,6 +43,14 @@ ahead of the first public release, `0.9.0`.
   error on purpose, each landing in ErrorShield as an incident or a
   friendly message. Installed via `demos/error_lab/install_error_lab.sql`
   (`ERSH-049`).
+- Reference code to Logger navigation in the admin app (10400). On page
+  110 each occurrence's reference code links to its log on page 410. Page
+  410 now lists every occurrence of the same incident, with a View Incident
+  button back to page 110, plus the related logs of the same request (the
+  business package's own START/params/log_error rows). New view
+  `ersh_related_logs_vw`; `ersh_incident_occurrences_vw` gains
+  `client_identifier` and `log_status` (Logged / Purged / Not logged). New
+  utPLSQL suite `ut_ersh_related_logs` (`ERSH-051`).
 - `docs/UPGRADE.md`: the split between idempotent structural DDL and
   numbered data migrations under `release/migrations/`, gated by the
   `ERSH_VERSION` preference (`ERSH-020`).

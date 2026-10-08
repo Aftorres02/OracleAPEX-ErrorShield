@@ -21,6 +21,8 @@ prompt *** Compiling utPLSQL test packages ***
 @ut_ersh_core_bugs.pkb
 @ut_ersh_observability.pks
 @ut_ersh_observability.pkb
+@ut_ersh_related_logs.pks
+@ut_ersh_related_logs.pkb
 
 prompt *** Running ErrorShield utPLSQL suite ***
 set serveroutput on

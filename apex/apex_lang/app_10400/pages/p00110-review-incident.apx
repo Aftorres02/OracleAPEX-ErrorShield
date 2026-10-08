@@ -63,6 +63,8 @@ page 110 (
                 select o.app_user          as app_user
                      , o.reference_display as reference_display
                      , o.occurred_on       as occurred_on
+                     , o.logger_log_id     as logger_log_id
+                     , o.log_status        as log_status
                   from ersh_incident_occurrences_vw o
                  where o.shield_incident_id = :P110_SHIELD_INCIDENT_ID
                  order by o.occurred_on desc
@@ -105,6 +107,26 @@ page 110 (
             }
         )
 
+        column LOGGER_LOG_ID (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 40
+            }
+        )
+
+        column LOG_STATUS (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Log
+            }
+            layout {
+                sequence: 50
+            }
+        )
+
         column OCCURRED_ON (
             reportColumnQueryId: 3
             derivedColumn: N
@@ -119,11 +141,23 @@ page 110 (
         column REFERENCE_DISPLAY (
             reportColumnQueryId: 2
             derivedColumn: N
+            type: link
             heading {
-                heading: Reference Display
+                heading: Reference
             }
             layout {
                 sequence: 20
+            }
+            link {
+                target: {
+                    page: 410
+                    items: {
+                        P410_ID: #LOGGER_LOG_ID#
+                    }
+                    clearCache: 410
+                }
+                linkText: #REFERENCE_DISPLAY#
+                linkAttributes: target="_top" title="Open the Logger log for this reference"
             }
         )
 

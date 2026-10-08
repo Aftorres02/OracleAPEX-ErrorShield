@@ -19,7 +19,7 @@ whenever sqlerror exit sql.sqlcode rollback
 begin
 wwv_flow_imp.import_begin (
  p_version_yyyy_mm_dd=>'2026.03.30'
-,p_release=>'26.1.4'
+,p_release=>'26.1.5'
 ,p_default_workspace_id=>15633453762491019
 ,p_default_application_id=>10400
 ,p_default_id_offset=>0
@@ -33,16 +33,16 @@ prompt APPLICATION 10400 - Error Shield
 -- Application Export:
 --   Application:     10400
 --   Name:            Error Shield
---   Date and Time:   04:02 Friday September 25, 2026
+--   Date and Time:   17:29 Monday October 5, 2026
 --   Exported By:     LOGGER_USER
 --   Flashback:       0
 --   Export Type:     Application Export
 --     Pages:                     20
---       Items:                   56
+--       Items:                   57
 --       Validations:              1
---       Processes:               17
---       Regions:                 47
---       Buttons:                 20
+--       Processes:               18
+--       Regions:                 49
+--       Buttons:                 21
 --       Dynamic Actions:          1
 --     Shared Components:
 --       Logic:
@@ -63,7 +63,7 @@ prompt APPLICATION 10400 - Error Shield
 --       Reports:
 --       E-Mail:
 --     Supporting Objects:  Included
---   Version:         26.1.4
+--   Version:         26.1.5
 --   Instance ID:     9052336394712143
 --
 
@@ -118,7 +118,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Error Shield'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
-,p_files_version=>2461309040045
+,p_files_version=>2461319172847
 ,p_print_server_type=>'INSTANCE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -884,7 +884,7 @@ wwv_flow_imp_shared.create_theme(
 ,p_default_required_label=>1610598484065263269
 ,p_default_navbar_list_template=>2849019392706229583
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_theme_file_prefix(42),'#APEX_FILES#themes/theme_42/26.1/')
-,p_files_version=>2461309040045
+,p_files_version=>2461319172847
 ,p_icon_library=>'FONTAPEX'
 ,p_javascript_file_urls=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '#APEX_FILES#libraries/apex/#MIN_DIRECTORY#widget.stickyWidget#MIN#.js?v=#APEX_VERSION#',
@@ -1758,7 +1758,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(21037783704186893)
+ p_id=>wwv_flow_imp.id(24888501070270829)
 ,p_report_id=>wwv_flow_imp.id(19836682997484688)
 ,p_static_id=>'pending-filter'
 ,p_condition_type=>'FILTER'
@@ -1783,7 +1783,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(21037865778186909)
+ p_id=>wwv_flow_imp.id(24888682617270843)
 ,p_report_id=>wwv_flow_imp.id(19836952520484707)
 ,p_static_id=>'regressions-filter'
 ,p_condition_type=>'FILTER'
@@ -1808,7 +1808,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(21037996388186911)
+ p_id=>wwv_flow_imp.id(24888765331270844)
 ,p_report_id=>wwv_flow_imp.id(19837162877484801)
 ,p_static_id=>'resolved-filter'
 ,p_condition_type=>'FILTER'
@@ -1924,7 +1924,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_column=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(21038052161186917)
+ p_id=>wwv_flow_imp.id(24888840920270851)
 ,p_branch_name=>'Go to Found Incident'
 ,p_branch_action=>'f?p=&APP_ID.:110:&SESSION.::&DEBUG.::P110_SHIELD_INCIDENT_ID:&P100_FOUND_INCIDENT_ID.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
@@ -2076,6 +2076,8 @@ wwv_flow_imp_page.create_report_region(
 'select o.app_user          as app_user',
 '     , o.reference_display as reference_display',
 '     , o.occurred_on       as occurred_on',
+'     , o.logger_log_id     as logger_log_id',
+'     , o.log_status        as log_status',
 '  from ersh_incident_occurrences_vw o',
 ' where o.shield_incident_id = :P110_SHIELD_INCIDENT_ID',
 ' order by o.occurred_on desc'))
@@ -2103,6 +2105,25 @@ wwv_flow_imp_page.create_report_columns(
 ,p_include_in_export=>'Y'
 );
 wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24889089908270853)
+,p_query_column_id=>4
+,p_column_alias=>'LOGGER_LOG_ID'
+,p_column_display_sequence=>40
+,p_hidden_column=>'Y'
+,p_derived_column=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24889116665270853)
+,p_query_column_id=>5
+,p_column_alias=>'LOG_STATUS'
+,p_column_display_sequence=>50
+,p_column_heading=>'Log'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
  p_id=>wwv_flow_imp.id(17641978509968064)
 ,p_query_column_id=>3
 ,p_column_alias=>'OCCURRED_ON'
@@ -2118,7 +2139,10 @@ wwv_flow_imp_page.create_report_columns(
 ,p_query_column_id=>2
 ,p_column_alias=>'REFERENCE_DISPLAY'
 ,p_column_display_sequence=>20
-,p_column_heading=>'Reference Display'
+,p_column_heading=>'Reference'
+,p_column_link=>'f?p=&APP_ID.:410:&SESSION.::&DEBUG.:410:P410_ID:#LOGGER_LOG_ID#'
+,p_column_linktext=>'#REFERENCE_DISPLAY#'
+,p_column_link_attr=>'target="_top" title="Open the Logger log for this reference"'
 ,p_heading_alignment=>'LEFT'
 ,p_disable_sort_column=>'N'
 ,p_derived_column=>'N'
@@ -3479,6 +3503,111 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_source_type=>'NATIVE_BREADCRUMB'
 ,p_menu_template_id=>4073839682315169711
 );
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(24889634425270914)
+,p_name=>'Incident Occurrences'
+,p_static_id=>'incident-occurrences'
+,p_region_name=>'incidentOccurrencesCR'
+,p_template=>4073835273271169698
+,p_display_sequence=>20
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select o.logger_log_id     as logger_log_id',
+'     , o.reference_display as reference_display',
+'     , o.app_user          as app_user',
+'     , o.occurred_on       as occurred_on',
+'     , o.client_identifier as client_identifier',
+'     , case',
+'         when o.logger_log_id = :P410_ID then ''This log''',
+'         else o.log_status',
+'       end                 as log_status',
+'  from ersh_incident_occurrences_vw o',
+' where o.shield_incident_id = :P410_SHIELD_INCIDENT_ID',
+' order by o.occurred_on desc'))
+,p_display_when_condition=>'P410_SHIELD_INCIDENT_ID'
+,p_display_condition_type=>'ITEM_IS_NOT_NULL'
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P410_ID,P410_SHIELD_INCIDENT_ID'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>15
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No occurrences recorded for this incident.'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24889766775270914)
+,p_query_column_id=>3
+,p_column_alias=>'APP_USER'
+,p_column_display_sequence=>30
+,p_column_heading=>'App User'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24889802995270914)
+,p_query_column_id=>5
+,p_column_alias=>'CLIENT_IDENTIFIER'
+,p_column_display_sequence=>50
+,p_column_heading=>'Client Identifier'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24889911773270914)
+,p_query_column_id=>1
+,p_column_alias=>'LOGGER_LOG_ID'
+,p_column_display_sequence=>10
+,p_hidden_column=>'Y'
+,p_derived_column=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24890091930270915)
+,p_query_column_id=>6
+,p_column_alias=>'LOG_STATUS'
+,p_column_display_sequence=>60
+,p_column_heading=>'Log'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24890121209270915)
+,p_query_column_id=>4
+,p_column_alias=>'OCCURRED_ON'
+,p_column_display_sequence=>40
+,p_column_heading=>'Occurred On'
+,p_column_format=>'DD-MON-YYYY HH24:MI:SS'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24890228634270915)
+,p_query_column_id=>2
+,p_column_alias=>'REFERENCE_DISPLAY'
+,p_column_display_sequence=>20
+,p_column_heading=>'Reference'
+,p_column_link=>'f?p=&APP_ID.:410:&SESSION.::&DEBUG.:410:P410_ID:#LOGGER_LOG_ID#'
+,p_column_linktext=>'#REFERENCE_DISPLAY#'
+,p_column_link_attr=>'title="Open the Logger log for this reference"'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382467233093296401)
 ,p_plug_name=>'Log'
@@ -3495,6 +3624,113 @@ wwv_flow_imp_page.create_page_plug(
 ,p_lost_update_check_type=>'VALUES'
 ,p_plug_source_type=>'NATIVE_FORM'
 ,p_plug_read_only_when_type=>'ALWAYS'
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(24890331463270915)
+,p_name=>'Related Logs (same session, 2 minutes before)'
+,p_static_id=>'related-logs'
+,p_region_name=>'relatedLogsCR'
+,p_template=>4073835273271169698
+,p_display_sequence=>30
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select r.log_id                 as log_id',
+'     , r.time_stamp             as time_stamp',
+'     , r.level_name             as level_name',
+'     , r.scope                  as scope',
+'     , substr(r.text, 1, 500)   as text',
+'     , case r.anchor_yn',
+'         when ''Y'' then ''This log''',
+'       end                      as this_log',
+'  from ersh_related_logs_vw r',
+' where r.anchor_log_id = :P410_ID',
+' order by r.time_stamp',
+'        , r.log_id'))
+,p_display_when_condition=>'P410_ID'
+,p_display_condition_type=>'ITEM_IS_NOT_NULL'
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P410_ID'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>15
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No related logs found.'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24890459426270916)
+,p_query_column_id=>3
+,p_column_alias=>'LEVEL_NAME'
+,p_column_display_sequence=>30
+,p_column_heading=>'Level'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24890558986270916)
+,p_query_column_id=>1
+,p_column_alias=>'LOG_ID'
+,p_column_display_sequence=>10
+,p_column_heading=>'Log ID'
+,p_column_link=>'f?p=&APP_ID.:410:&SESSION.::&DEBUG.:410:P410_ID:#LOG_ID#'
+,p_column_linktext=>'#LOG_ID#'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24890622292270916)
+,p_query_column_id=>4
+,p_column_alias=>'SCOPE'
+,p_column_display_sequence=>40
+,p_column_heading=>'Scope'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24890773017270916)
+,p_query_column_id=>5
+,p_column_alias=>'TEXT'
+,p_column_display_sequence=>50
+,p_column_heading=>'Text'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24890859197270916)
+,p_query_column_id=>6
+,p_column_alias=>'THIS_LOG'
+,p_column_display_sequence=>60
+,p_column_heading=>'Current'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(24890940051270916)
+,p_query_column_id=>2
+,p_column_alias=>'TIME_STAMP'
+,p_column_display_sequence=>20
+,p_column_heading=>'Time Stamp'
+,p_column_format=>'DD-MON-YYYY HH24:MI:SS.FF3'
+,p_heading_alignment=>'LEFT'
+,p_disable_sort_column=>'N'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
 );
 wwv_flow_imp_page.create_page_button(
  p_id=>wwv_flow_imp.id(382479228102296410)
@@ -3570,8 +3806,24 @@ wwv_flow_imp_page.create_page_button(
 ,p_database_action=>'UPDATE'
 ,p_required_patch=>wwv_flow_imp.id(381905544746018346)
 );
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(24891182023270956)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(24889634425270914)
+,p_button_name=>'VIEW_INCIDENT'
+,p_static_id=>'view-incident'
+,p_button_static_id=>'VIEW_INCIDENT'
+,p_show_as_disabled=>false
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4073839297780169708
+,p_button_image_alt=>'View Incident'
+,p_button_position=>'EDIT'
+,p_button_redirect_url=>'f?p=&APP_ID.:110:&SESSION.::&DEBUG.::P110_SHIELD_INCIDENT_ID:&P410_SHIELD_INCIDENT_ID.'
+,p_grid_new_row=>'Y'
+);
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(21038601381187009)
+ p_id=>wwv_flow_imp.id(24891351239270958)
 ,p_branch_action=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
 ,p_branch_type=>'REDIRECT_URL'
@@ -3817,6 +4069,16 @@ wwv_flow_imp_page.create_page_item(
   'trim_spaces', 'BOTH')).to_clob
 );
 wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(24891019244270919)
+,p_name=>'P410_SHIELD_INCIDENT_ID'
+,p_item_sequence=>15
+,p_item_plug_id=>wwv_flow_imp.id(382467233093296401)
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_HIDDEN'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'value_protected', 'Y')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
  p_id=>wwv_flow_imp.id(382473672327296407)
 ,p_name=>'P410_SID'
 ,p_source_data_type=>'NUMBER'
@@ -3950,6 +4212,29 @@ wwv_flow_imp_page.create_page_process(
 ,p_process_name=>'Initialize form Log'
 ,p_static_id=>'initialize-form-log'
 ,p_internal_uid=>382481499053296414
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(24891257302270957)
+,p_process_sequence=>20
+,p_process_point=>'BEFORE_HEADER'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'Load Shield Incident Id'
+,p_static_id=>'load-shield-incident-id'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'-- ERSH-051: a log that is a reference code shown to a user has',
+'-- exactly one ersh_incident_occurrences row (unique on',
+'-- logger_log_id). Resolve its incident so the Incident',
+'-- Occurrences region and the View Incident button can list every',
+'-- hit of that incident. max() returns null instead of raising',
+'-- no_data_found for any other log, which hides both.',
+'select max(o.shield_incident_id)',
+'  into :P410_SHIELD_INCIDENT_ID',
+'  from ersh_incident_occurrences_vw o',
+' where o.logger_log_id = :P410_ID;'))
+,p_process_clob_language=>'PLSQL'
+,p_process_when=>'P410_ID'
+,p_process_when_type=>'ITEM_IS_NOT_NULL'
+,p_internal_uid=>24891257302270957
 );
 wwv_flow_imp_page.create_page_process(
  p_id=>wwv_flow_imp.id(382481893555296414)
@@ -6352,7 +6637,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_row=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(21039815417187131)
+ p_id=>wwv_flow_imp.id(24892525975271048)
 ,p_branch_name=>'Branch to Admin Page'
 ,p_branch_action=>'f?p=&APP_ID.:10000:&SESSION.::&DEBUG.:RP&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
