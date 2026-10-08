@@ -174,7 +174,7 @@ page 400 (
         )
 
         column ID (
-            type: hidden
+            type: plainText
             heading {
                 heading: Id
             }
@@ -375,35 +375,31 @@ page 400 (
             }
 
             displayColumn ACTION (
-                sequence: 6
+                sequence: 5
             )
 
-            displayColumn LOGGER_LEVEL (
+            displayColumn ID (
                 sequence: 1
             )
 
             displayColumn MODULE (
-                sequence: 5
-            )
-
-            displayColumn SCN (
-                sequence: 8
-            )
-
-            displayColumn SCOPE (
                 sequence: 4
             )
 
-            displayColumn TEXT (
-                sequence: 2
+            displayColumn SCN (
+                sequence: 7
             )
 
-            displayColumn TIME_STAMP (
+            displayColumn SCOPE (
                 sequence: 3
             )
 
+            displayColumn TIME_STAMP (
+                sequence: 2
+            )
+
             displayColumn USER_NAME (
-                sequence: 7
+                sequence: 6
             )
 
             sort (

@@ -140,6 +140,8 @@ jobs:
           @ut_ersh_core_bugs.pkb
           @ut_ersh_observability.pks
           @ut_ersh_observability.pkb
+          @ut_ersh_related_logs.pks
+          @ut_ersh_related_logs.pkb
           exit
           SQL
 

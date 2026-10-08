@@ -28,10 +28,28 @@ page 110 (
             slot: subRegions
         }
         appearance {
-            template: @/standard
+            template: @/collapsible
             templateOptions: [
                 #DEFAULT#
+                js-useLocalStorage
+                is-collapsed
                 t-Region--scrollBody
+            ]
+        }
+    )
+
+    region body (
+        name: "{body}"
+        type: staticContent
+        layout {
+            sequence: 15
+            slot: contentBody
+        }
+        appearance {
+            template: @/tabs-container
+            templateOptions: [
+                #DEFAULT#
+                t-TabsRegion-mod--simple
             ]
         }
     )
@@ -63,6 +81,8 @@ page 110 (
                 select o.app_user          as app_user
                      , o.reference_display as reference_display
                      , o.occurred_on       as occurred_on
+                     , o.logger_log_id     as logger_log_id
+                     , o.log_status        as log_status
                   from ersh_incident_occurrences_vw o
                  where o.shield_incident_id = :P110_SHIELD_INCIDENT_ID
                  order by o.occurred_on desc
@@ -71,13 +91,14 @@ page 110 (
         }
         layout {
             sequence: 20
-            parentRegion: @review-incident
-            slot: subRegions
+            parentRegion: @body
+            slot: tabs
         }
         appearance {
             template: @/standard
             templateOptions: [
                 #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
                 t-Region--scrollBody
             ]
         }
@@ -105,6 +126,26 @@ page 110 (
             }
         )
 
+        column LOGGER_LOG_ID (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 40
+            }
+        )
+
+        column LOG_STATUS (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Log
+            }
+            layout {
+                sequence: 50
+            }
+        )
+
         column OCCURRED_ON (
             reportColumnQueryId: 3
             derivedColumn: N
@@ -119,11 +160,23 @@ page 110 (
         column REFERENCE_DISPLAY (
             reportColumnQueryId: 2
             derivedColumn: N
+            type: link
             heading {
-                heading: Reference Display
+                heading: Reference
             }
             layout {
                 sequence: 20
+            }
+            link {
+                target: {
+                    page: 410
+                    items: {
+                        P410_ID: #LOGGER_LOG_ID#
+                    }
+                    clearCache: 410
+                }
+                linkText: #REFERENCE_DISPLAY#
+                linkAttributes: target="_top" title="Open the Logger log for this reference"
             }
         )
 
@@ -138,17 +191,16 @@ page 110 (
         }
         layout {
             sequence: 10
-            slot: contentBody
+            parentRegion: @body
+            slot: tabs
         }
         appearance {
             template: @/standard
             templateOptions: [
                 #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
                 t-Region--scrollBody
             ]
-        }
-        advanced {
-            regionDisplaySelector: true
         }
     )
 
@@ -161,6 +213,7 @@ page 110 (
         layout {
             sequence: 5
             slot: contentBody
+            column: 11
         }
         appearance {
             template: @/blank-with-attributes
@@ -249,11 +302,10 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 100
+            sequence: 110
             region: @review-incident
             slot: regionBody
             alignment: left
-            startNewRow: false
         }
         appearance {
             template: @/optional-floating
@@ -273,10 +325,11 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 90
+            sequence: 80
             region: @review-incident
             slot: regionBody
             alignment: left
+            startNewRow: false
         }
         appearance {
             template: @/optional-floating
@@ -337,20 +390,11 @@ page 110 (
     )
 
     pageItem P110_ERROR_FINGERPRINT (
-        type: displayOnly
-        label {
-            label: Error Fingerprint
-            alignment: left
-        }
+        type: hidden
         layout {
-            sequence: 130
+            sequence: 140
             region: @review-incident
             slot: regionBody
-            alignment: left
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
         }
         source {
             formRegion: @review-incident
@@ -366,7 +410,7 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 120
+            sequence: 130
             region: @review-incident
             slot: regionBody
             alignment: left
@@ -459,11 +503,13 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 70
+            sequence: 60
             region: @review-incident
             slot: regionBody
             alignment: left
             startNewRow: false
+            column: 11
+            columnSpan: 2
         }
         appearance {
             template: @/optional-floating
@@ -483,11 +529,13 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 110
+            sequence: 90
             region: @review-incident
             slot: regionBody
             alignment: left
             startNewRow: false
+            column: 11
+            columnSpan: 2
         }
         appearance {
             template: @/optional-floating
@@ -531,7 +579,7 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 80
+            sequence: 100
             region: @review-incident
             slot: regionBody
             alignment: left
@@ -681,7 +729,7 @@ page 110 (
             alignment: left
         }
         layout {
-            sequence: 60
+            sequence: 70
             region: @review-incident
             slot: regionBody
             alignment: left
