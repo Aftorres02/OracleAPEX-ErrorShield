@@ -516,5 +516,157 @@ page 1000 (
 
     )
 
+    button start-live-demo (
+        buttonName: START_LIVE_DEMO
+        label: Start live demo
+        layout {
+            sequence: 10
+            region: @breadcrumb
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-play
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+        advanced {
+            htmlDomId: START_LIVE_DEMO
+        }
+        serverSideCondition {
+            type: rowsReturned
+            sqlQuery:
+                ```sql
+                select 1                                                   as demo_available
+                  from user_objects o
+                 where o.object_name = 'ERSH_DEMO_DATA_API'
+                   and o.object_type = 'PACKAGE BODY'
+                   and o.status      = 'VALID'
+                   and not exists (
+                         select 1
+                           from user_scheduler_jobs j
+                          where j.job_name like 'ERSH\_DEMO\_LIVE\_%' escape '\'
+                            and j.enabled  = 'TRUE'
+                       )
+                ```
+        }
+        security {
+            authorizationScheme: @administration-rights
+        }
+    )
+
+    button stop-live-demo (
+        buttonName: STOP_LIVE_DEMO
+        label: Stop live demo
+        layout {
+            sequence: 20
+            region: @breadcrumb
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-stop
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+        advanced {
+            htmlDomId: STOP_LIVE_DEMO
+        }
+        serverSideCondition {
+            type: rowsReturned
+            sqlQuery:
+                ```sql
+                select 1                                                   as demo_running
+                  from user_scheduler_jobs j
+                 where j.job_name like 'ERSH\_DEMO\_LIVE\_%' escape '\'
+                ```
+        }
+        security {
+            authorizationScheme: @administration-rights
+        }
+    )
+
+    process start-live-demo (
+        name: Start live jobs demo
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                -- ersh_demo_data_api is demo-only (demos/, never installed by the
+                -- release), so this app must not depend on it at compile time. The
+                -- button that submits this request only renders when it exists.
+                execute immediate 'begin ersh_demo_data_api.start_live_jobs_demo; end;';
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        successMessage {
+            successMessage: Live jobs demo started. Six demo jobs now run every 20 to 30 seconds for the next hour, and some of them fail on purpose.
+        }
+        advanced {
+            executionMappingIdentifier: 52462276030934053
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'START_LIVE_DEMO'
+        }
+        security {
+            authorizationScheme: @administration-rights
+        }
+    )
+
+    process stop-live-demo (
+        name: Stop live jobs demo
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                -- Same reason as "Start live jobs demo": no compile-time dependency
+                -- on the demo-only package.
+                execute immediate 'begin ersh_demo_data_api.stop_live_jobs_demo; end;';
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        successMessage {
+            successMessage: Live jobs demo stopped. Their run history stays on this dashboard.
+        }
+        advanced {
+            executionMappingIdentifier: 52462354244934054
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'STOP_LIVE_DEMO'
+        }
+        security {
+            authorizationScheme: @administration-rights
+        }
+    )
+
+    branch (
+        name: Back to Jobs Dashboard
+        execution {
+            sequence: 10
+        }
+        behavior {
+            target: {
+                page: 1000
+            }
+        }
+    )
+
 )
 

@@ -28,5 +28,5 @@ begin
 end;
 /
 
-prompt *** Done. See docs/DEMO.md for what still needs a manual step ***
-prompt *** (the "Running now" and "APEX Automations" dashboards). ***
+prompt *** Done. During the demo, click "Start live demo" on the Jobs dashboard (page 1000) ***
+prompt *** to keep jobs running and failing for an hour. See docs/DEMO.md for the rest. ***

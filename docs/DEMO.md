@@ -175,31 +175,98 @@ raised so far, and the Overview page lists them across all lessons.
 
 ---
 
+## Showing jobs running live
+
+The Jobs dashboard (page 1000) and "Running now" (page 1400) read the
+scheduler's own views, so they only change while jobs actually run. The
+live jobs demo starts six made-up integration jobs that keep running for
+the length of a presentation, and some of them fail on purpose.
+
+### Start the live demo
+
+Open Jobs - Dashboard (page 1000) and click **Start live demo** in the
+title bar. The button only shows when `ersh_demo_data_api` is installed in
+the schema (Step 4) and no live demo is already running. The same call
+from SQL:
+
+```sql
+exec ersh_demo_data_api.start_live_jobs_demo;
+
+-- or a different length, in minutes (the default is 60)
+exec ersh_demo_data_api.start_live_jobs_demo(p_duration_minutes => 30);
+```
+
+The first runs start within about 15 seconds.
+
+### What runs
+
+| Job | Pretends to | Every | Fails |
+|---|---|---|---|
+| `ERSH_DEMO_LIVE_ORDERS_SYNC` | pull new web-store orders | 20 s | ~5%: storefront HTTP 503, deadlock |
+| `ERSH_DEMO_LIVE_PAYMENT_RECON` | reconcile gateway settlements | 30 s | ~15%: download timeout, untrusted certificate |
+| `ERSH_DEMO_LIVE_INVENTORY_SNAPSHOT` | refresh the stock snapshot | 25 s | ~3%: deadlock |
+| `ERSH_DEMO_LIVE_EMAIL_DIGEST` | send notification e-mails | 20 s | ~10%: no network ACL for the SMTP relay |
+| `ERSH_DEMO_LIVE_FX_RATES` | load exchange rates | 30 s | ~10%: truncated JSON, unreadable rate |
+| `ERSH_DEMO_LIVE_SUPPLIER_PRICES` | import supplier price files | 30 s | ~60%: missing file, bad date; BROKEN after 3 failures in a row |
+
+Each run takes 5 to 10 seconds, so one to three of them are usually in
+"Running now" at any moment.
+
+Each failure raises a real Oracle error (`ORA-29273`, `ORA-29024`,
+`ORA-24247`, `ORA-40441`, `ORA-06502`, `ORA-29283`, `ORA-01843`,
+`ORA-00060`). Recent failures and Failed Runs 24h on page 1000 show those
+real scheduler errors, and Logger Logs (page 400) shows each run's trail:
+START, a warning with the context, then the error.
+
+A seventh job, `ERSH_DEMO_LIVE_DISPATCHER`, stays in "Running now" for the
+whole window.
+
+> **Why there is a dispatcher:** on Autonomous Database the job
+> coordinator was seen starting these sub-minute repeats 30 to 150 seconds
+> late at times, which leaves "Running now" empty for minutes in the middle
+> of a demo. Every 2 seconds the dispatcher starts any live job more than 3
+> seconds overdue. When the scheduler is on time it does nothing.
+
+### Stop the live demo
+
+The jobs end on their own when the window closes, and the dispatcher drops
+itself. To stop earlier, click **Stop live demo** on page 1000, or:
+
+```sql
+exec ersh_demo_data_api.stop_live_jobs_demo;
+```
+
+Stopping drops the jobs. A run in progress is recorded as STOPPED, and
+earlier runs stay in the scheduler log, so the failures keep showing on the
+dashboard. A job that went BROKEN stays in the job list until you stop the
+demo, start it again, or purge.
+
+> **Note:** each run writes three or four Logger rows, about 2,500 an
+> hour. They carry the demo client identifier, so `purge_demo_data`
+> removes them with the rest.
+
+---
+
 ## What this does not cover
 
-Two pages in the admin app can't be populated by a script:
+> **"Timeline" (page 1500)** has no report or region at all in the current
+> app export — it's a placeholder page. There is nothing to feed it.
 
-> **"Running now" (page 1400)** only ever has rows while a job is actually
-> executing. Call this right before you show that specific screen, not as
-> part of the bulk generation step:
+> **A single long run** instead of the live demo: `run_slow_demo_job`
+> creates (if missing) and kicks off a job that sleeps for 45 seconds in the
+> background — open "Running now" (page 1400) within that window.
 >
 > ```sql
 > exec ersh_demo_data_api.run_slow_demo_job;
 > ```
->
-> It creates (if missing) and kicks off a job that sleeps for 45 seconds in
-> the background — open the page within that window.
-
-> **"Timeline" (page 1500)** has no report or region at all in the current
-> app export — it's a placeholder page. There is nothing to feed it.
 
 ---
 
 ## Resetting
 
 To remove everything the generator created — logs, incidents, occurrences,
-and the three demo scheduler jobs — without touching anything else in the
-schema:
+and every `ERSH_DEMO_*` scheduler job, live demo jobs included — without
+touching anything else in the schema:
 
 ```sql
 exec ersh_demo_data_api.purge_demo_data;

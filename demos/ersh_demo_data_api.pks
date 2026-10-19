@@ -13,6 +13,7 @@ create or replace package ersh_demo_data_api is
 -- data in it.
 --
 -- @ticket ERSH-046
+-- @ticket ERSH-052 (live jobs demo: start_live_jobs_demo / stop_live_jobs_demo)
 -- =============================================================================
 
 
@@ -69,6 +70,50 @@ create or replace package ersh_demo_data_api is
 
 
   /**
+   * Starts the live jobs demo: (re)creates six demo-only scheduler jobs that
+   * each pretend to be a real integration (web-store orders, payment
+   * settlements, stock snapshot, e-mail, exchange rates, supplier price
+   * files). Each repeats every 20-30 seconds, runs 5-10 seconds, fails at
+   * random with a realistic Oracle error, and ends on its own after
+   * p_duration_minutes. Keeps "Running now" (page 1400) and the failure
+   * counters on the Jobs dashboard (page 1000) moving during a live demo.
+   * Also behind the "Start live demo" button on page 1000.
+   */
+  procedure start_live_jobs_demo(
+      p_duration_minutes                              in pls_integer default 60
+  );
+
+
+  /**
+   * Stops the live jobs demo now by dropping every live demo job (a run in
+   * progress is stopped). Their run history stays in the scheduler log, so
+   * failures already recorded keep showing on the dashboard.
+   */
+  procedure stop_live_jobs_demo;
+
+
+  /**
+   * Action of every live demo job — public only because DBMS_SCHEDULER has
+   * to call it; not meant to be run by hand. Sleeps for the job's run time,
+   * then either logs a realistic summary or raises a realistic Oracle error
+   * so the scheduler records a FAILED run.
+   */
+  procedure run_live_demo_job(
+      p_job_code                                      in varchar2
+  );
+
+
+  /**
+   * Action of the live demo's dispatcher job — public only because
+   * DBMS_SCHEDULER has to call it. Starts any live demo job the scheduler
+   * leaves overdue (on Autonomous Database sub-minute repeats can start a
+   * minute or more late), so the jobs keep their 20-30 s cadence. Ends on its
+   * own once no live demo job is left to run.
+   */
+  procedure dispatch_live_jobs;
+
+
+  /**
    * Convenience wrapper: optionally purges existing demo data, then calls
    * generate_background_logs, generate_incidents, and generate_scheduler_jobs
    * with the given (or default) volumes. This is the one call a fresh demo
@@ -86,8 +131,9 @@ create or replace package ersh_demo_data_api is
   /**
    * Removes every row this package generated (matched by client_identifier =
    * 'ERRORSHIELD_DEMO_DATA', in FK-safe order) and drops every demo
-   * scheduler job (job_name like 'ERSH_DEMO_%'). Never touches real data —
-   * only rows/jobs this package's own naming convention produced.
+   * scheduler job (job_name like 'ERSH_DEMO_%', live demo jobs included).
+   * Never touches real data — only rows/jobs this package's own naming
+   * convention produced.
    */
   procedure purge_demo_data;
 

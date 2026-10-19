@@ -33,16 +33,16 @@ prompt APPLICATION 10400 - Error Shield
 -- Application Export:
 --   Application:     10400
 --   Name:            Error Shield
---   Date and Time:   14:02 Thursday October 8, 2026
+--   Date and Time:   02:19 Monday October 19, 2026
 --   Exported By:     LOGGER_USER
 --   Flashback:       0
 --   Export Type:     Application Export
 --     Pages:                     20
 --       Items:                   57
 --       Validations:              1
---       Processes:               18
+--       Processes:               20
 --       Regions:                 50
---       Buttons:                 21
+--       Buttons:                 23
 --       Dynamic Actions:          1
 --     Shared Components:
 --       Logic:
@@ -118,8 +118,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Error Shield'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
-,p_files_version=>2461319172847
-,p_version_scn=>'47046977529841'
+,p_files_version=>2461333021835
 ,p_print_server_type=>'INSTANCE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -338,14 +337,13 @@ wwv_flow_imp_shared.create_list(
  p_id=>wwv_flow_imp.id(381906604775018353)
 ,p_name=>'Navigation Menu'
 ,p_static_id=>'navigation-menu'
-,p_version_scn=>'SH256:nG0RIYE8ZHqEuqex49g97jfrKMg2RLtW7CWP9WiOMB8'
 );
 wwv_flow_imp_shared.create_list_item(
  p_id=>wwv_flow_imp.id(382115413880018564)
 ,p_list_item_display_sequence=>10000
 ,p_list_item_link_text=>'Administration'
 ,p_static_id=>'administration'
-,p_list_item_link_target=>'f?p=&APP_ID.:10000:&SESSION.::&DEBUG.::::'
+,p_list_item_link_target=>'f?p=&APP_ID.:10000:&SESSION.::&DEBUG.'
 ,p_list_item_icon=>'fa-user-wrench'
 ,p_list_item_disp_cond_type=>'NEVER'
 ,p_security_scheme=>wwv_flow_imp.id(382097282347018512)
@@ -887,7 +885,7 @@ wwv_flow_imp_shared.create_theme(
 ,p_default_required_label=>1610598484065263269
 ,p_default_navbar_list_template=>2849019392706229583
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_theme_file_prefix(42),'#APEX_FILES#themes/theme_42/26.1/')
-,p_files_version=>2461319172847
+,p_files_version=>2461333021835
 ,p_icon_library=>'FONTAPEX'
 ,p_javascript_file_urls=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '#APEX_FILES#libraries/apex/#MIN_DIRECTORY#widget.stickyWidget#MIN#.js?v=#APEX_VERSION#',
@@ -986,7 +984,6 @@ wwv_flow_imp_page.create_page(
 ,p_warn_on_unsaved_changes=>null
 ,p_autocomplete_on_off=>'OFF'
 ,p_protection_level=>'D'
-,p_page_component_map=>'14'
 );
 end;
 /
@@ -1001,7 +998,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'13'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(21034841318186813)
@@ -1410,7 +1406,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'18'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(17640820228968005)
@@ -1787,7 +1782,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(24888682617270843)
+ p_id=>wwv_flow_imp.id(52461055704933929)
 ,p_report_id=>wwv_flow_imp.id(19836952520484707)
 ,p_static_id=>'regressions-filter'
 ,p_condition_type=>'FILTER'
@@ -1812,7 +1807,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_sort_direction_1=>'DESC'
 );
 wwv_flow_imp_page.create_worksheet_condition(
- p_id=>wwv_flow_imp.id(24888765331270844)
+ p_id=>wwv_flow_imp.id(52461118850933930)
 ,p_report_id=>wwv_flow_imp.id(19837162877484801)
 ,p_static_id=>'resolved-filter'
 ,p_condition_type=>'FILTER'
@@ -1926,10 +1921,11 @@ wwv_flow_imp_page.create_page_button(
 ,p_button_image_alt=>'Find Incident'
 ,p_warn_on_unsaved_changes=>null
 ,p_grid_new_row=>'N'
+,p_grid_new_column=>'Y'
 ,p_grid_column=>8
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(24888840920270851)
+ p_id=>wwv_flow_imp.id(52461272394933937)
 ,p_branch_name=>'Go to Found Incident'
 ,p_branch_action=>'f?p=&APP_ID.:110:&SESSION.::&DEBUG.::P110_SHIELD_INCIDENT_ID:&P100_FOUND_INCIDENT_ID.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
@@ -2033,7 +2029,6 @@ wwv_flow_imp_page.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_dialog_width=>'1000'
 ,p_protection_level=>'C'
-,p_page_component_map=>'02'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(377204084152175333)
@@ -2729,7 +2724,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'18'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382140660269074934)
@@ -2900,7 +2894,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>2101883943284197310
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'02'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382136278258074929)
@@ -3201,7 +3194,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'18'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382490259525296421)
@@ -3508,7 +3500,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'02'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382490801523296423)
@@ -3845,7 +3836,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_row=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(24891351239270958)
+ p_id=>wwv_flow_imp.id(52461878118934047)
 ,p_branch_action=>'f?p=&APP_ID.:400:&SESSION.::&DEBUG.&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
 ,p_branch_type=>'REDIRECT_URL'
@@ -4287,7 +4278,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'03'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(422972579763875614)
@@ -4615,6 +4605,108 @@ wwv_flow_imp_page.create_report_columns(
 ,p_derived_column=>'N'
 ,p_include_in_export=>'Y'
 );
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(52462025654934052)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(422972579763875614)
+,p_button_name=>'START_LIVE_DEMO'
+,p_static_id=>'start-live-demo'
+,p_button_static_id=>'START_LIVE_DEMO'
+,p_show_as_disabled=>false
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#:t-Button--iconLeft'
+,p_button_template_id=>2084305881903810008
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'Start live demo'
+,p_button_position=>'NEXT'
+,p_button_condition=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select 1                                                   as demo_available',
+'  from user_objects o',
+' where o.object_name = ''ERSH_DEMO_DATA_API''',
+'   and o.object_type = ''PACKAGE BODY''',
+'   and o.status      = ''VALID''',
+'   and not exists (',
+'         select 1',
+'           from user_scheduler_jobs j',
+'          where j.job_name like ''ERSH\_DEMO\_LIVE\_%'' escape ''\''',
+'            and j.enabled  = ''TRUE''',
+'       )'))
+,p_button_condition_type=>'EXISTS'
+,p_icon_css_classes=>'fa-play'
+,p_grid_new_row=>'Y'
+,p_security_scheme=>wwv_flow_imp.id(382097282347018512)
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(52462175066934053)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_imp.id(422972579763875614)
+,p_button_name=>'STOP_LIVE_DEMO'
+,p_static_id=>'stop-live-demo'
+,p_button_static_id=>'STOP_LIVE_DEMO'
+,p_show_as_disabled=>false
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#:t-Button--iconLeft'
+,p_button_template_id=>2084305881903810008
+,p_button_image_alt=>'Stop live demo'
+,p_button_position=>'NEXT'
+,p_button_condition=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select 1                                                   as demo_running',
+'  from user_scheduler_jobs j',
+' where j.job_name like ''ERSH\_DEMO\_LIVE\_%'' escape ''\'''))
+,p_button_condition_type=>'EXISTS'
+,p_icon_css_classes=>'fa-stop'
+,p_grid_new_row=>'Y'
+,p_security_scheme=>wwv_flow_imp.id(382097282347018512)
+);
+wwv_flow_imp_page.create_page_branch(
+ p_id=>wwv_flow_imp.id(52462438461934054)
+,p_branch_name=>'Back to Jobs Dashboard'
+,p_branch_action=>'f?p=&APP_ID.:1000:&SESSION.::&DEBUG.&success_msg=#SUCCESS_MSG#'
+,p_branch_point=>'AFTER_PROCESSING'
+,p_branch_type=>'REDIRECT_URL'
+,p_branch_sequence=>10
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(52462276030934053)
+,p_process_sequence=>10
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'Start live jobs demo'
+,p_static_id=>'start-live-demo'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'-- ersh_demo_data_api is demo-only (demos/, never installed by the',
+'-- release), so this app must not depend on it at compile time. The',
+'-- button that submits this request only renders when it exists.',
+'execute immediate ''begin ersh_demo_data_api.start_live_jobs_demo; end;'';'))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when=>':REQUEST = ''START_LIVE_DEMO'''
+,p_process_when_type=>'EXPRESSION'
+,p_process_when2=>'PLSQL'
+,p_process_success_message=>'Live jobs demo started. Six demo jobs now run every 20 to 30 seconds for the next hour, and some of them fail on purpose.'
+,p_security_scheme=>wwv_flow_imp.id(382097282347018512)
+,p_internal_uid=>52462276030934053
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(52462354244934054)
+,p_process_sequence=>20
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'Stop live jobs demo'
+,p_static_id=>'stop-live-demo'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'-- Same reason as "Start live jobs demo": no compile-time dependency',
+'-- on the demo-only package.',
+'execute immediate ''begin ersh_demo_data_api.stop_live_jobs_demo; end;'';'))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when=>':REQUEST = ''STOP_LIVE_DEMO'''
+,p_process_when_type=>'EXPRESSION'
+,p_process_when2=>'PLSQL'
+,p_process_success_message=>'Live jobs demo stopped. Their run history stays on this dashboard.'
+,p_security_scheme=>wwv_flow_imp.id(382097282347018512)
+,p_internal_uid=>52462354244934054
+);
 end;
 /
 prompt --application/pages/page_01100
@@ -4628,7 +4720,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'18'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(422975217770897996)
@@ -5035,7 +5126,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'03'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(422988109211905198)
@@ -5443,7 +5533,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'18'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(423004037104911410)
@@ -5718,7 +5807,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'03'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(428263454437277907)
@@ -5903,7 +5991,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'11'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(428265091658282521)
@@ -5934,7 +6021,6 @@ wwv_flow_imp_page.create_page(
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
-,p_page_component_map=>'03'
 );
 wwv_flow_imp_page.create_report_region(
  p_id=>wwv_flow_imp.id(428289904590424233)
@@ -6354,7 +6440,6 @@ wwv_flow_imp_page.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
-,p_page_component_map=>'12'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382098467923018521)
@@ -6534,7 +6619,6 @@ wwv_flow_imp_page.create_page(
 '<p>The administration page allows application owners (Administrators) to configure the application and maintain common data used across the application.',
 'By selecting one of the available settings, administrators can potentially change how the application is displayed and/or features available to the end users.</p>',
 '<p>Access to this page should be limited to Administrators only.</p>'))
-,p_page_component_map=>'06'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382115982740018567)
@@ -6600,7 +6684,6 @@ wwv_flow_imp_page.create_page(
 ,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<p>Select the default color scheme used to display the application.</p>',
 '<p>If <strong>Allow End Users to choose Theme Style</strong> is checked, then each end user can select from the available theme styles by clicking the <em>Customize</em> link in the bottom left corner of the Home page.</p>'))
-,p_page_component_map=>'16'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382104546553018548)
@@ -6669,7 +6752,7 @@ wwv_flow_imp_page.create_page_button(
 ,p_grid_new_row=>'Y'
 );
 wwv_flow_imp_page.create_page_branch(
- p_id=>wwv_flow_imp.id(24892525975271048)
+ p_id=>wwv_flow_imp.id(52463530511934144)
 ,p_branch_name=>'Branch to Admin Page'
 ,p_branch_action=>'f?p=&APP_ID.:10000:&SESSION.::&DEBUG.:RP&success_msg=#SUCCESS_MSG#'
 ,p_branch_point=>'AFTER_PROCESSING'
@@ -6824,7 +6907,6 @@ wwv_flow_imp_page.create_page(
 ,p_required_patch=>wwv_flow_imp.id(382096455746018510)
 ,p_protection_level=>'C'
 ,p_help_text=>'All application help text can be accessed from this page. The links in the "Documentation" region give a much more in-depth explanation of the application''s features and functionality.'
-,p_page_component_map=>'11'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382110846157018560)
@@ -6857,7 +6939,6 @@ wwv_flow_imp_page.create_page(
 ,p_required_patch=>wwv_flow_imp.id(382096455746018510)
 ,p_dialog_chained=>'N'
 ,p_protection_level=>'C'
-,p_page_component_map=>'10'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(382111555014018562)
