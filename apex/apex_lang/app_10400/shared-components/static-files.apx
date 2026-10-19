@@ -13,3 +13,8 @@ file app.css (
     charSet: utf-8
 )
 
+file ersh-auto-refresh.js (
+    mimeType: text/javascript
+    charSet: utf-8
+)
+

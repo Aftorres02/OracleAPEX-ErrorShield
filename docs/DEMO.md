@@ -196,7 +196,10 @@ exec ersh_demo_data_api.start_live_jobs_demo;
 exec ersh_demo_data_api.start_live_jobs_demo(p_duration_minutes => 30);
 ```
 
-The first runs start within about 15 seconds.
+The first runs start within about 15 seconds. You don't need to reload:
+the reports on page 1000 and on "Running now" (page 1400) refresh
+themselves every 5 seconds while the page is open, and pause while the
+browser tab is in the background.
 
 ### What runs
 

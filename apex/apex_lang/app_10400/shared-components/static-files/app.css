@@ -54,3 +54,13 @@
 .ersh-summary-value-danger {
   color: #7a2f27;
 }
+
+/* ERSH-052: ersh.autoRefresh (ersh-auto-refresh.js) refreshes the job
+   dashboards (pages 1000 and 1400) every few seconds. Hide the report's
+   loading spinner only while one of those timer refreshes runs, so the page
+   doesn't flicker; a refresh the user starts (sort, paging) still shows it. */
+/* stylelint-disable-next-line selector-class-pattern -- .u-Processing is
+   APEX's own loading spinner class, not a project-defined one. */
+.ersh-auto-refreshing .u-Processing {
+  display: none;
+}

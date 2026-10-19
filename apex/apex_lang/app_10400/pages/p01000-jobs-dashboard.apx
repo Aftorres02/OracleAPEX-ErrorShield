@@ -9,6 +9,9 @@ page 1000 (
     navigation {
         cursorFocus: doNotFocusCursor
     }
+    javaScript {
+        fileUrls: #APP_FILES#ersh-auto-refresh.js?version=#APP_VERSION#
+    }
     security {
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
@@ -56,6 +59,7 @@ page 1000 (
             ]
         }
         advanced {
+            htmlDomId: healthBySourceCR
             regionDisplaySelector: true
         }
         componentAppearance {
@@ -167,10 +171,11 @@ page 1000 (
             ]
         }
         advanced {
+            htmlDomId: nextRunsCR
             regionDisplaySelector: true
         }
         reportLayout {
-            numberOfRows: 5
+            numberOfRows: 10
         }
         componentAppearance {
             template: @/standard
@@ -281,7 +286,11 @@ page 1000 (
             ]
         }
         advanced {
+            htmlDomId: recentFailuresCR
             regionDisplaySelector: true
+        }
+        reportLayout {
+            numberOfRows: 20
         }
         componentAppearance {
             template: @/standard
@@ -437,6 +446,7 @@ page 1000 (
             ]
         }
         advanced {
+            htmlDomId: statusCR
             regionDisplaySelector: true
         }
         reportLayout {
@@ -595,6 +605,40 @@ page 1000 (
         security {
             authorizationScheme: @administration-rights
         }
+    )
+
+    dynamicAction auto-refresh-reports (
+        name: Auto refresh reports
+        execution {
+            sequence: 10
+        }
+        when {
+            event: ready
+        }
+
+        action start-auto-refresh (
+            action: executeJsCode
+            settings {
+                jsCode:
+                    ```javascript-browser
+                    // ersh-auto-refresh.js: refresh while the page is open, so
+                    // scheduler activity shows up without a reload.
+                    ersh.autoRefresh.start({
+                        regions: [
+                            'statusCR'
+                          , 'healthBySourceCR'
+                          , 'nextRunsCR'
+                          , 'recentFailuresCR'
+                        ]
+                      , seconds: 5
+                    });
+                    ```
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
     )
 
     process start-live-demo (

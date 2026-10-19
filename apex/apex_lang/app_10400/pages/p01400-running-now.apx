@@ -10,6 +10,9 @@ page 1400 (
     navigation {
         cursorFocus: doNotFocusCursor
     }
+    javaScript {
+        fileUrls: #APP_FILES#ersh-auto-refresh.js?version=#APP_VERSION#
+    }
     security {
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
@@ -58,6 +61,7 @@ page 1400 (
             ]
         }
         advanced {
+            htmlDomId: runningNowCR
             regionDisplaySelector: true
         }
         componentAppearance {
@@ -294,6 +298,35 @@ page 1400 (
             }
             sorting {
                 sortable: false
+            }
+        )
+
+    )
+
+    dynamicAction auto-refresh-reports (
+        name: Auto refresh reports
+        execution {
+            sequence: 10
+        }
+        when {
+            event: ready
+        }
+
+        action start-auto-refresh (
+            action: executeJsCode
+            settings {
+                jsCode:
+                    ```javascript-browser
+                    // ersh-auto-refresh.js: refresh while the page is open, so
+                    // scheduler activity shows up without a reload.
+                    ersh.autoRefresh.start({
+                        regions: ['runningNowCR']
+                      , seconds: 5
+                    });
+                    ```
+            }
+            execution {
+                sequence: 10
             }
         )
 
