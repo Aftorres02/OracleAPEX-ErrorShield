@@ -37,6 +37,144 @@ page 410 (
         }
     )
 
+    region incident-occurrences (
+        name: Incident Occurrences
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select o.logger_log_id     as logger_log_id
+                     , o.reference_display as reference_display
+                     , o.app_user          as app_user
+                     , o.occurred_on       as occurred_on
+                     , o.client_identifier as client_identifier
+                     , case
+                         when o.logger_log_id = :P410_ID then 'This log'
+                         else o.log_status
+                       end                 as log_status
+                  from ersh_incident_occurrences_vw o
+                 where o.shield_incident_id = :P410_SHIELD_INCIDENT_ID
+                 order by o.occurred_on desc
+                ```
+            pageItemsToSubmit: [
+                P410_ID
+                P410_SHIELD_INCIDENT_ID
+            ]
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        advanced {
+            htmlDomId: incidentOccurrencesCR
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P410_SHIELD_INCIDENT_ID
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        messages {
+            whenNoDataFound: No occurrences recorded for this incident.
+        }
+
+        column APP_USER (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: App User
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column CLIENT_IDENTIFIER (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Client Identifier
+            }
+            layout {
+                sequence: 50
+            }
+        )
+
+        column LOGGER_LOG_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column LOG_STATUS (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Log
+            }
+            layout {
+                sequence: 60
+            }
+        )
+
+        column OCCURRED_ON (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Occurred On
+            }
+            layout {
+                sequence: 40
+            }
+            appearance {
+                formatMask: DD-MON-YYYY HH24:MI:SS
+            }
+        )
+
+        column REFERENCE_DISPLAY (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Reference
+            }
+            layout {
+                sequence: 20
+            }
+            link {
+                target: {
+                    page: 410
+                    items: {
+                        P410_ID: #LOGGER_LOG_ID#
+                    }
+                    clearCache: 410
+                }
+                linkText: #REFERENCE_DISPLAY#
+                linkAttributes: title="Open the Logger log for this reference"
+            }
+        )
+
+    )
+
     region log (
         name: Log
         type: form
@@ -66,6 +204,142 @@ page 410 (
                 delete
             ]
         }
+    )
+
+    region related-logs (
+        name: Related Logs (same session, 2 minutes before)
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select r.log_id                 as log_id
+                     , r.time_stamp             as time_stamp
+                     , r.level_name             as level_name
+                     , r.scope                  as scope
+                     , substr(r.text, 1, 500)   as text
+                     , case r.anchor_yn
+                         when 'Y' then 'This log'
+                       end                      as this_log
+                  from ersh_related_logs_vw r
+                 where r.anchor_log_id = :P410_ID
+                 order by r.time_stamp
+                        , r.log_id
+                ```
+            pageItemsToSubmit: P410_ID
+        }
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        advanced {
+            htmlDomId: relatedLogsCR
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P410_ID
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--altRowsDefault
+                t-Report--rowHighlight
+            ]
+        }
+        messages {
+            whenNoDataFound: No related logs found.
+        }
+
+        column LEVEL_NAME (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Level
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column LOG_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Log ID
+            }
+            layout {
+                sequence: 10
+            }
+            link {
+                target: {
+                    page: 410
+                    items: {
+                        P410_ID: #LOG_ID#
+                    }
+                    clearCache: 410
+                }
+                linkText: #LOG_ID#
+            }
+        )
+
+        column SCOPE (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Scope
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+        column TEXT (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Text
+            }
+            layout {
+                sequence: 50
+            }
+        )
+
+        column THIS_LOG (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Current
+            }
+            layout {
+                sequence: 60
+            }
+        )
+
+        column TIME_STAMP (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Time Stamp
+            }
+            layout {
+                sequence: 20
+            }
+            appearance {
+                formatMask: DD-MON-YYYY HH24:MI:SS.FF3
+            }
+        )
+
     )
 
     pageItem P410_ACTION (
@@ -367,6 +641,15 @@ page 410 (
         }
     )
 
+    pageItem P410_SHIELD_INCIDENT_ID (
+        type: hidden
+        layout {
+            sequence: 15
+            region: @log
+            slot: regionBody
+        }
+    )
+
     pageItem P410_SID (
         type: numberField
         label {
@@ -610,6 +893,33 @@ page 410 (
         }
     )
 
+    button view-incident (
+        buttonName: VIEW_INCIDENT
+        label: View Incident
+        layout {
+            sequence: 10
+            region: @incident-occurrences
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 110
+                items: {
+                    P110_SHIELD_INCIDENT_ID: &P410_SHIELD_INCIDENT_ID.
+                }
+            }
+            warnOnUnsavedChanges: doNotCheck
+        }
+        advanced {
+            htmlDomId: VIEW_INCIDENT
+        }
+    )
+
     validation p410-time-stamp-must-be-timestamp (
         name: P410_TIME_STAMP must be timestamp
         execution {
@@ -635,6 +945,37 @@ page 410 (
         }
         advanced {
             executionMappingIdentifier: 382481499053296414
+        }
+    )
+
+    process load-shield-incident-id (
+        name: Load Shield Incident Id
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                -- ERSH-051: a log that is a reference code shown to a user has
+                -- exactly one ersh_incident_occurrences row (unique on
+                -- logger_log_id). Resolve its incident so the Incident
+                -- Occurrences region and the View Incident button can list every
+                -- hit of that incident. max() returns null instead of raising
+                -- no_data_found for any other log, which hides both.
+                select max(o.shield_incident_id)
+                  into :P410_SHIELD_INCIDENT_ID
+                  from ersh_incident_occurrences_vw o
+                 where o.logger_log_id = :P410_ID;
+                ```
+        }
+        execution {
+            sequence: 20
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 24891257302270957
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P410_ID
         }
     )
 

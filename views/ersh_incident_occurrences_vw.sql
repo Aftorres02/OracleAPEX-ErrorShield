@@ -6,11 +6,14 @@
 --          ersh_shield_incidents_vw, so a code the DEV main pastes from the
 --          support flow always matches what the affected user saw on screen.
 --          Used by the ErrorShield admin application (page 100 support
---          lookup and page 110 occurrences region).
+--          lookup, page 110 occurrences region and page 410 incident
+--          occurrences region).
 --
 -- @author Angel Flores (Consultant)
 -- @created September 16, 2026
 -- @ticket ERSH-010
+-- @ticket ERSH-051 (client_identifier and log_status from logger_logs, so
+--         a page can tell whether each reference still has a log to open)
 -- =============================================================================
 -- FORCE: this view calls logger.get_pref, which does not exist yet at this
 -- point in a fresh release (views are created before packages). Without
@@ -49,8 +52,22 @@ with w_base as (
        , si.resolved_by                                                as resolved_by
        , si.resolved_on                                                as resolved_on
        , si.resolution_notes                                           as resolution_notes
+       -- ERSH-051: logger_logs side of this hit. logger_logs is vendored and
+       -- purged by its own job (no FK can exist), so the row may be gone
+       -- while the occurrence lives on. 'Purged' warns that the reference
+       -- has no log left to open (Logger's default PURGE_MIN_LEVEL keeps
+       -- ERROR rows, so this needs a non-default purge); 'Not logged' is a
+       -- hit where logger.log_error itself failed and no reference code was
+       -- issued.
+       , ll.client_identifier                                          as client_identifier
+       , case
+           when io.logger_log_id is null then 'Not logged'
+           when ll.id is null            then 'Purged'
+           else                               'Logged'
+         end                                                           as log_status
     from ersh_incident_occurrences io
     join ersh_shield_incidents     si on si.shield_incident_id = io.shield_incident_id
+    left join logger_logs          ll on ll.id = io.logger_log_id
    where io.active_yn = 'Y'
      and si.active_yn = 'Y'
 )
@@ -72,4 +89,6 @@ select occurrence_id
      , resolved_by
      , resolved_on
      , resolution_notes
+     , client_identifier
+     , log_status
   from w_base;

@@ -113,6 +113,7 @@ drop view ersh_jobs_recent_failures_vw;
 drop view ersh_jobs_next_runs_vw;
 drop view ersh_jobs_health_by_source_vw;
 drop view ersh_jobs_status_vw;
+drop view ersh_related_logs_vw;
 drop view ersh_incident_occurrences_vw;
 drop view ersh_shield_incidents_vw;
 drop view logger_logs_terse;

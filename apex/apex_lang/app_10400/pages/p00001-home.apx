@@ -310,9 +310,11 @@ page 1 (
             derivedColumn: N
             heading {
                 heading: Status
+                alignment: center
             }
             layout {
                 sequence: 10
+                columnAlignment: center
             }
             columnFormatting {
                 htmlExpression:

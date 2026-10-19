@@ -18,10 +18,8 @@ page 100 (
         name: Find Incident
         type: staticContent
         layout {
-            sequence: 5
+            sequence: 10
             slot: body
-            startNewRow: false
-            column: 9
             columnSpan: 4
         }
         appearance {
@@ -41,7 +39,7 @@ page 100 (
             tableName: ERSH_SHIELD_INCIDENTS_VW
         }
         layout {
-            sequence: 10
+            sequence: 40
             slot: body
         }
         appearance {
@@ -512,27 +510,27 @@ page 100 (
             }
 
             displayColumn AFFECTED_USERS (
-                sequence: 8
+                sequence: 9
             )
 
             displayColumn APP_PAGE_DISPLAY (
-                sequence: 2
-            )
-
-            displayColumn COMPONENT_LABEL (
                 sequence: 4
             )
 
-            displayColumn COMPONENT_NAME (
-                sequence: 5
-            )
-
-            displayColumn ERROR_SUMMARY (
+            displayColumn COMPONENT_LABEL (
                 sequence: 3
             )
 
+            displayColumn COMPONENT_NAME (
+                sequence: 6
+            )
+
+            displayColumn ERROR_SUMMARY (
+                sequence: 5
+            )
+
             displayColumn FIRST_REFERENCE_DISPLAY (
-                sequence: 10
+                sequence: 2
             )
 
             displayColumn INCIDENT_STATUS (
@@ -540,15 +538,15 @@ page 100 (
             )
 
             displayColumn LAST_OCCURRED_ON (
-                sequence: 9
+                sequence: 10
             )
 
             displayColumn OCCURRENCE_COUNT (
-                sequence: 7
+                sequence: 8
             )
 
             displayColumn ORA_SQLCODE (
-                sequence: 6
+                sequence: 7
             )
 
             sort (
@@ -729,8 +727,9 @@ page 100 (
                 ```
         }
         layout {
-            sequence: 3
+            sequence: 20
             slot: body
+            startNewRow: false
             columnSpan: 8
         }
         appearance {
@@ -836,11 +835,13 @@ page 100 (
             slot: regionBody
             alignment: left
             startNewRow: false
-            columnSpan: 3
         }
         appearance {
             template: @/optional-above
-            templateOptions: #DEFAULT#
+            templateOptions: [
+                #DEFAULT#
+                t-Form-fieldContainer--stretchInputs
+            ]
             valuePlaceholder: e.g. 0000005003
         }
         validation {
@@ -856,6 +857,7 @@ page 100 (
             region: @find-incident
             slot: regionBody
             startNewRow: false
+            column: 8
         }
         appearance {
             buttonTemplate: @/text

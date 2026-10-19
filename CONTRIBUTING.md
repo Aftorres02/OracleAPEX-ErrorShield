@@ -58,7 +58,7 @@ cd tests
 sql <connection-as-owner-schema> @run_tests.sql
 ```
 
-This compiles the five utPLSQL suites in `tests/` and runs them with a
+This compiles the six utPLSQL suites in `tests/` and runs them with a
 console reporter:
 
 | Suite | Covers |
@@ -68,6 +68,7 @@ console reporter:
 | `ut_ersh_dedup_occurrences` | `record_internal_incident` dedup + `ersh_incident_occurrences` — the test that protects ERSH-010: either of two users' reference codes must resolve back to the same incident |
 | `ut_ersh_core_bugs` | `raise_custom_error` / `get_message` respecting `active_yn` (ERSH-022, ERSH-024), the `ora_sqlcode` range validation on `merge_ersh_error_lookup` (ERSH-025) |
 | `ut_ersh_observability` | The `SCRUB_FUNCTION` hook (ERSH-032) — inert by default, applies when configured, falls back on a broken function, never affects the dedup fingerprint — and `purge_incidents` retention (ERSH-026) |
+| `ut_ersh_related_logs` | The reference code → Logger trail (ERSH-051): `ersh_related_logs_vw` keeps the same request's rows (same `client_identifier` and `sid`, 2 minutes before to 5 seconds after) and drops other sessions or rows outside the window; `ersh_incident_occurrences_vw.log_status` reports Logged / Purged / Not logged |
 
 Each suite cleans up its own fixtures (`%aftereach`) — running the suite
 repeatedly against the same schema is safe.

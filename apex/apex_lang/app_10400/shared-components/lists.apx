@@ -144,6 +144,9 @@ list navigation-menu (
                 page: 10000
             }
         }
+        serverSideCondition {
+            type: never
+        }
         security {
             authorizationScheme: @administration-rights
         }

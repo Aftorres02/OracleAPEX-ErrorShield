@@ -15,6 +15,9 @@ prompt @../views/ersh_shield_incidents_vw.sql
 prompt @../views/ersh_incident_occurrences_vw.sql
 @@../views/ersh_incident_occurrences_vw.sql
 
+prompt @../views/ersh_related_logs_vw.sql
+@@../views/ersh_related_logs_vw.sql
+
 prompt @../views/ersh_jobs_status_vw.sql
 @@../views/ersh_jobs_status_vw.sql
 
