@@ -1,11 +1,61 @@
 create or replace package body ersh_demo_data_api as
 
-  gc_scope_prefix     constant varchar2(31) := lower($$plsql_unit) || '.';
+  gc_scope_prefix        constant varchar2(31) := lower($$plsql_unit) || '.';
   -- Tag on every generated logger_logs row so purge_demo_data can remove
   -- exactly what this package created, and nothing else.
-  gc_demo_client_id   constant varchar2(30 char) := 'ERRORSHIELD_DEMO_DATA';
+  gc_demo_client_id      constant varchar2(30 char) := 'ERRORSHIELD_DEMO_DATA';
   -- Prefix on every demo scheduler job name for the same reason.
-  gc_demo_job_prefix  constant varchar2(20 char) := 'ERSH_DEMO_';
+  gc_demo_job_prefix     constant varchar2(20 char) := 'ERSH_DEMO_';
+  -- Live demo jobs (start_live_jobs_demo) share a longer prefix, so starting
+  -- and stopping the live demo (and the Start/Stop buttons on page 1000) only
+  -- ever touch those, never the heartbeat/flaky/reliable/slow jobs.
+  gc_live_job_prefix     constant varchar2(30 char) := gc_demo_job_prefix || 'LIVE_';
+  -- Keeps the live demo jobs on their 20-30 s cadence. On Autonomous Database
+  -- the job coordinator was measured starting sub-minute repeats 30-150 s
+  -- late at times, which leaves "Running now" empty for minutes in the middle
+  -- of a demo; run_job starts a job within seconds instead.
+  gc_live_dispatcher_job constant varchar2(60 char) := gc_live_job_prefix || 'DISPATCHER';
+  -- Seconds past its interval a live job may run late before the dispatcher
+  -- starts it itself.
+  gc_dispatch_grace_secs constant pls_integer := 3;
+
+  -- Real Oracle errors a live demo job raises on a simulated failure, so the
+  -- scheduler log shows the same codes a real integration job would hit.
+  e_deadlock_detected       exception;
+  pragma exception_init(e_deadlock_detected, -60);
+  e_invalid_month           exception;
+  pragma exception_init(e_invalid_month, -1843);
+  e_network_acl_denied      exception;
+  pragma exception_init(e_network_acl_denied, -24247);
+  e_certificate_invalid     exception;
+  pragma exception_init(e_certificate_invalid, -29024);
+  e_http_request_failed     exception;
+  pragma exception_init(e_http_request_failed, -29273);
+  e_invalid_file_operation  exception;
+  pragma exception_init(e_invalid_file_operation, -29283);
+  e_json_syntax_error       exception;
+  pragma exception_init(e_json_syntax_error, -40441);
+  -- Raised by drop_job/run_job when the job is already gone (auto_drop got
+  -- there first at the end of the demo window).
+  e_unknown_job             exception;
+  pragma exception_init(e_unknown_job, -27475);
+  -- Raised by run_job when the job is already running.
+  e_job_running             exception;
+  pragma exception_init(e_job_running, -27478);
+
+  -- One live demo job: what it pretends to do and how it behaves.
+  type t_live_job is record (
+      job_code                varchar2(30 char)
+    , description             varchar2(200 char)
+    , interval_secs           pls_integer
+    , min_run_secs            pls_integer
+    , max_run_secs            pls_integer
+    , failure_pct             pls_integer
+    -- Consecutive failed runs before the scheduler marks the job BROKEN
+    -- (null = never).
+    , max_failures            pls_integer
+  );
+  type t_live_jobs is table of t_live_job;
 
 
 
@@ -295,6 +345,203 @@ create or replace package body ersh_demo_data_api as
       );
     end if;
   end create_demo_job_if_missing;
+
+
+
+
+
+
+
+
+  /**
+   * The six live demo jobs started by start_live_jobs_demo. Each pretends to
+   * be a real integration. Failure rates are tuned so a few failures show up
+   * in the first minutes of a demo; SUPPLIER_PRICES fails often enough to
+   * reach max_failures and turn BROKEN.
+   *
+   * @return Every live demo job, in creation order.
+   */
+  function get_live_jobs return t_live_jobs
+  is
+  begin
+    return t_live_jobs(
+        t_live_job(
+            job_code              => 'ORDERS_SYNC'
+          , description           => 'Pulls new web-store orders into the order hub.'
+          , interval_secs         => 20
+          , min_run_secs          => 5
+          , max_run_secs          => 8
+          , failure_pct           => 5
+          , max_failures          => null
+        )
+      , t_live_job(
+            job_code              => 'PAYMENT_RECON'
+          , description           => 'Reconciles payment-gateway settlements against open invoices.'
+          , interval_secs         => 30
+          , min_run_secs          => 6
+          , max_run_secs          => 10
+          , failure_pct           => 15
+          , max_failures          => null
+        )
+      , t_live_job(
+            job_code              => 'INVENTORY_SNAPSHOT'
+          , description           => 'Refreshes the warehouse stock snapshot the storefront reads.'
+          , interval_secs         => 25
+          , min_run_secs          => 5
+          , max_run_secs          => 10
+          , failure_pct           => 3
+          , max_failures          => null
+        )
+      , t_live_job(
+            job_code              => 'EMAIL_DIGEST'
+          , description           => 'Sends queued customer notification e-mails.'
+          , interval_secs         => 20
+          , min_run_secs          => 5
+          , max_run_secs          => 7
+          , failure_pct           => 10
+          , max_failures          => null
+        )
+      , t_live_job(
+            job_code              => 'FX_RATES'
+          , description           => 'Loads currency exchange rates from the treasury feed.'
+          , interval_secs         => 30
+          , min_run_secs          => 5
+          , max_run_secs          => 8
+          , failure_pct           => 10
+          , max_failures          => null
+        )
+      , t_live_job(
+            job_code              => 'SUPPLIER_PRICES'
+          , description           => 'Imports supplier price files from the legacy SFTP drop folder.'
+          , interval_secs         => 30
+          , min_run_secs          => 5
+          , max_run_secs          => 10
+          , failure_pct           => 60
+          , max_failures          => 3
+        )
+    );
+  end get_live_jobs;
+
+
+
+
+
+
+
+
+  /**
+   * @param p_job_code Code of a live demo job (see get_live_jobs).
+   * @return           That job's definition. Raises no_data_found for an
+   *                   unknown code, like a select..into that finds nothing.
+   */
+  function get_live_job(
+      p_job_code                                       in varchar2
+  ) return t_live_job
+  is
+    l_jobs t_live_jobs := get_live_jobs;
+  begin
+    for i in 1 .. l_jobs.count loop
+      if l_jobs(i).job_code = p_job_code then
+        return l_jobs(i);
+      end if;
+    end loop;
+
+    raise no_data_found;
+  end get_live_job;
+
+
+
+
+
+
+
+
+  /**
+   * @param p_job_code Code of a live demo job (see get_live_jobs).
+   * @return           A random, clearly-fake summary of a successful run.
+   */
+  function get_live_job_summary(
+      p_job_code                                       in varchar2
+  ) return varchar2
+  is
+    l_count pls_integer := trunc(dbms_random.value(5, 60));
+    l_other pls_integer := trunc(dbms_random.value(0, 4));
+  begin
+    return case p_job_code
+             when 'ORDERS_SYNC' then
+               'Imported ' || l_count || ' web-store orders (' || l_other || ' skipped as duplicates).'
+             when 'PAYMENT_RECON' then
+               'Matched ' || l_count * 4 || ' of ' || (l_count * 4 + l_other) || ' gateway settlements; '
+               || l_other || ' left for manual review.'
+             when 'INVENTORY_SNAPSHOT' then
+               'Stock snapshot refreshed: ' || l_count * 40 || ' SKUs across 4 warehouses.'
+             when 'EMAIL_DIGEST' then
+               'Sent ' || l_count || ' notification e-mails; ' || l_other || ' still queued.'
+             when 'FX_RATES' then
+               'Loaded ' || (28 + l_other) || ' exchange rates (base USD) from the treasury feed.'
+             when 'SUPPLIER_PRICES' then
+               'Imported ' || l_count * 25 || ' price lines from ' || (l_other + 1) || ' supplier files.'
+           end;
+  end get_live_job_summary;
+
+
+
+
+
+
+
+
+  /**
+   * Simulates a technical failure of a live demo job: logs the warning a real
+   * job would have written right before failing, then raises a real Oracle
+   * error. This stands in for an unexpected failure, not a business error, so
+   * it is meant to reach run_live_demo_job's "when others" handler and be
+   * logged as unhandled there, exactly like a real job's failure would.
+   *
+   * @param p_job_code Code of a live demo job (see get_live_jobs).
+   * @param p_scope    Logger scope of the calling job run.
+   */
+  procedure raise_live_job_failure(
+      p_job_code                                       in varchar2
+    , p_scope                                          in logger_logs.scope%type
+  )
+  is
+    l_first_case_yn varchar2(1 char) := case when dbms_random.value(0, 1) < 0.5 then 'Y' else 'N' end;
+    l_number        pls_integer      := trunc(dbms_random.value(2, 9));
+  begin
+    case
+      when p_job_code = 'ORDERS_SYNC' and l_first_case_yn = 'Y' then
+        logger.log_warning('Storefront API returned HTTP 503 on page ' || l_number || ' of the order feed; retries exhausted.', p_scope);
+        raise e_http_request_failed;
+      when p_job_code = 'ORDERS_SYNC' then
+        logger.log_warning('Order SO-' || trunc(dbms_random.value(100000, 999999)) || ' was locked by a concurrent fulfilment update.', p_scope);
+        raise e_deadlock_detected;
+      when p_job_code = 'PAYMENT_RECON' and l_first_case_yn = 'Y' then
+        logger.log_warning('Settlement download for batch STL-' || to_char(sysdate, 'YYYYMMDD') || '-0' || l_number || ' timed out after 30 s.', p_scope);
+        raise e_http_request_failed;
+      when p_job_code = 'PAYMENT_RECON' then
+        logger.log_warning('TLS handshake with the payment gateway failed: server certificate not trusted by the wallet.', p_scope);
+        raise e_certificate_invalid;
+      when p_job_code = 'INVENTORY_SNAPSHOT' then
+        logger.log_warning('Deadlock while merging stock levels for warehouse WH-0' || trunc(dbms_random.value(1, 5)) || '.', p_scope);
+        raise e_deadlock_detected;
+      when p_job_code = 'EMAIL_DIGEST' then
+        logger.log_warning('SMTP relay smtp.example.com:587 refused the connection; no network ACL for this schema.', p_scope);
+        raise e_network_acl_denied;
+      when p_job_code = 'FX_RATES' and l_first_case_yn = 'Y' then
+        logger.log_warning('Treasury feed returned a truncated JSON payload (' || trunc(dbms_random.value(200, 900)) || ' bytes).', p_scope);
+        raise e_json_syntax_error;
+      when p_job_code = 'FX_RATES' then
+        logger.log_warning('Rate for ARS arrived as "N/A" and could not be stored.', p_scope);
+        raise value_error;
+      when p_job_code = 'SUPPLIER_PRICES' and l_first_case_yn = 'Y' then
+        logger.log_warning('ACME_PRICES_' || to_char(sysdate, 'YYYYMMDD') || '.csv not found in SUPPLIER_DROP_DIR.', p_scope);
+        raise e_invalid_file_operation;
+      when p_job_code = 'SUPPLIER_PRICES' then
+        logger.log_warning('Line ' || l_number * 37 || ' of NORTHWIND_PRICES.csv has effective date "31/13/2026".', p_scope);
+        raise e_invalid_month;
+    end case;
+  end raise_live_job_failure;
 
 
 
@@ -770,6 +1017,361 @@ create or replace package body ersh_demo_data_api as
       logger.log_error('Unhandled Exception', l_scope, null, l_params);
       raise;
   end run_slow_demo_job;
+
+
+
+
+
+
+
+
+  /**
+   * Starts the live jobs demo: drops whatever an earlier run left behind,
+   * then creates the six live demo jobs (see get_live_jobs). Each repeats
+   * every 20-30 seconds from a slightly staggered start, runs 5-10 seconds,
+   * fails at random with a realistic Oracle error, and is dropped by the
+   * scheduler on its own after p_duration_minutes (auto_drop). Their run
+   * history stays in the scheduler log, so the dashboard keeps showing it.
+   * Also starts the dispatcher job (see dispatch_live_jobs), which keeps them
+   * on that cadence when the scheduler runs late.
+   *
+   * This is what keeps "Running now" (page 1400), "Recent failures" and the
+   * failure counters on the Jobs dashboard (page 1000) moving during a live
+   * demo. Page 1000's "Start live demo" button calls it with the default.
+   *
+   * @example
+   * exec ersh_demo_data_api.start_live_jobs_demo(
+   *     p_duration_minutes                             => 60
+   * );
+   *
+   * @issue ERSH-052
+   *
+   * @author Angel Flores (Consultant)
+   * @created October 18, 2026
+   *
+   * @param p_duration_minutes How long the live jobs keep running. Null falls
+   *                           back to 60, so the jobs can never run forever.
+   */
+  procedure start_live_jobs_demo(
+      p_duration_minutes                               in pls_integer default 60
+  )
+  is
+    l_scope    logger_logs.scope%type := gc_scope_prefix || 'start_live_jobs_demo';
+    l_params   logger.tab_param;
+
+    l_jobs     t_live_jobs := get_live_jobs;
+    l_job_name user_scheduler_jobs.job_name%type;
+    l_end_date user_scheduler_jobs.end_date%type;
+  begin
+    logger.append_param(l_params, 'p_duration_minutes', p_duration_minutes);
+    logger.log('START', l_scope, null, l_params);
+
+    l_end_date := systimestamp + numtodsinterval(nvl(p_duration_minutes, 60), 'minute');
+
+
+    -- =========================================================================
+    -- Start from a clean slate, including a job already marked BROKEN.
+    -- =========================================================================
+
+    stop_live_jobs_demo;
+    -- =========================================================================
+
+    for i in 1 .. l_jobs.count loop
+      l_job_name := gc_live_job_prefix || l_jobs(i).job_code;
+
+      -- Created disabled so max_failures is in place before the first run.
+      dbms_scheduler.create_job(
+          job_name        => l_job_name
+        , job_type        => 'PLSQL_BLOCK'
+        , job_action      => 'begin ersh_demo_data_api.run_live_demo_job(p_job_code => '''
+                             || l_jobs(i).job_code || '''); end;'
+        , start_date      => systimestamp + numtodsinterval(dbms_random.value(2, 15), 'second')
+        , repeat_interval => 'FREQ=SECONDLY; INTERVAL=' || l_jobs(i).interval_secs
+        , end_date        => l_end_date
+        , enabled         => false
+        , auto_drop       => true
+        , comments        => 'Demo-only live job (ERSH-052): ' || l_jobs(i).description
+                             || ' Stop with ersh_demo_data_api.stop_live_jobs_demo.'
+      );
+
+      if l_jobs(i).max_failures is not null then
+        dbms_scheduler.set_attribute(
+            name      => l_job_name
+          , attribute => 'max_failures'
+          , value     => l_jobs(i).max_failures
+        );
+      end if;
+
+      dbms_scheduler.enable(name => l_job_name);
+    end loop;
+
+    -- Never enabled: started by hand right away instead of waiting on the
+    -- coordinator, so it runs exactly once and drops itself at the end.
+    dbms_scheduler.create_job(
+        job_name        => gc_live_dispatcher_job
+      , job_type        => 'PLSQL_BLOCK'
+      , job_action      => 'begin ersh_demo_data_api.dispatch_live_jobs; end;'
+      , enabled         => false
+      , auto_drop       => false
+      , comments        => 'Demo-only (ERSH-052): starts any live demo job the scheduler leaves overdue,'
+                           || ' so they keep their 20-30 s cadence.'
+    );
+
+    dbms_scheduler.run_job(
+        job_name                        => gc_live_dispatcher_job
+      , use_current_session             => false
+    );
+
+    logger.log('END', l_scope, null, l_params);
+  exception
+    when others then
+      logger.log_error('Unhandled Exception', l_scope, null, l_params);
+      raise;
+  end start_live_jobs_demo;
+
+
+
+
+
+
+
+
+  /**
+   * Stops the live jobs demo now: drops every live demo job (force, so a run
+   * in progress is stopped first and logged by the scheduler as STOPPED).
+   * Run history stays in the scheduler log, so failures already recorded
+   * keep showing on the dashboard. Safe to call when nothing is running.
+   *
+   * @example
+   * exec ersh_demo_data_api.stop_live_jobs_demo;
+   *
+   * @issue ERSH-052
+   *
+   * @author Angel Flores (Consultant)
+   * @created October 18, 2026
+   */
+  procedure stop_live_jobs_demo
+  is
+    l_scope  logger_logs.scope%type := gc_scope_prefix || 'stop_live_jobs_demo';
+    l_params logger.tab_param;
+  begin
+    logger.log('START', l_scope, null, l_params);
+
+    -- The dispatcher goes first, so it can't start a job that is being dropped.
+    for l_job_rec in (
+      select j.job_name                                             as job_name
+        from user_scheduler_jobs j
+       where j.job_name like replace(gc_live_job_prefix, '_', '\_') || '%' escape '\'
+       order by case when j.job_name = gc_live_dispatcher_job then 0 else 1 end
+    )
+    loop
+      begin
+        dbms_scheduler.drop_job(
+            job_name                    => l_job_rec.job_name
+          , force                       => true
+        );
+      exception
+        when e_unknown_job then
+          null; -- already dropped by the scheduler at the end of the window.
+      end;
+    end loop;
+
+    logger.log('END', l_scope, null, l_params);
+  exception
+    when others then
+      logger.log_error('Unhandled Exception', l_scope, null, l_params);
+      raise;
+  end stop_live_jobs_demo;
+
+
+
+
+
+
+
+
+  /**
+   * Action of every live demo job (DBMS_SCHEDULER calls it; not meant to be
+   * run by hand). Sleeps for a random time within the job's run window, then
+   * either logs a realistic summary or, at the job's failure rate, raises a
+   * realistic Oracle error so the scheduler records the run as FAILED.
+   *
+   * Every log line is tagged with the demo client identifier, so
+   * purge_demo_data removes them along with the rest of the demo data.
+   *
+   * @example
+   * set serveroutput on
+   * begin
+   *   ersh_demo_data_api.run_live_demo_job(
+   *       p_job_code                                   => 'ORDERS_SYNC'
+   *   );
+   *   dbms_output.put_line('Run succeeded (it fails about 1 time in 20).');
+   * end;
+   * /
+   *
+   * @issue ERSH-052
+   *
+   * @author Angel Flores (Consultant)
+   * @created October 18, 2026
+   *
+   * @param p_job_code Code of a live demo job (see get_live_jobs).
+   */
+  procedure run_live_demo_job(
+      p_job_code                                       in varchar2
+  )
+  is
+    l_scope   logger_logs.scope%type := gc_scope_prefix || 'run_live_demo_job';
+    l_params  logger.tab_param;
+
+    l_job_rec t_live_job;
+  begin
+    -- Cleared again on the way out: the scheduler can reuse this session for
+    -- a job that is not a demo.
+    dbms_session.set_identifier(gc_demo_client_id);
+
+    logger.append_param(l_params, 'p_job_code', p_job_code);
+    logger.log('START', l_scope, null, l_params);
+
+    l_job_rec := get_live_job(p_job_code);
+
+    dbms_session.sleep(round(dbms_random.value(l_job_rec.min_run_secs, l_job_rec.max_run_secs), 1));
+
+
+    -- =========================================================================
+    -- At the job's failure rate, fail the way a real integration would.
+    -- =========================================================================
+
+    if dbms_random.value(0, 100) < l_job_rec.failure_pct then
+      raise_live_job_failure(
+          p_job_code                    => p_job_code
+        , p_scope                       => l_scope
+      );
+    end if;
+    -- =========================================================================
+
+    logger.log_information(get_live_job_summary(p_job_code), l_scope, null, l_params);
+
+    logger.log('END', l_scope, null, l_params);
+    dbms_session.clear_identifier;
+  exception
+    when others then
+      begin
+        logger.log_error('Unhandled Exception', l_scope, null, l_params);
+      exception
+        when others then
+          null; -- a Logger failure must not hide this run's own error.
+      end;
+      dbms_session.clear_identifier;
+      raise;
+  end run_live_demo_job;
+
+
+
+
+
+
+
+
+  /**
+   * Action of the live demo's dispatcher job (DBMS_SCHEDULER calls it; not
+   * meant to be run by hand). Every 2 seconds, starts any live demo job the
+   * scheduler has left more than gc_dispatch_grace_secs past its interval
+   * (see gc_live_dispatcher_job for why). When the scheduler is on time it
+   * starts nothing. Ends, and drops its own job, once no live demo job is
+   * left to run (window over, stopped, or BROKEN).
+   *
+   * @example
+   * -- Started by start_live_jobs_demo, never by hand. Run a one-minute demo,
+   * -- then see what the dispatcher did:
+   * exec ersh_demo_data_api.start_live_jobs_demo(p_duration_minutes => 1);
+   *
+   * select l.time_stamp                                     as time_stamp
+   *      , l.text                                           as text
+   *   from logger_logs l
+   *  where l.scope = 'ersh_demo_data_api.dispatch_live_jobs'
+   *  order by l.id desc;
+   *
+   * @issue ERSH-052
+   *
+   * @author Angel Flores (Consultant)
+   * @created October 18, 2026
+   */
+  procedure dispatch_live_jobs
+  is
+    l_scope        logger_logs.scope%type := gc_scope_prefix || 'dispatch_live_jobs';
+    l_params       logger.tab_param;
+
+    l_active_count pls_integer;
+    l_job_rec      t_live_job;
+    l_due_on       user_scheduler_jobs.start_date%type;
+  begin
+    -- Cleared again on the way out, like run_live_demo_job.
+    dbms_session.set_identifier(gc_demo_client_id);
+
+    logger.log('START', l_scope, null, l_params);
+
+    loop
+      l_active_count := 0;
+
+      for l_live_rec in (
+        select j.job_name                                           as job_name
+             , j.state                                              as state
+             , j.start_date                                         as start_date
+             , j.last_start_date                                    as last_start_date
+          from user_scheduler_jobs j
+         where j.job_name like replace(gc_live_job_prefix, '_', '\_') || '%' escape '\'
+           and j.job_name <> gc_live_dispatcher_job
+           and j.state in ('SCHEDULED', 'RUNNING')
+           and j.end_date > systimestamp
+      )
+      loop
+        l_active_count := l_active_count + 1;
+
+        l_job_rec := get_live_job(substr(l_live_rec.job_name, length(gc_live_job_prefix) + 1));
+        l_due_on  := nvl(
+                         l_live_rec.last_start_date + numtodsinterval(l_job_rec.interval_secs, 'second')
+                       , l_live_rec.start_date
+                     );
+
+        if l_live_rec.state = 'SCHEDULED'
+           and systimestamp > l_due_on + numtodsinterval(gc_dispatch_grace_secs, 'second') then
+          begin
+            dbms_scheduler.run_job(
+                job_name                => l_live_rec.job_name
+              , use_current_session     => false
+            );
+            logger.log('Started overdue job ' || l_live_rec.job_name, l_scope);
+          exception
+            when e_job_running or e_unknown_job then
+              null; -- the scheduler started it, or it ended, in the meantime.
+          end;
+        end if;
+      end loop;
+
+      exit when l_active_count = 0;
+
+      dbms_session.sleep(2);
+    end loop;
+
+    -- Removes this one-shot job as soon as this run ends.
+    dbms_scheduler.drop_job(
+        job_name                        => gc_live_dispatcher_job
+      , defer                           => true
+    );
+
+    logger.log('END', l_scope, null, l_params);
+    dbms_session.clear_identifier;
+  exception
+    when others then
+      begin
+        logger.log_error('Unhandled Exception', l_scope, null, l_params);
+      exception
+        when others then
+          null; -- a Logger failure must not hide this run's own error.
+      end;
+      dbms_session.clear_identifier;
+      raise;
+  end dispatch_live_jobs;
 
 
 

@@ -51,6 +51,21 @@ ahead of the first public release, `0.9.0`.
   `ersh_related_logs_vw`; `ersh_incident_occurrences_vw` gains
   `client_identifier` and `log_status` (Logged / Purged / Not logged). New
   utPLSQL suite `ut_ersh_related_logs` (`ERSH-051`).
+- Live jobs demo for the Jobs dashboard. `ersh_demo_data_api.start_live_jobs_demo`
+  starts six made-up integration jobs (orders sync, payment
+  reconciliation, stock snapshot, e-mail, exchange rates, supplier price
+  files). Each runs every 20-30 seconds for 5-10 seconds, for an hour by
+  default. Some runs fail on purpose with real Oracle errors (HTTP,
+  certificate, ACL, JSON, file and date errors), and one job fails often
+  enough that the scheduler marks it BROKEN. Page 1000 gets Start/Stop
+  buttons that only render when the demo package is installed
+  (`ERSH-052`).
+- Auto refresh on the Jobs dashboard (page 1000) and "Running now" (page
+  1400): their reports refresh every 5 seconds while the page is open,
+  through a new `ersh-auto-refresh.js` static file. Refreshing pauses
+  while the tab is hidden. "Next runs" now shows 10 rows and "Recent
+  failures" shows all 20, because a refresh returns a report to its first
+  page (`ERSH-052`).
 - `docs/UPGRADE.md`: the split between idempotent structural DDL and
   numbered data migrations under `release/migrations/`, gated by the
   `ERSH_VERSION` preference (`ERSH-020`).
