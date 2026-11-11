@@ -1,4 +1,4 @@
-# Setting Up a Community Demo
+# Setting Up a Community Demo (CI demo edit)
 
 A walkthrough for populating a throwaway schema with realistic, clearly-fake
 data so the admin app's reports and dashboards have something to show — for
