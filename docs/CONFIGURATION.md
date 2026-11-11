@@ -119,3 +119,4 @@ see [OraOpenSource/logger](https://github.com/OraOpenSource/logger)'s own
 documentation. `post_install_configuration.sql` reads the schema's
 *current* `LEVEL` and re-applies it rather than resetting it, so an
 existing Logger install's logging level survives a release.
+
