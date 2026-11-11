@@ -33,7 +33,7 @@ permissions:
 env:
   # Public, generic image (no project objects): Oracle Database Free 23.26.1,
   # APEX 26.1, utPLSQL 3.2.3, service FREEPDB1. Swap for your own if you
-  # need other versions (see templates/github-actions/build-ci-image.yml).
+  # need other versions (templates/ci_image_workflow_template.yml).
   BASE_IMAGE: ghcr.io/aftorres02/oracle-apex-utplsql:26.1-utplsql3.2.3
   DB_SERVICE: FREEPDB1
   # Baked into the image — not a secret, it only has to match the image.
