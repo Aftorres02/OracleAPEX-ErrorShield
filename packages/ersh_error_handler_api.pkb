@@ -333,7 +333,7 @@ create or replace package body ersh_error_handler_api as
       end if;
     end if;
 
-    return l_result;
+    return l_result
   end apex_error_handling;
 
 
