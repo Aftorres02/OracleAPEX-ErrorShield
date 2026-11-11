@@ -1,7 +1,7 @@
 name: CI
 
 # -----------------------------------------------------------------------------
-# Based on .claude/templates/github-actions/ci.yml (coding standards) — see
+# Based on .claude/templates/ci_workflow_template.yml (coding standards) — see
 # .claude/skills/apex-ci-setup/SKILL.md for what each step is for.
 #
 # What it does on every PR (and after every merge to main):
