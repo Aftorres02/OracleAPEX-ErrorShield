@@ -95,7 +95,7 @@ as
     l_result := ersh_error_handler_api.apex_error_handling(p_error => l_error);
 
     ut.expect(l_result.message).not_to_equal(l_error.message);
-    ut.expect(l_result.message).to_be_like('%support@example.com%');
+    ut.expect(l_result.message).to_be_like('%nobody@example.invalid%');
   end masks_when_environment_listed;
 
 
