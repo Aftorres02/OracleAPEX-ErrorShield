@@ -23,7 +23,7 @@ as
   begin
     g_orig_environment := logger.get_pref('ENVIRONMENT', gc_pref_type);
     g_orig_mask_list    := logger.get_pref('MASK_IN_ENVIRONMENTS', gc_pref_type);
-  end save_original_prefs;
+  end save_original_prefs
 
 
 
