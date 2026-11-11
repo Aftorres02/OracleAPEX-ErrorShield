@@ -31,7 +31,7 @@ as
 
 
   --%test(Trail includes the rows the same request wrote before the anchor)
-  procedure trail_includes_same_request;
+  procedure trail_includes_same_request
 
 
   --%test(Trail excludes rows from another APEX session on the same sid)
