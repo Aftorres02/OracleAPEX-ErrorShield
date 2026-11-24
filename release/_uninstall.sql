@@ -68,10 +68,10 @@ begin
   execute immediate 'drop context '||l_ctx_name;
 exception
   when others then
-    -- ORA-01435: context does not exist (already dropped, fine)
+    -- ORA-01435 / ORA-04043 (23ai+): context does not exist (fine)
     -- ORA-01031/ORA-41726: schema lacks DROP ANY CONTEXT (grant it via
     -- scripts/admin/create_user.sql, or ask a DBA to run this drop manually)
-    if sqlcode not in (-1435, -1031) then
+    if sqlcode not in (-1435, -4043, -1031) then
       raise;
     else
       dbms_output.put_line('Skipped: could not drop context '||l_ctx_name||' ('||sqlerrm||')');

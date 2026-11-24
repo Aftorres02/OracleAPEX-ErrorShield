@@ -367,8 +367,10 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
+          # Run from a script file: "set termout off" only applies to @scripts,
+          # and keeps the multi-MB HTML report out of the step log.
           for reporter in cobertura html; do
-            sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" <<SQL
+            cat > "$RUNNER_TEMP/coverage_${reporter}.sql" <<SQL
           whenever sqlerror exit failure
           set feedback off heading off pagesize 0 verify off long 100000000 longchunksize 32767 linesize 32767 trimspool on
           column objects new_value objects noprint
@@ -379,6 +381,7 @@ jobs:
                     where uo.object_name like '${COVERAGE_OBJECTS_LIKE}' escape '\'
                       and uo.object_type in ('PACKAGE BODY', 'TYPE BODY', 'PROCEDURE', 'FUNCTION', 'TRIGGER')
                  ) o;
+          set termout off
           spool coverage.${reporter}.out
           select column_value
             from table(
@@ -391,6 +394,7 @@ jobs:
           spool off
           exit
           SQL
+            sql -S "$OWNER_SCHEMA"/"$OWNER_PASSWORD"@localhost:1521/"$DB_SERVICE" @"$RUNNER_TEMP/coverage_${reporter}.sql"
           done
           mkdir -p coverage
           mv coverage.cobertura.out coverage/coverage.xml
