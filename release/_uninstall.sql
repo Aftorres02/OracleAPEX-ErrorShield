@@ -7,7 +7,7 @@
 --
 -- Objects are dropped in the REVERSE order they are created in _release.sql
 -- (jobs -> context -> procedures -> packages -> views -> tables -> sequences)
--- so dependencies never block a drop.
+-- so dependencies never block a drop. Objects that don't exist are skipped.
 --
 -- This script is idempotent: it is safe to run against a schema that is
 -- already partially or fully clean, or where the release only partially
@@ -81,69 +81,81 @@ end;
 
 
 -- =============================================================================
--- 3. STANDALONE PROCEDURES
+-- 3-7. PROCEDURES, PACKAGES, VIEWS, TABLES, SEQUENCES
 -- =============================================================================
-prompt *** Dropping standalone procedures ***
+-- Each object is dropped only if it exists, so running this on an empty
+-- schema (every CI run does) prints "Skipped" lines instead of ORA-04043 /
+-- ORA-00942 errors, and any ERROR line that does appear here is real.
+prompt *** Dropping procedures, packages, views, tables and sequences ***
 
-drop procedure logger_configure;
+declare
+  procedure drop_if_exists(
+      p_object_type                             in user_objects.object_type%type
+    , p_object_name                             in user_objects.object_name%type
+    , p_drop_options                            in varchar2 default null
+  )
+  is
+    l_count pls_integer;
+  begin
+    select count(1)
+      into l_count
+      from user_objects o
+     where o.object_type = p_object_type
+       and o.object_name = p_object_name;
 
+    if l_count = 0 then
+      dbms_output.put_line('Skipped (not found): ' || lower(p_object_type) || ' ' || lower(p_object_name));
+      return;
+    end if;
 
--- =============================================================================
--- 4. PACKAGES
--- =============================================================================
-prompt *** Dropping packages ***
+    execute immediate 'drop ' || p_object_type || ' ' || dbms_assert.enquote_name(p_object_name) || p_drop_options;
+    dbms_output.put_line('Dropped: ' || lower(p_object_type) || ' ' || lower(p_object_name));
+  exception
+    when others then
+      dbms_output.put_line('ERROR dropping ' || lower(p_object_type) || ' ' || lower(p_object_name) || ': ' || sqlerrm);
+  end drop_if_exists;
+begin
+  -- Standalone procedures
+  drop_if_exists('PROCEDURE',  'LOGGER_CONFIGURE');
 
-drop package ersh_error_handler_api;
-drop package logger;
+  -- Packages
+  drop_if_exists('PACKAGE',    'ERSH_ERROR_HANDLER_API');
+  drop_if_exists('PACKAGE',    'LOGGER');
 
+  -- Views
+  drop_if_exists('VIEW',       'ERSH_APEX_AUTOMATION_MESSAGES_VW');
+  drop_if_exists('VIEW',       'ERSH_APEX_AUTOMATION_EXECUTIONS_VW');
+  drop_if_exists('VIEW',       'ERSH_APEX_AUTOMATIONS_VW');
+  drop_if_exists('VIEW',       'ERSH_JOBS_RUNNING_VW');
+  drop_if_exists('VIEW',       'ERSH_JOB_EXECUTIONS_VW');
+  drop_if_exists('VIEW',       'ERSH_JOB_DETAILS_VW');
+  drop_if_exists('VIEW',       'ERSH_JOBS_INVENTORY_VW');
+  drop_if_exists('VIEW',       'ERSH_JOBS_RECENT_FAILURES_VW');
+  drop_if_exists('VIEW',       'ERSH_JOBS_NEXT_RUNS_VW');
+  drop_if_exists('VIEW',       'ERSH_JOBS_HEALTH_BY_SOURCE_VW');
+  drop_if_exists('VIEW',       'ERSH_JOBS_STATUS_VW');
+  drop_if_exists('VIEW',       'ERSH_RELATED_LOGS_VW');
+  drop_if_exists('VIEW',       'ERSH_INCIDENT_OCCURRENCES_VW');
+  drop_if_exists('VIEW',       'ERSH_SHIELD_INCIDENTS_VW');
+  drop_if_exists('VIEW',       'LOGGER_LOGS_TERSE');
+  drop_if_exists('VIEW',       'LOGGER_LOGS_60_MIN');
+  drop_if_exists('VIEW',       'LOGGER_LOGS_5_MIN');
 
--- =============================================================================
--- 5. VIEWS
--- =============================================================================
-prompt *** Dropping views ***
+  -- Tables (cascade constraints handles FKs regardless of drop order)
+  drop_if_exists('TABLE',      'ERSH_INCIDENT_OCCURRENCES', ' cascade constraints purge');
+  drop_if_exists('TABLE',      'ERSH_SHIELD_INCIDENTS',     ' cascade constraints purge');
+  drop_if_exists('TABLE',      'ERSH_ERROR_LOOKUP',         ' cascade constraints purge');
+  drop_if_exists('TABLE',      'ERSH_CONSTRAINT_LOOKUP',    ' cascade constraints purge');
+  drop_if_exists('TABLE',      'LOGGER_PREFS_BY_CLIENT_ID', ' cascade constraints purge');
+  drop_if_exists('TABLE',      'LOGGER_LOGS_APEX_ITEMS',    ' cascade constraints purge');
+  drop_if_exists('TABLE',      'LOGGER_LOGS',               ' cascade constraints purge');
+  drop_if_exists('TABLE',      'LOGGER_PREFS',              ' cascade constraints purge');
 
-drop view ersh_apex_automation_messages_vw;
-drop view ersh_apex_automation_executions_vw;
-drop view ersh_apex_automations_vw;
-drop view ersh_jobs_running_vw;
-drop view ersh_job_executions_vw;
-drop view ersh_job_details_vw;
-drop view ersh_jobs_inventory_vw;
-drop view ersh_jobs_recent_failures_vw;
-drop view ersh_jobs_next_runs_vw;
-drop view ersh_jobs_health_by_source_vw;
-drop view ersh_jobs_status_vw;
-drop view ersh_related_logs_vw;
-drop view ersh_incident_occurrences_vw;
-drop view ersh_shield_incidents_vw;
-drop view logger_logs_terse;
-drop view logger_logs_60_min;
-drop view logger_logs_5_min;
-
-
--- =============================================================================
--- 6. TABLES (cascade constraints handles FKs regardless of drop order)
--- =============================================================================
-prompt *** Dropping tables ***
-
-drop table ersh_incident_occurrences cascade constraints purge;
-drop table ersh_shield_incidents cascade constraints purge;
-drop table ersh_error_lookup cascade constraints purge;
-drop table ersh_constraint_lookup cascade constraints purge;
-
-drop table logger_prefs_by_client_id cascade constraints purge;
-drop table logger_logs_apex_items cascade constraints purge;
-drop table logger_logs cascade constraints purge;
-drop table logger_prefs cascade constraints purge;
-
-
--- =============================================================================
--- 7. SEQUENCES
--- =============================================================================
-prompt *** Dropping sequences ***
-
-drop sequence logger_apx_items_seq;
-drop sequence logger_logs_seq;
+  -- Sequences
+  drop_if_exists('SEQUENCE',   'LOGGER_APX_ITEMS_SEQ');
+  drop_if_exists('SEQUENCE',   'LOGGER_LOGS_SEQ');
+end;
+/
 
 
 -- =============================================================================
