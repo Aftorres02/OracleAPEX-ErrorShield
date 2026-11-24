@@ -82,28 +82,56 @@ repeatedly against the same schema is safe.
 
 ## How CI works
 
-Two workflows, split by how often each needs to run:
+Two workflows, split by how often each needs to run. Both read the tool
+versions (database image, APEX, utPLSQL, SQLcl) from
+[`ci/versions.env`](ci/versions.env) — the one place to change them.
 
-- [`.github/workflows/build-ci-image.yml`](.github/workflows/build-ci-image.yml)
-  — manual (`workflow_dispatch`) only. Installs Oracle Database Free + real
-  Oracle APEX 26.1 + utPLSQL from scratch, then commits the stopped
-  container and pushes it to `ghcr.io/<owner>/oracle-apex-utplsql`. Slow
-  (~30-40 minutes) — run it once, and again whenever the pinned
-  Oracle/APEX/utPLSQL versions change. Deliberately generic: no ErrorShield
-  objects are baked in, so the same image is reusable by any other Oracle
-  APEX project's CI, not just this repo.
-- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — runs on every
-  PR. Pulls that pre-built image (DB + APEX + utPLSQL already installed,
-  starts in seconds instead of being created from scratch), then installs
-  ErrorShield fresh (`release/_uninstall.sql` + `_release.sql`) and runs the
-  `tests/` suite, gated on a GitHub check.
+### On every PR and every merge to main
 
-**Before `ci.yml` can pass for the first time**, `build-ci-image.yml` has
-to run once manually to publish the base image. See
-`data/plan/CI-ROLLOUT.md` for the exact activation steps and what's been
-validated locally vs. not yet run for real on GitHub.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) pulls the prebuilt
+image (Oracle Database Free + APEX + utPLSQL; it starts in seconds), then:
 
-**To reuse `ghcr.io/<owner>/oracle-apex-utplsql` from another repo**, its
-package visibility needs to be set to public (one-time, in that package's
-GitHub settings) — `ci.yml` itself doesn't need this, since `GITHUB_TOKEN`
-can always pull a package this same repo published.
+1. creates the `LOGGER_USER` schema and its APEX workspace;
+
+2. installs ErrorShield from scratch with `release/_uninstall.sql` +
+   `release/_release.sql`, including the APEX app;
+
+3. fails if any object is invalid or app 10400 was not imported;
+
+4. compiles every `tests/*.pks` and `*.pkb`, and fails with the compile
+   errors if one does not compile;
+
+5. runs the utPLSQL suite and fails on any failure or error, or if fewer
+   tests ran than the `--%test` annotations in `tests/*.pks` declare;
+
+6. reports code coverage of the `ERSH_*` objects (informational — it
+   never fails the job).
+
+Results, failing tests and coverage appear in the run's summary page; the
+JUnit XML and the coverage report are uploaded as artifacts. A PR that only
+touches Markdown, `docs/` or `LICENSE` skips the test job (reported as
+passed).
+
+### Only when the tool versions change
+
+[`.github/workflows/build-ci-image.yml`](.github/workflows/build-ci-image.yml)
+— manual (`workflow_dispatch`). Installs Oracle Database Free + APEX +
+utPLSQL from scratch, commits the stopped container and pushes it to
+`ghcr.io/aftorres02/oracle-apex-utplsql`. About 20 minutes. It holds no
+ErrorShield objects, so any Oracle APEX project can reuse it; the image is
+public.
+
+To upgrade the database, APEX or utPLSQL: on a branch, edit
+`ci/versions.env` with a **new** `CI_IMAGE_TAG`, run this workflow on that
+branch, then push — the PR's CI runs against the new image. The workflow
+refuses to overwrite a tag that already exists, because other branches
+still pull it. A SQLcl upgrade only needs the `SQLCL_URL` edit.
+
+### Expected noise in the install log
+
+`Errors for TRIGGER BIU_LOGGER_PREFS: PLS-00049: bad bind variable
+'NEW.PREF_TYPE'` appears on every fresh install. Logger's own
+`tables/logger_prefs.sql` (vendored, not modified here) creates the
+trigger before it adds the `pref_type` column further down the same
+script; the trigger compiles cleanly at the end. Anything else invalid
+fails the job at "Verify the install".
